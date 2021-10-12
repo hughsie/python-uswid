@@ -56,13 +56,20 @@ XML document:
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
     software-name = HughskiColorHug.efi
     software-version = 1.2.3
+    product = ColorHug
+    summary = Open Source Display Colorimeter
+    colloquial-version = b2ed6f1ed8587bf01a2951d74512a70f1a512d38
+    edition = v2021+
+    revision = 2
 
 This can then be saved as `uswid.ini` and applied to the binary using:
 
     uswid --inifile uswid.ini --binfile ./HughskiColorHug.efi
 
 The `tag-id` value has to be unique, but for UEFI firmware this is typically
-the ESRT GUID value.
+the ESRT GUID value. The `product`, `summary`, `colloquial-version`, `revision`
+and `edition` values are optional but at least the first two are highly
+recommended.
 
 Of course, we want to include in the uswid blob which vendor actually created
 the tag, and for this we can define an entity in `uswid.ini`:
