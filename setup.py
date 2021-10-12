@@ -43,6 +43,7 @@ setup(
             "enums.pyi",
             "errors.pyi",
             "identity.pyi",
+            "link.pyi",
             "__init__.pyi",
         ]
     },
