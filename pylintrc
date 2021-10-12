@@ -1,0 +1,79 @@
+[MASTER]
+
+# Allow loading of arbitrary C extensions. Extensions are imported into the
+# active Python interpreter and may run arbitrary code.
+unsafe-load-any-extension=yes
+
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s)
+disable=invalid-name,len-as-condition,missing-docstring,too-many-return-statements,too-many-branches,import-outside-toplevel,too-many-public-methods,abstract-method,unsubscriptable-object,too-many-instance-attributes,consider-using-enumerate,cyclic-import,consider-using-f-string
+
+[REPORTS]
+
+# Tells whether to display a full report or only the messages
+reports=no
+
+# Activate the evaluation score.
+score=no
+
+[REFACTORING]
+
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
+
+[VARIABLES]
+
+# List of additional names supposed to be defined in builtins. Remember that
+# you should avoid to define new builtins when possible.
+additional-builtins=
+
+# A regular expression matching the name of dummy variables (i.e. expectedly
+# not used).
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+# Tells whether we should check for unused import in __init__ files.
+#init-import=yes
+
+[TYPECHECK]
+
+# List of members which are set dynamically and missed by pylint inference
+# system, and so shouldn't trigger E1101 when accessed. Python regular
+# expressions are accepted.
+generated-members=query,commit,add,delete,flush,rollback,expire_all
+
+[FORMAT]
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=LF
+
+# Maximum number of characters on a single line.
+max-line-length=120
+
+[DESIGN]
+
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of statements in function / method body
+max-statements=150
+
+# Maximum number of locals for function / method body
+max-locals=30
+
+# Maximum number of lines in a module
+max-module-lines=1100
+
+[SIMILARITIES]
+
+# Minimum lines number of a similarity.
+min-similarity-lines=50
+
+# Ignore comments when computing similarities.
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=no
