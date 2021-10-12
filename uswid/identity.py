@@ -16,8 +16,8 @@ import cbor
 from lxml import etree as ET
 
 from .errors import NotSupportedError
-from .enums import uSwidGlobalMap, uSwidRole
-from .entity import uSwidEntity
+from .enums import uSwidGlobalMap
+from .entity import uSwidEntity, uSwidRole
 from .link import uSwidLink
 
 

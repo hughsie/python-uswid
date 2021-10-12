@@ -7,13 +7,23 @@
 #
 # pylint: disable=too-few-public-methods
 
+from enum import IntEnum
 from typing import Dict, List, Any, Optional
 import configparser
 
 from lxml import etree as ET
 
 from .errors import NotSupportedError
-from .enums import uSwidGlobalMap, uSwidRole
+from .enums import uSwidGlobalMap
+
+
+class uSwidRole(IntEnum):
+    TAG_CREATOR = 1
+    SOFTWARE_CREATOR = 2
+    AGGREGATOR = 3
+    DISTRIBUTOR = 4
+    LICENSOR = 5
+    MAINTAINER = 6
 
 
 class uSwidEntity:

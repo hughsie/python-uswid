@@ -66,12 +66,3 @@ class uSwidGlobalMap(IntEnum):
     SUMMARY = 55
     UNSPSC_CODE = 56
     UNSPSC_VERSION = 57
-
-
-class uSwidRole(IntEnum):
-    TAG_CREATOR = 1
-    SOFTWARE_CREATOR = 2
-    AGGREGATOR = 3
-    DISTRIBUTOR = 4
-    LICENSOR = 5
-    MAINTAINER = 6
