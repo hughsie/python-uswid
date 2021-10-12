@@ -7,6 +7,6 @@
 
 from uswid.link import uSwidLink, uSwidRel
 from uswid.identity import uSwidIdentity
-from uswid.entity import uSwidEntity
-from uswid.enums import uSwidRole, uSwidGlobalMap
+from uswid.entity import uSwidEntity, uSwidRole
+from uswid.enums import uSwidGlobalMap
 from uswid.errors import NotSupportedError
