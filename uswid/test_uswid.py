@@ -86,6 +86,9 @@ xmlns:SHA256="http://www.w3.org/2001/04/xmlenc#sha256"
 xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512"
 xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
 <Entity name="Dell Technologies" regid="dell.com" role="softwareCreator tagCreator" />
+<Link rel="license" href="www.gnu.org/licenses/gpl.txt"/>
+<Meta product="Fedora" colloquialVersion="29"
+  summary="Linux distribution developed by the community-supported Fedora Project" />
 </SoftwareIdentity>"""
         identity = uSwidIdentity()
         identity.import_xml(xml)
@@ -94,6 +97,12 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,DellBiosConnectNetwork,1.5.2):\n"
             "uSwidEntity(Dell Technologies,dell.com->SOFTWARE_CREATOR,TAG_CREATOR)",
         )
+        self.assertEqual(
+            identity.summary,
+            "Linux distribution developed by the community-supported Fedora Project",
+        )
+        self.assertEqual(identity.product, "Fedora")
+        self.assertEqual(identity.colloquial_version, "29")
 
         # INI import
         ini = """[uSWID]

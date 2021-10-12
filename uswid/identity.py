@@ -36,6 +36,12 @@ class uSwidIdentity:
         self.tag_version: int = tag_version
         self.software_name: str = software_name
         self.software_version: str = software_version
+        self.summary: str = None
+        self.product: str = None
+        self.colloquial_version: str = None
+        self.revision: str = None
+        self.edition: str = None
+        self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
 
     def add_entity(self, entity: uSwidEntity) -> None:
@@ -50,10 +56,29 @@ class uSwidIdentity:
         if not blob:
             return
         data = cbor.load(io.BytesIO(blob))
+
+        # identity
         self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
         self.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         self.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
+
+        # optional metadata
+        for key, value in data.get(uSwidGlobalMap.SOFTWARE_META, []).items():
+            if key == uSwidGlobalMap.GENERATOR:
+                self.generator = value
+            elif key == uSwidGlobalMap.SUMMARY:
+                self.summary = value
+            elif key == uSwidGlobalMap.REVISION:
+                self.revision = value
+            elif key == uSwidGlobalMap.PRODUCT:
+                self.product = value
+            elif key == uSwidGlobalMap.EDITION:
+                self.edition = value
+            elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
+                self.colloquial_version = value
+
+        # entities
         for entity_data in data.get(uSwidGlobalMap.ENTITY, []):
             entity = uSwidEntity()
             entity._import_data(entity_data)
@@ -71,10 +96,24 @@ class uSwidIdentity:
         namespaces = {"ns": "http://standards.iso.org/iso/19770/-2/2015/schema.xsd"}
         identity = tree.xpath("/ns:SoftwareIdentity", namespaces=namespaces)[0]
 
+        # identity
         self.tag_id = identity.get("tagId")
         self.tag_version = identity.get("tagVersion")
         self.software_name = identity.get("name")
         self.software_version = identity.get("version")
+
+        # optional metadata
+        try:
+            meta = identity.xpath("ns:Meta", namespaces=namespaces)[0]
+            self.summary = meta.get("summary")
+            self.revision = meta.get("revision")
+            self.product = meta.get("product")
+            self.edition = meta.get("edition")
+            self.colloquial_version = meta.get("colloquialVersion")
+        except IndexError:
+            pass
+
+        # entities
         for node in identity.xpath("ns:Entity", namespaces=namespaces):
             entity = uSwidEntity()
             entity._import_xml(node)
@@ -96,6 +135,16 @@ class uSwidIdentity:
                         self.software_name = value
                     elif key == "software-version":
                         self.software_version = value
+                    elif key == "summary":
+                        self.summary = value
+                    elif key == "revision":
+                        self.revision = value
+                    elif key == "product":
+                        self.product = value
+                    elif key == "edition":
+                        self.edition = value
+                    elif key == "colloquial-version":
+                        self.colloquial_version = value
                     else:
                         print("unknown key {} found in ini file!".format(key))
             if group.startswith("uSWID-Entity:"):
@@ -106,7 +155,8 @@ class uSwidIdentity:
     def export_bytes(self) -> bytes:
         """exports a uSwidIdentity CBOR blob"""
 
-        data: Dict[int, Any] = {}
+        # general identity section
+        data: Dict[uSwidGlobalMap, Any] = {}
         if self.tag_id:
             data[uSwidGlobalMap.TAG_ID] = self.tag_id
         if self.tag_version:
@@ -120,6 +170,22 @@ class uSwidIdentity:
         if not self.software_version:
             raise NotSupportedError("a software_version MUST be provided")
         data[uSwidGlobalMap.SOFTWARE_VERSION] = self.software_version
+
+        # metadata section
+        metadata: Dict[uSwidGlobalMap, Any] = {uSwidGlobalMap.GENERATOR: self.generator}
+        if self.summary:
+            metadata[uSwidGlobalMap.SUMMARY] = self.summary
+        if self.revision:
+            metadata[uSwidGlobalMap.REVISION] = self.revision
+        if self.edition:
+            metadata[uSwidGlobalMap.PRODUCT] = self.product
+        if self.edition:
+            metadata[uSwidGlobalMap.EDITION] = self.edition
+        if self.colloquial_version:
+            metadata[uSwidGlobalMap.COLLOQUIAL_VERSION] = self.colloquial_version
+        data[uSwidGlobalMap.SOFTWARE_META] = metadata
+
+        # entities
         if not self._entities:
             raise NotSupportedError("at least one entity MUST be provided")
         has_tag_creator = False
