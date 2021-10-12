@@ -18,6 +18,7 @@ from lxml import etree as ET
 from .errors import NotSupportedError
 from .enums import uSwidGlobalMap, uSwidRole
 from .entity import uSwidEntity
+from .link import uSwidLink
 
 
 class uSwidIdentity:
@@ -43,12 +44,19 @@ class uSwidIdentity:
         self.edition: str = None
         self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
+        self._links: Dict[str, uSwidEntity] = {}
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """only adds the latest entity"""
         if not entity.name:
             raise NotSupportedError("the entity name MUST be provided")
         self._entities[entity.name] = entity
+
+    def add_link(self, link: uSwidLink) -> None:
+        """only adds the deduped link"""
+        if not link.href:
+            raise NotSupportedError("the link href MUST be provided")
+        self._links[link.href] = link
 
     def import_bytes(self, blob: bytes) -> None:
         """imports a uSwidIdentity CBOR blob"""
@@ -151,6 +159,10 @@ class uSwidIdentity:
                 entity = uSwidEntity()
                 entity._import_ini(config[group], role_hint=group)
                 self.add_entity(entity)
+            if group.startswith("uSWID-Link:"):
+                link = uSwidLink()
+                link._import_ini(config[group])
+                self.add_link(link)
 
     def export_bytes(self) -> bytes:
         """exports a uSwidIdentity CBOR blob"""
@@ -203,14 +215,24 @@ class uSwidIdentity:
         data[uSwidGlobalMap.ENTITY] = [
             entity._export_bytes() for entity in self._entities.values()
         ]
+        data[uSwidGlobalMap.LINK] = [
+            link._export_bytes() for link in self._links.values()
+        ]
+
         return cbor.dumps(data)
 
     def __repr__(self) -> str:
         tmp = "uSwidIdentity({},{},{},{})".format(
             self.tag_id, self.tag_version, self.software_name, self.software_version
         )
+        if self._links or self._entities:
+            tmp += ":"
+        if self._links:
+            tmp += "\n{}".format(
+                "\n".join([str(e) for e in self._links.values()]),
+            )
         if self._entities:
-            tmp += ":\n{}".format(
+            tmp += "\n{}".format(
                 "\n".join([str(e) for e in self._entities.values()]),
             )
         return tmp

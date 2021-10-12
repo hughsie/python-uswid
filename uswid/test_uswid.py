@@ -15,7 +15,14 @@ from lxml import etree as ET
 # allows us to run this from the project root
 sys.path.append(os.path.realpath("."))
 
-from uswid import uSwidEntity, uSwidIdentity, uSwidRole, NotSupportedError
+from uswid import (
+    uSwidEntity,
+    uSwidIdentity,
+    uSwidRole,
+    NotSupportedError,
+)
+
+from .link import uSwidLink, uSwidRel
 
 
 class TestSwidEntity(unittest.TestCase):
@@ -57,6 +64,33 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(str(entity), "uSwidEntity(foo,bar->TAG_CREATOR,MAINTAINER)")
         with self.assertRaises(NotSupportedError):
             entity._import_ini({"name": "foo", "regid": "bar", "extra-roles": "baz"})
+
+    def test_link(self):
+
+        link = uSwidLink(href="http://test.com/", rel=uSwidRel.SEE_ALSO)
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
+        self.assertEqual(
+            str(link._export_bytes()),
+            "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
+            + "<uSwidGlobalMap.REL: 40>: <uSwidRel.SEE_ALSO: 9>}",
+        )
+
+        # XML import
+        link = uSwidLink()
+        link._import_xml(
+            ET.Element(
+                "Url",
+                attrib={"href": "http://test.com/", "rel": "seeAlso"},
+            )
+        )
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
+
+        # INI import
+        link = uSwidLink()
+        link._import_ini(
+            {"href": "http://test.com/", "rel": "see-also"},
+        )
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
 
     def test_identity(self):
 
@@ -118,12 +152,18 @@ regid = hughsie.com
 [uSWID-Entity:ANYTHING_CAN_GO_HERE]
 name = Hughski Limited
 regid = hughski.com
-extra-roles = Aggregator"""
+extra-roles = Aggregator
+
+[uSWID-Link:ANYTHING]
+href = https://hughski.com/
+rel = see-also
+"""
         identity = uSwidIdentity()
         identity.import_ini(ini)
         self.assertEqual(
             str(identity),
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,HughskiColorHug.efi,1.0.0):\n"
+            "uSwidLink(https://hughski.com/,uSwidRel.SEE_ALSO)\n"
             "uSwidEntity(Richard Hughes,hughsie.com->TAG_CREATOR)\n"
             "uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
         )
