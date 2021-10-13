@@ -18,7 +18,7 @@ from .errors import NotSupportedError
 from .enums import uSwidGlobalMap
 
 
-class uSwidRel(IntEnum):
+class uSwidLinkRel(IntEnum):
     ANCESTOR = 1
     COMPONENT = 2
     FEATURE = 3
@@ -60,23 +60,23 @@ class uSwidLink:
         # always a string
         self.href = data.get(uSwidGlobalMap.HREF)
 
-        # rel can either be a uSwidRel or a string
+        # rel can either be a uSwidLinkRel or a string
         rel_data = data.get(uSwidGlobalMap.REL)
         if isinstance(rel_data, str):
             self.rel = rel_data
-        if isinstance(rel_data, uSwidRel):
-            LINK_MAP: Dict[uSwidRel, str] = {
-                uSwidRel.ANCESTOR: "ancestor",
-                uSwidRel.COMPONENT: "component",
-                uSwidRel.FEATURE: "feature",
-                uSwidRel.INSTALLATIONMEDIA: "installation-media",
-                uSwidRel.PACKAGEINSTALLER: "package-installer",
-                uSwidRel.PARENT: "parent",
-                uSwidRel.PATCHES: "patches",
-                uSwidRel.REQUIRES: "requires",
-                uSwidRel.SEE_ALSO: "see-also",
-                uSwidRel.SUPERSEDES: "supersedes",
-                uSwidRel.SUPPLEMENTAL: "supplemental",
+        if isinstance(rel_data, uSwidLinkRel):
+            LINK_MAP: Dict[uSwidLinkRel, str] = {
+                uSwidLinkRel.ANCESTOR: "ancestor",
+                uSwidLinkRel.COMPONENT: "component",
+                uSwidLinkRel.FEATURE: "feature",
+                uSwidLinkRel.INSTALLATIONMEDIA: "installation-media",
+                uSwidLinkRel.PACKAGEINSTALLER: "package-installer",
+                uSwidLinkRel.PARENT: "parent",
+                uSwidLinkRel.PATCHES: "patches",
+                uSwidLinkRel.REQUIRES: "requires",
+                uSwidLinkRel.SEE_ALSO: "see-also",
+                uSwidLinkRel.SUPERSEDES: "supersedes",
+                uSwidLinkRel.SUPPLEMENTAL: "supplemental",
             }
             try:
                 self.rel = LINK_MAP[rel_data]
@@ -106,20 +106,20 @@ class uSwidLink:
         data: Dict[uSwidGlobalMap, Any] = {}
         data[uSwidGlobalMap.HREF] = self.href
 
-        # map back into a uSwidRel if possible
+        # map back into a uSwidLinkRel if possible
         if self.rel:
-            LINK_MAP: Dict[str, uSwidRel] = {
-                "ancestor": uSwidRel.ANCESTOR,
-                "component": uSwidRel.COMPONENT,
-                "feature": uSwidRel.FEATURE,
-                "installation-media": uSwidRel.INSTALLATIONMEDIA,
-                "package-installer": uSwidRel.PACKAGEINSTALLER,
-                "parent": uSwidRel.PARENT,
-                "patches": uSwidRel.PATCHES,
-                "requires": uSwidRel.REQUIRES,
-                "see-also": uSwidRel.SEE_ALSO,
-                "supersedes": uSwidRel.SUPERSEDES,
-                "supplemental": uSwidRel.SUPPLEMENTAL,
+            LINK_MAP: Dict[str, uSwidLinkRel] = {
+                "ancestor": uSwidLinkRel.ANCESTOR,
+                "component": uSwidLinkRel.COMPONENT,
+                "feature": uSwidLinkRel.FEATURE,
+                "installation-media": uSwidLinkRel.INSTALLATIONMEDIA,
+                "package-installer": uSwidLinkRel.PACKAGEINSTALLER,
+                "parent": uSwidLinkRel.PARENT,
+                "patches": uSwidLinkRel.PATCHES,
+                "requires": uSwidLinkRel.REQUIRES,
+                "see-also": uSwidLinkRel.SEE_ALSO,
+                "supersedes": uSwidLinkRel.SUPERSEDES,
+                "supplemental": uSwidLinkRel.SUPPLEMENTAL,
             }
             data[uSwidGlobalMap.REL] = LINK_MAP.get(self.rel, self.rel)
         return data

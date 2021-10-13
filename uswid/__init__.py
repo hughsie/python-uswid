@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 
-from uswid.link import uSwidLink, uSwidRel
+from uswid.link import uSwidLink, uSwidLinkRel
 from uswid.identity import uSwidIdentity
-from uswid.entity import uSwidEntity, uSwidRole
+from uswid.entity import uSwidEntity, uSwidEntityRole
 from uswid.enums import uSwidGlobalMap
 from uswid.errors import NotSupportedError

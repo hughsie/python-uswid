@@ -15,28 +15,24 @@ from lxml import etree as ET
 # allows us to run this from the project root
 sys.path.append(os.path.realpath("."))
 
-from uswid import (
-    uSwidEntity,
-    uSwidIdentity,
-    uSwidRole,
-    NotSupportedError,
-)
-
+from .errors import NotSupportedError
 from .link import uSwidLink
+from .entity import uSwidEntity, uSwidEntityRole
+from .identity import uSwidIdentity
 
 
 class TestSwidEntity(unittest.TestCase):
     def test_entity(self):
 
         entity = uSwidEntity(
-            name="test", regid="example.com", roles=[uSwidRole.MAINTAINER]
+            name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
         self.assertEqual(str(entity), "uSwidEntity(test,example.com->MAINTAINER)")
         self.assertEqual(
             str(entity._export_bytes()),
             "{<uSwidGlobalMap.SOFTWARE_NAME: 1>: 'test', "
             + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
-            + "<uSwidGlobalMap.ROLE: 33>: [<uSwidRole.MAINTAINER: 6>]}",
+            + "<uSwidGlobalMap.ROLE: 33>: [<uSwidEntityRole.MAINTAINER: 6>]}",
         )
 
         # XML import
@@ -73,7 +69,7 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(
             str(link._export_bytes()),
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
-            + "<uSwidGlobalMap.REL: 40>: <uSwidRel.SEE_ALSO: 9>}",
+            + "<uSwidGlobalMap.REL: 40>: <uSwidLinkRel.SEE_ALSO: 9>}",
         )
 
         # rel from IANA "Software Tag Link Relationship Values" registry
@@ -112,7 +108,7 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertEqual(str(identity), "uSwidIdentity(foobarbaz,5,foo,1.2.3)")
         entity = uSwidEntity(
-            name="test", regid="example.com", roles=[uSwidRole.MAINTAINER]
+            name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
         identity.add_entity(entity)
         self.assertEqual(
