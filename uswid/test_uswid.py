@@ -22,7 +22,7 @@ from uswid import (
     NotSupportedError,
 )
 
-from .link import uSwidLink, uSwidRel
+from .link import uSwidLink
 
 
 class TestSwidEntity(unittest.TestCase):
@@ -67,12 +67,22 @@ class TestSwidEntity(unittest.TestCase):
 
     def test_link(self):
 
-        link = uSwidLink(href="http://test.com/", rel=uSwidRel.SEE_ALSO)
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
+        # enumerated type
+        link = uSwidLink(href="http://test.com/", rel="see-also")
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
         self.assertEqual(
             str(link._export_bytes()),
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
             + "<uSwidGlobalMap.REL: 40>: <uSwidRel.SEE_ALSO: 9>}",
+        )
+
+        # rel from IANA "Software Tag Link Relationship Values" registry
+        link = uSwidLink(href="http://test.com/", rel="license")
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,license)")
+        self.assertEqual(
+            str(link._export_bytes()),
+            "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
+            + "<uSwidGlobalMap.REL: 40>: 'license'}",
         )
 
         # XML import
@@ -83,14 +93,14 @@ class TestSwidEntity(unittest.TestCase):
                 attrib={"href": "http://test.com/", "rel": "seeAlso"},
             )
         )
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
 
         # INI import
         link = uSwidLink()
         link._import_ini(
             {"href": "http://test.com/", "rel": "see-also"},
         )
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,uSwidRel.SEE_ALSO)")
+        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
 
     def test_identity(self):
 
@@ -120,6 +130,7 @@ xmlns:SHA256="http://www.w3.org/2001/04/xmlenc#sha256"
 xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512"
 xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
 <Entity name="Dell Technologies" regid="dell.com" role="softwareCreator tagCreator" />
+<Link rel="seeAlso" href="http://hughsie.com"/>
 <Link rel="license" href="www.gnu.org/licenses/gpl.txt"/>
 <Meta product="Fedora" colloquialVersion="29"
   summary="Linux distribution developed by the community-supported Fedora Project" />
@@ -129,6 +140,8 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
         self.assertEqual(
             str(identity),
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,DellBiosConnectNetwork,1.5.2):\n"
+            "uSwidLink(http://hughsie.com,see-also)\n"
+            "uSwidLink(www.gnu.org/licenses/gpl.txt,license)\n"
             "uSwidEntity(Dell Technologies,dell.com->SOFTWARE_CREATOR,TAG_CREATOR)",
         )
         self.assertEqual(
@@ -163,7 +176,7 @@ rel = see-also
         self.assertEqual(
             str(identity),
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,HughskiColorHug.efi,1.0.0):\n"
-            "uSwidLink(https://hughski.com/,uSwidRel.SEE_ALSO)\n"
+            "uSwidLink(https://hughski.com/,see-also)\n"
             "uSwidEntity(Richard Hughes,hughsie.com->TAG_CREATOR)\n"
             "uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
         )
