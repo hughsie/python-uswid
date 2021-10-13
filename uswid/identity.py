@@ -17,7 +17,7 @@ from lxml import etree as ET
 
 from .errors import NotSupportedError
 from .enums import uSwidGlobalMap
-from .entity import uSwidEntity, uSwidRole
+from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
 
 
@@ -214,7 +214,7 @@ class uSwidIdentity:
                 )
             if not entity.name:
                 raise NotSupportedError("all entities MUST have a name")
-            if uSwidRole.TAG_CREATOR in entity.roles:
+            if uSwidEntityRole.TAG_CREATOR in entity.roles:
                 has_tag_creator = True
         if not has_tag_creator:
             raise NotSupportedError("all entries MUST have a tag-creator")

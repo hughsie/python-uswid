@@ -17,7 +17,7 @@ from .errors import NotSupportedError
 from .enums import uSwidGlobalMap
 
 
-class uSwidRole(IntEnum):
+class uSwidEntityRole(IntEnum):
     TAG_CREATOR = 1
     SOFTWARE_CREATOR = 2
     AGGREGATOR = 3
@@ -33,12 +33,12 @@ class uSwidEntity:
         self,
         name: Optional[str] = None,
         regid: Optional[str] = None,
-        roles: Optional[List[uSwidRole]] = None,
+        roles: Optional[List[uSwidEntityRole]] = None,
     ):
 
         self.name: Optional[str] = name
         self.regid: Optional[str] = regid
-        self.roles: List[uSwidRole] = []
+        self.roles: List[uSwidEntityRole] = []
         if roles:
             self.roles.extend(roles)
 
@@ -46,12 +46,12 @@ class uSwidEntity:
         """imports a uSwidEntity XML blob"""
 
         ENTITY_MAP = {
-            "tagCreator": uSwidRole.TAG_CREATOR,
-            "softwareCreator": uSwidRole.SOFTWARE_CREATOR,
-            "aggregator": uSwidRole.AGGREGATOR,
-            "distributor": uSwidRole.DISTRIBUTOR,
-            "licensor": uSwidRole.LICENSOR,
-            "maintainer": uSwidRole.MAINTAINER,
+            "tagCreator": uSwidEntityRole.TAG_CREATOR,
+            "softwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
+            "aggregator": uSwidEntityRole.AGGREGATOR,
+            "distributor": uSwidEntityRole.DISTRIBUTOR,
+            "licensor": uSwidEntityRole.LICENSOR,
+            "maintainer": uSwidEntityRole.MAINTAINER,
         }
         self.name = node.get("name")
         self.regid = node.get("regid", None)
@@ -70,7 +70,7 @@ class uSwidEntity:
         self.regid = data.get(uSwidGlobalMap.REG_ID, None)
         for role in data.get(uSwidGlobalMap.ROLE, []):
             try:
-                self.roles.append(uSwidRole(int(role)))
+                self.roles.append(uSwidEntityRole(int(role)))
             except KeyError:
                 print("ignoring invalid role of {}".format(role))
                 continue
@@ -81,12 +81,12 @@ class uSwidEntity:
         """imports a uSwidEntity INI section"""
 
         ENTITY_MAP = {
-            "TagCreator": uSwidRole.TAG_CREATOR,
-            "SoftwareCreator": uSwidRole.SOFTWARE_CREATOR,
-            "Aggregator": uSwidRole.AGGREGATOR,
-            "Distributor": uSwidRole.DISTRIBUTOR,
-            "Licensor": uSwidRole.LICENSOR,
-            "Maintainer": uSwidRole.MAINTAINER,
+            "TagCreator": uSwidEntityRole.TAG_CREATOR,
+            "SoftwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
+            "Aggregator": uSwidEntityRole.AGGREGATOR,
+            "Distributor": uSwidEntityRole.DISTRIBUTOR,
+            "Licensor": uSwidEntityRole.LICENSOR,
+            "Maintainer": uSwidEntityRole.MAINTAINER,
         }
         if role_hint:
             try:
