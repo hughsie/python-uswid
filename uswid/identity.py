@@ -33,18 +33,18 @@ class uSwidIdentity:
     ):
 
         self._auto_increment_tag_version = False
-        self.tag_id: str = tag_id
+        self.tag_id: Optional[str] = tag_id
         self.tag_version: int = tag_version
-        self.software_name: str = software_name
-        self.software_version: str = software_version
-        self.summary: str = None
-        self.product: str = None
-        self.colloquial_version: str = None
-        self.revision: str = None
-        self.edition: str = None
+        self.software_name: Optional[str] = software_name
+        self.software_version: Optional[str] = software_version
+        self.summary: Optional[str] = None
+        self.product: Optional[str] = None
+        self.colloquial_version: Optional[str] = None
+        self.revision: Optional[str] = None
+        self.edition: Optional[str] = None
         self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
-        self._links: Dict[str, uSwidEntity] = {}
+        self._links: Dict[str, uSwidLink] = {}
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """only adds the latest entity"""
