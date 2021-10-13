@@ -38,70 +38,63 @@ class uSwidLink:
     def __init__(
         self,
         href: Optional[str] = None,
-        rel: Optional[uSwidRel] = None,
+        rel: Optional[str] = None,
     ):
 
         self.href: Optional[str] = href
-        self.rel: Optional[uSwidRel] = rel
+        self.rel: Optional[str] = rel
 
     def _import_xml(self, node: ET.SubElement) -> None:
         """imports a uSwidLink XML blob"""
 
-        LINK_MAP = {
-            "ancestor": uSwidRel.ANCESTOR,
-            "component": uSwidRel.COMPONENT,
-            "feature": uSwidRel.FEATURE,
-            "installationmedia": uSwidRel.INSTALLATIONMEDIA,
-            "packageinstaller": uSwidRel.PACKAGEINSTALLER,
-            "parent": uSwidRel.PARENT,
-            "patches": uSwidRel.PATCHES,
-            "requires": uSwidRel.REQUIRES,
-            "seeAlso": uSwidRel.SEE_ALSO,
-            "supersedes": uSwidRel.SUPERSEDES,
-            "supplemental": uSwidRel.SUPPLEMENTAL,
+        LINK_MAP: Dict[str, str] = {
+            "seeAlso": "see-also",
         }
         self.href = node.get("href")
-        rel_data = node.get("rel", None)
-        if rel_data:
-            try:
-                self.rel = LINK_MAP[rel_data]
-            except KeyError as e:
-                raise NotSupportedError(
-                    "{} not supported from {}".format(rel_data, ",".join(LINK_MAP))
-                ) from e
+        rel_data = node.get("rel")
+        self.rel = LINK_MAP.get(rel_data, rel_data)
 
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidLink data section"""
 
+        # always a string
         self.href = data.get(uSwidGlobalMap.HREF)
-        self.rel = data.get(uSwidGlobalMap.REL)
+
+        # rel can either be a uSwidRel or a string
+        rel_data = data.get(uSwidGlobalMap.REL)
+        if isinstance(rel_data, str):
+            self.rel = rel_data
+        if isinstance(rel_data, uSwidRel):
+            LINK_MAP: Dict[uSwidRel, str] = {
+                uSwidRel.ANCESTOR: "ancestor",
+                uSwidRel.COMPONENT: "component",
+                uSwidRel.FEATURE: "feature",
+                uSwidRel.INSTALLATIONMEDIA: "installation-media",
+                uSwidRel.PACKAGEINSTALLER: "package-installer",
+                uSwidRel.PARENT: "parent",
+                uSwidRel.PATCHES: "patches",
+                uSwidRel.REQUIRES: "requires",
+                uSwidRel.SEE_ALSO: "see-also",
+                uSwidRel.SUPERSEDES: "supersedes",
+                uSwidRel.SUPPLEMENTAL: "supplemental",
+            }
+            try:
+                self.rel = LINK_MAP[rel_data]
+            except KeyError as e:
+                raise NotSupportedError(
+                    "{} not supported from {}".format(
+                        rel_data, ",".join(LINK_MAP.values())
+                    )
+                ) from e
 
     def _import_ini(self, data: configparser.SectionProxy) -> None:
         """imports a uSwidLink INI section"""
 
-        LINK_MAP = {
-            "ancestor": uSwidRel.ANCESTOR,
-            "component": uSwidRel.COMPONENT,
-            "feature": uSwidRel.FEATURE,
-            "installation-media": uSwidRel.INSTALLATIONMEDIA,
-            "package-installer": uSwidRel.PACKAGEINSTALLER,
-            "parent": uSwidRel.PARENT,
-            "patches": uSwidRel.PATCHES,
-            "requires": uSwidRel.REQUIRES,
-            "see-also": uSwidRel.SEE_ALSO,
-            "supersedes": uSwidRel.SUPERSEDES,
-            "supplemental": uSwidRel.SUPPLEMENTAL,
-        }
         for key, value in data.items():
             if key == "href":
                 self.href = value
             elif key == "rel":
-                try:
-                    self.rel = LINK_MAP[value]
-                except KeyError as e:
-                    raise NotSupportedError(
-                        "{} not supported from {}".format(value, ",".join(LINK_MAP))
-                    ) from e
+                self.rel = value
             else:
                 print("unknown key {} found in ini file!".format(key))
         if not self.href:
@@ -112,8 +105,23 @@ class uSwidLink:
 
         data: Dict[uSwidGlobalMap, Any] = {}
         data[uSwidGlobalMap.HREF] = self.href
+
+        # map back into a uSwidRel if possible
         if self.rel:
-            data[uSwidGlobalMap.REL] = self.rel
+            LINK_MAP: Dict[str, uSwidRel] = {
+                "ancestor": uSwidRel.ANCESTOR,
+                "component": uSwidRel.COMPONENT,
+                "feature": uSwidRel.FEATURE,
+                "installation-media": uSwidRel.INSTALLATIONMEDIA,
+                "package-installer": uSwidRel.PACKAGEINSTALLER,
+                "parent": uSwidRel.PARENT,
+                "patches": uSwidRel.PATCHES,
+                "requires": uSwidRel.REQUIRES,
+                "see-also": uSwidRel.SEE_ALSO,
+                "supersedes": uSwidRel.SUPERSEDES,
+                "supplemental": uSwidRel.SUPPLEMENTAL,
+            }
+            data[uSwidGlobalMap.REL] = LINK_MAP.get(self.rel, self.rel)
         return data
 
     def __repr__(self) -> str:

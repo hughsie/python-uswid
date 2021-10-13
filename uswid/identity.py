@@ -127,6 +127,12 @@ class uSwidIdentity:
             entity._import_xml(node)
             self.add_entity(entity)
 
+        # links
+        for node in identity.xpath("ns:Link", namespaces=namespaces):
+            link = uSwidLink()
+            link._import_xml(node)
+            self.add_link(link)
+
     def import_ini(self, ini: str) -> None:
         """imports a ini file as overrides to the uSwidIdentity data"""
         config = configparser.ConfigParser()
@@ -159,7 +165,7 @@ class uSwidIdentity:
                 entity = uSwidEntity()
                 entity._import_ini(config[group], role_hint=group)
                 self.add_entity(entity)
-            if group.startswith("uSWID-Link:"):
+            if group.startswith("uSWID-Link"):
                 link = uSwidLink()
                 link._import_ini(config[group])
                 self.add_link(link)

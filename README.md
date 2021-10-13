@@ -107,6 +107,24 @@ Usefully, if you load a uswid blob from an existing binary, the tag version is
 incremented when you save it again. If you don't want that, set an explicit
 `tag-version` in the `[uSWID]` section.
 
+License Information
+-------------------
+
+If the binary content is licensed in a permissive or open-source way it
+should be identified as such.
+To do this, you can either use the SWID XML format:
+
+    <SoftwareIdentity …>
+    <Entity … />
+    <Link rel="license" href="https://spdx.org/licenses/LGPL-2.1-or-later.html"/>
+    </SoftwareIdentity>
+
+Or the `ini` override format:
+
+    [uSWID-Link]
+    rel = license
+    href = https://spdx.org/licenses/LGPL-2.1-or-later.html
+
 Contributing
 ------------
 
