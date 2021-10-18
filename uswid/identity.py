@@ -111,15 +111,16 @@ class uSwidIdentity:
         self.software_version = identity.get("version")
 
         # optional metadata
-        try:
-            meta = identity.xpath("ns:Meta", namespaces=namespaces)[0]
-            self.summary = meta.get("summary")
-            self.revision = meta.get("revision")
-            self.product = meta.get("product")
-            self.edition = meta.get("edition")
-            self.colloquial_version = meta.get("colloquialVersion")
-        except IndexError:
-            pass
+        for meta in identity.xpath("ns:Meta", namespaces=namespaces):
+            for attr_name, attrib_name in [
+                ("summary", "summary"),
+                ("revision", "revision"),
+                ("product", "product"),
+                ("edition", "edition"),
+                ("colloquialVersion", "colloquial_version"),
+            ]:
+                if attr_name in meta.attrib:
+                    setattr(self, attrib_name, meta.attrib[attr_name])
 
         # entities
         for node in identity.xpath("ns:Entity", namespaces=namespaces):
