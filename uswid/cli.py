@@ -102,7 +102,7 @@ def main():
         sys.exit(1)
     if args.binfile:
         with tempfile.NamedTemporaryFile(
-            mode="wb", prefix="objcopy_", suffix=".bin", delete=False
+            mode="wb", prefix="objcopy_", suffix=".bin", delete=True
         ) as src:
             src.write(blob)
             src.flush()
