@@ -26,6 +26,9 @@ def main():
     parser.add_argument("--inifile", default=None, help="INI data source")
     parser.add_argument("--xmlfile", default=None, help="SWID XML data source")
     parser.add_argument(
+        "--objcopy", default="/usr/bin/objcopy", help="Binary file to use for objcopy"
+    )
+    parser.add_argument(
         "--verbose",
         dest="verbose",
         default=False,
@@ -49,7 +52,7 @@ def main():
                 # pylint: disable=unexpected-keyword-arg
                 subprocess.check_output(
                     [
-                        "/usr/bin/objcopy",
+                        args.objcopy,
                         "-O",
                         "binary",
                         "--only-section=.sbom",
@@ -107,7 +110,7 @@ def main():
                 # pylint: disable=unexpected-keyword-arg
                 subprocess.check_output(
                     [
-                        "/usr/bin/objcopy",
+                        args.objcopy,
                         "--remove-section=.sbom",
                         "--add-section",
                         ".sbom={}".format(src.name),
