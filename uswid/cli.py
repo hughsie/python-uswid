@@ -21,6 +21,7 @@ from uswid import uSwidIdentity, NotSupportedError
 
 def main():
     parser = argparse.ArgumentParser(description="Generate CoSWID metadata")
+    parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
     parser.add_argument("--binfile", default=None, help="PE binary to modify")
     parser.add_argument("--inifile", default=None, help="INI data source")
     parser.add_argument("--xmlfile", default=None, help="SWID XML data source")
@@ -40,10 +41,7 @@ def main():
     identity = uSwidIdentity()
 
     # load in existing uSwidIdentity object
-    if args.binfile:
-        if not os.path.exists(args.binfile):
-            print("{} does not exist".format(args.binfile))
-            sys.exit(1)
+    if args.binfile and os.path.exists(args.binfile):
         with tempfile.NamedTemporaryFile(
             mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
         ) as dst:
@@ -84,6 +82,12 @@ def main():
         except FileNotFoundError:
             print("{} does not exist".format(args.inifile))
             sys.exit(1)
+
+    # create empty EFI binary?
+    if args.binfile and not os.path.exists(args.binfile):
+        subprocess.run(
+            [args.cc, "-x", "c", "-c", "-o", args.binfile, "/dev/null"], check=True
+        )
 
     # save to file?
     if args.verbose:
