@@ -125,6 +125,12 @@ Or the `ini` override format:
     rel = license
     href = https://spdx.org/licenses/LGPL-2.1-or-later.html
 
+Testing
+-------
+
+You can use `objdump -s -j .sbom` to verify that the tag has been written
+correctly to the EFI binary.
+
 Contributing
 ------------
 
