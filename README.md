@@ -21,7 +21,7 @@ into the tianocore build process, but they all are not exactly awesome:
    with any versions than Java 9 and that's been end-of-support since 2018.
 
  * A [go implementation](https://github.com/veraison/swid) exists, but it
-   doesn't currently build and requires the BIOS engineer to write actual code.
+   requires the BIOS engineer to write actual code.
 
 Installing
 ----------
