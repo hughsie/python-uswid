@@ -20,6 +20,7 @@ setup(
         "uswid",
     ],
     include_package_data=True,
+    install_requires=["cbor", "lxml"],
     entry_points={
         "console_scripts": [
             "uswid = uswid.cli:main",
