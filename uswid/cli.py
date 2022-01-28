@@ -23,8 +23,12 @@ def main():
     parser = argparse.ArgumentParser(description="Generate CoSWID metadata")
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
     parser.add_argument("--binfile", default=None, help="PE binary to modify")
-    parser.add_argument("--inifile", default=None, help="INI data source")
-    parser.add_argument("--xmlfile", default=None, help="SWID XML data source")
+    parser.add_argument(
+        "--inifile", action="append", default=None, help="INI data source"
+    )
+    parser.add_argument(
+        "--xmlfile", action="append", default=None, help="SWID XML data source"
+    )
     parser.add_argument(
         "--objcopy", default="/usr/bin/objcopy", help="Binary file to use for objcopy"
     )
@@ -72,19 +76,21 @@ def main():
 
     # merge data
     if args.xmlfile:
-        try:
-            with open(args.xmlfile, "rb") as f:
-                identity.import_xml(f.read())
-        except FileNotFoundError:
-            print("{} does not exist".format(args.xmlfile))
-            sys.exit(1)
+        for xmlfile in args.xmlfile:
+            try:
+                with open(xmlfile, "rb") as f:
+                    identity.import_xml(f.read())
+            except FileNotFoundError:
+                print("{} does not exist".format(xmlfile))
+                sys.exit(1)
     if args.inifile:
-        try:
-            with open(args.inifile, "rb") as f:
-                identity.import_ini(f.read().decode())
-        except FileNotFoundError:
-            print("{} does not exist".format(args.inifile))
-            sys.exit(1)
+        for inifile in args.inifile:
+            try:
+                with open(inifile, "rb") as f:
+                    identity.import_ini(f.read().decode())
+            except FileNotFoundError:
+                print("{} does not exist".format(inifile))
+                sys.exit(1)
 
     # create empty EFI binary?
     if args.binfile and not os.path.exists(args.binfile):
