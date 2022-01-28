@@ -72,7 +72,7 @@ class uSwidIdentity:
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
 
         # optional metadata
-        for key, value in data.get(uSwidGlobalMap.SOFTWARE_META, []).items():
+        for key, value in data.get(uSwidGlobalMap.SOFTWARE_META, {}).items():
             if key == uSwidGlobalMap.GENERATOR:
                 self.generator = value
             elif key == uSwidGlobalMap.SUMMARY:
