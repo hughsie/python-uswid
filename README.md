@@ -140,5 +140,6 @@ make the code more robust.
 
 # Release Process
 
+    update setup.py
     make pkg
     ./env/bin/twine upload dist/*
