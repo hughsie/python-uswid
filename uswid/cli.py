@@ -23,6 +23,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate CoSWID metadata")
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
     parser.add_argument("--binfile", default=None, help="PE binary to modify")
+    parser.add_argument("--rawfile", default=None, help="RAW binary to modify")
     parser.add_argument(
         "--inifile", action="append", default=None, help="INI data source"
     )
@@ -40,7 +41,7 @@ def main():
         help="Show verbose operation",
     )
     args = parser.parse_args()
-    if not args.binfile and not args.inifile and not args.xmlfile:
+    if not args.binfile and not args.inifile and not args.xmlfile and not args.rawfile:
         print("Use uswid --help for command line arguments")
         sys.exit(1)
 
@@ -74,6 +75,20 @@ def main():
             if args.verbose:
                 print("Loaded:\n{}".format(identity))
 
+    # raw file
+    use_header = args.rawfile is not None
+    if args.rawfile and os.path.exists(args.rawfile):
+        with open(args.rawfile, "rb") as f:
+            try:
+                identity.import_bytes(f.read(), use_header=use_header)
+            except NotSupportedError as e:
+                print(e)
+                sys.exit(1)
+
+        # debug
+        if args.verbose:
+            print("Loaded:\n{}".format(identity))
+
     # merge data
     if args.xmlfile:
         for xmlfile in args.xmlfile:
@@ -102,7 +117,7 @@ def main():
     if args.verbose:
         print("Saving:\n{}".format(identity))
     try:
-        blob = identity.export_bytes()
+        blob = identity.export_bytes(use_header=use_header)
     except NotSupportedError as e:
         print(e)
         sys.exit(1)
@@ -128,6 +143,9 @@ def main():
             except subprocess.CalledProcessError as e:
                 print(e)
                 sys.exit(1)
+    elif args.rawfile:
+        with open(args.rawfile, "wb") as f:
+            f.write(blob)
     else:
         print(blob)
 

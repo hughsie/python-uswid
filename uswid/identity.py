@@ -9,6 +9,7 @@
 
 import configparser
 import io
+import struct
 
 from typing import Dict, Any, Optional
 
@@ -16,7 +17,12 @@ import cbor
 from lxml import etree as ET
 
 from .errors import NotSupportedError
-from .enums import uSwidGlobalMap
+from .enums import (
+    uSwidGlobalMap,
+    USWID_HEADER_MAGIC,
+    USWID_HEADER_VERSION,
+    USWID_HEADER_SIZE,
+)
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
 
@@ -58,12 +64,23 @@ class uSwidIdentity:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
 
-    def import_bytes(self, blob: bytes) -> None:
+    def import_bytes(self, blob: bytes, use_header: bool = False) -> None:
         """imports a uSwidIdentity CBOR blob"""
 
         if not blob:
             return
-        data = cbor.load(io.BytesIO(blob))
+
+        # discard magic GUID
+        if use_header:
+            (guid, _, hdrsz, payloadsz) = struct.unpack("<16sBHI", blob[:23])
+            if guid != USWID_HEADER_MAGIC:
+                raise NotSupportedError("header does not have expected magic GUID")
+            try:
+                data = cbor.load(io.BytesIO(blob[hdrsz : hdrsz + payloadsz]))
+            except EOFError as e:
+                raise NotSupportedError("invalid header") from e
+        else:
+            data = cbor.load(io.BytesIO(blob))
 
         # identity
         self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
@@ -171,7 +188,7 @@ class uSwidIdentity:
                 link._import_ini(config[group])
                 self.add_link(link)
 
-    def export_bytes(self) -> bytes:
+    def export_bytes(self, use_header: bool = False) -> bytes:
         """exports a uSwidIdentity CBOR blob"""
 
         # general identity section
@@ -226,6 +243,18 @@ class uSwidIdentity:
             link._export_bytes() for link in self._links.values()
         ]
 
+        if use_header:
+            payload = cbor.dumps(data)
+            return (
+                struct.pack(
+                    "<16sBHI",
+                    USWID_HEADER_MAGIC,
+                    USWID_HEADER_VERSION,
+                    USWID_HEADER_SIZE,
+                    len(payload),
+                )
+                + payload
+            )
         return cbor.dumps(data)
 
     def __repr__(self) -> str:
