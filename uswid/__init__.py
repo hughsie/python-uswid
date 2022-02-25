@@ -8,5 +8,5 @@
 from uswid.link import uSwidLink, uSwidLinkRel
 from uswid.identity import uSwidIdentity
 from uswid.entity import uSwidEntity, uSwidEntityRole
-from uswid.enums import uSwidGlobalMap
+from uswid.enums import uSwidGlobalMap, USWID_HEADER_MAGIC
 from uswid.errors import NotSupportedError

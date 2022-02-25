@@ -107,6 +107,19 @@ Usefully, if you load a uswid blob from an existing binary, the tag version is
 incremented when you save it again. If you don't want that, set an explicit
 `tag-version` in the `[uSWID]` section.
 
+RAW Blobs
+---------
+
+uSWID can also export a raw blob that can be embedded in a unspecified data
+section. This allows coSWID metadata to be easily embedded in non-free tools.
+
+    uswid --inifile oem.ini --rawfile ./raw.bin
+
+The `raw.bin` file also includes a 16 byte *random* GUID prefixing a simple
+header.
+This allows a program to aggregate multiple coSWID sources from a composite
+image into a single SBOM.
+
 License Information
 -------------------
 
