@@ -29,6 +29,31 @@ class uSwidEntityRole(IntEnum):
 class uSwidEntity:
     """represents a SWID entity"""
 
+    _ENTITY_MAP_FROM_INI = {
+        "TagCreator": uSwidEntityRole.TAG_CREATOR,
+        "SoftwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
+        "Aggregator": uSwidEntityRole.AGGREGATOR,
+        "Distributor": uSwidEntityRole.DISTRIBUTOR,
+        "Licensor": uSwidEntityRole.LICENSOR,
+        "Maintainer": uSwidEntityRole.MAINTAINER,
+    }
+    _ENTITY_MAP_TO_INI = {
+        uSwidEntityRole.TAG_CREATOR: "TagCreator",
+        uSwidEntityRole.SOFTWARE_CREATOR: "SoftwareCreator",
+        uSwidEntityRole.AGGREGATOR: "Aggregator",
+        uSwidEntityRole.DISTRIBUTOR: "Distributor",
+        uSwidEntityRole.LICENSOR: "Licensor",
+        uSwidEntityRole.MAINTAINER: "Maintainer",
+    }
+    _ENTITY_MAP_FROM_XML = {
+        "tagCreator": uSwidEntityRole.TAG_CREATOR,
+        "softwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
+        "aggregator": uSwidEntityRole.AGGREGATOR,
+        "distributor": uSwidEntityRole.DISTRIBUTOR,
+        "licensor": uSwidEntityRole.LICENSOR,
+        "maintainer": uSwidEntityRole.MAINTAINER,
+    }
+
     def __init__(
         self,
         name: Optional[str] = None,
@@ -45,22 +70,16 @@ class uSwidEntity:
     def _import_xml(self, node: ET.SubElement) -> None:
         """imports a uSwidEntity XML blob"""
 
-        ENTITY_MAP = {
-            "tagCreator": uSwidEntityRole.TAG_CREATOR,
-            "softwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
-            "aggregator": uSwidEntityRole.AGGREGATOR,
-            "distributor": uSwidEntityRole.DISTRIBUTOR,
-            "licensor": uSwidEntityRole.LICENSOR,
-            "maintainer": uSwidEntityRole.MAINTAINER,
-        }
         self.name = node.get("name")
         self.regid = node.get("regid", None)
         for role_str in node.get("role", "").split(" "):
             try:
-                self.roles.append(ENTITY_MAP[role_str])
+                self.roles.append(self._ENTITY_MAP_FROM_XML[role_str])
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(role_str, ",".join(ENTITY_MAP))
+                    "{} not supported from {}".format(
+                        role_str, ",".join(self._ENTITY_MAP_FROM_XML)
+                    )
                 ) from e
 
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
@@ -80,17 +99,9 @@ class uSwidEntity:
     ) -> None:
         """imports a uSwidEntity INI section"""
 
-        ENTITY_MAP = {
-            "TagCreator": uSwidEntityRole.TAG_CREATOR,
-            "SoftwareCreator": uSwidEntityRole.SOFTWARE_CREATOR,
-            "Aggregator": uSwidEntityRole.AGGREGATOR,
-            "Distributor": uSwidEntityRole.DISTRIBUTOR,
-            "Licensor": uSwidEntityRole.LICENSOR,
-            "Maintainer": uSwidEntityRole.MAINTAINER,
-        }
         if role_hint:
             try:
-                self.roles.append(ENTITY_MAP[role_hint.split(":")[1]])
+                self.roles.append(self._ENTITY_MAP_FROM_INI[role_hint.split(":")[1]])
             except (KeyError, TypeError, IndexError):
                 pass
         for key, value in data.items():
@@ -101,11 +112,11 @@ class uSwidEntity:
             elif key == "extra-roles":
                 for role_str in value.split(","):
                     try:
-                        self.roles.append(ENTITY_MAP[role_str])
+                        self.roles.append(self._ENTITY_MAP_FROM_INI[role_str])
                     except KeyError as e:
                         raise NotSupportedError(
                             "{} not supported from {}".format(
-                                role_str, ",".join(ENTITY_MAP)
+                                role_str, ",".join(self._ENTITY_MAP_FROM_INI)
                             )
                         ) from e
             else:
@@ -116,6 +127,23 @@ class uSwidEntity:
             raise NotSupportedError(
                 "entity {} MUST have at least one role".format(self.name)
             )
+
+    def _export_ini(self) -> Dict[str, Any]:
+        """exports a uSwidEntity INI section"""
+
+        data: Dict[str, Any] = {}
+        if self.name:
+            data["name"] = self.name
+        if self.regid:
+            data["regid"] = self.regid
+        extra_roles: List[str] = []
+        for role in self.roles:
+            if role == uSwidEntityRole.TAG_CREATOR:
+                continue
+            extra_roles.append(self._ENTITY_MAP_TO_INI[role])
+        if extra_roles:
+            data["extra-roles"] = ",".join(extra_roles)
+        return data
 
     def _export_bytes(self) -> Dict[uSwidGlobalMap, Any]:
         """exports a uSwidEntity CBOR blob"""
