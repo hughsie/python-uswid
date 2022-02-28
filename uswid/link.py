@@ -100,6 +100,16 @@ class uSwidLink:
         if not self.href:
             raise NotSupportedError("all entities MUST have a href")
 
+    def _export_ini(self) -> Dict[str, Any]:
+        """exports a uSwidLink INI section"""
+
+        data: Dict[str, Any] = {}
+        if self.rel:
+            data["rel"] = self.rel
+        if self.href:
+            data["href"] = self.href
+        return data
+
     def _export_bytes(self) -> Dict[uSwidGlobalMap, Any]:
         """exports a uSwidLink CBOR blob"""
 

@@ -188,6 +188,47 @@ class uSwidIdentity:
                 link._import_ini(config[group])
                 self.add_link(link)
 
+    def export_ini(self) -> str:
+        config = configparser.ConfigParser()
+
+        # main section
+        main = {}
+        if self.tag_id:
+            main["tag-id"] = self.tag_id
+        if self.tag_version:
+            main["tag-version"] = self.tag_version
+        if self.software_name:
+            main["software-name"] = self.software_name
+        if self.software_version:
+            main["software-version"] = self.software_version
+        if self.summary:
+            main["summary"] = self.summary
+        if self.revision:
+            main["revision"] = self.revision
+        if self.product:
+            main["product"] = self.product
+        if self.edition:
+            main["edition"] = self.edition
+        if self.colloquial_version:
+            main["colloquial-version"] = self.colloquial_version
+        config["uSWID"] = main
+
+        # entity
+        if self._entities:
+            config["uSWID-Entity:TagCreator"] = list(self._entities.values())[
+                0
+            ]._export_ini()
+
+        # link
+        if self._links:
+            config["uSWID-Link"] = list(self._links.values())[0]._export_ini()
+
+        # as string
+        with io.StringIO() as f:
+            config.write(f)
+            f.seek(0)
+            return f.read()
+
     def export_bytes(self, use_header: bool = False) -> bytes:
         """exports a uSwidIdentity CBOR blob"""
 

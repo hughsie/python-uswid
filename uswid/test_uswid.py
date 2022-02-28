@@ -177,6 +177,12 @@ rel = see-also
             "uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
         )
 
+        # INI export
+        tmp = identity.export_ini()
+        assert "uSWID" in tmp
+        assert "uSWID-Entity" in tmp
+        assert "uSWID-Link" in tmp
+
 
 if __name__ == "__main__":
     unittest.main()
