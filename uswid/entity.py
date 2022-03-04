@@ -53,6 +53,14 @@ class uSwidEntity:
         "licensor": uSwidEntityRole.LICENSOR,
         "maintainer": uSwidEntityRole.MAINTAINER,
     }
+    _ENTITY_MAP_TO_XML = {
+        uSwidEntityRole.TAG_CREATOR: "tagCreator",
+        uSwidEntityRole.SOFTWARE_CREATOR: "softwareCreator",
+        uSwidEntityRole.AGGREGATOR: "aggregator",
+        uSwidEntityRole.DISTRIBUTOR: "distributor",
+        uSwidEntityRole.LICENSOR: "licensor",
+        uSwidEntityRole.MAINTAINER: "maintainer",
+    }
 
     def __init__(
         self,
@@ -81,6 +89,27 @@ class uSwidEntity:
                         role_str, ",".join(self._ENTITY_MAP_FROM_XML)
                     )
                 ) from e
+
+    def _export_xml(self, root: ET.Element) -> None:
+        """exports a uSwidEntity XML blob"""
+
+        node = ET.SubElement(root, "Entity")
+        if self.name:
+            node.set("name", self.name)
+        if self.regid:
+            node.set("regid", self.regid)
+        roles: List[str] = []
+        for role in self.roles:
+            try:
+                roles.append(self._ENTITY_MAP_TO_XML[role])
+            except KeyError as e:
+                raise NotSupportedError(
+                    "{} not supported from {}".format(
+                        role, ",".join(self._ENTITY_MAP_TO_XML)
+                    )
+                ) from e
+        if roles:
+            node.set("role", " ".join(roles))
 
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidEntity data section"""

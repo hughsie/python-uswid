@@ -61,6 +61,16 @@ class TestSwidEntity(unittest.TestCase):
         with self.assertRaises(NotSupportedError):
             entity._import_ini({"name": "foo", "regid": "bar", "extra-roles": "baz"})
 
+        # XML export
+        root = ET.Element("SoftwareIdentity")
+        entity._export_xml(root)
+        self.assertEqual(
+            ET.tostring(root),
+            b"<SoftwareIdentity>"
+            b'<Entity name="foo" regid="bar" role="tagCreator maintainer"/>'
+            b"</SoftwareIdentity>",
+        )
+
     def test_link(self):
 
         # enumerated type
@@ -97,6 +107,16 @@ class TestSwidEntity(unittest.TestCase):
             {"href": "http://test.com/", "rel": "see-also"},
         )
         self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
+
+        # XML export
+        root = ET.Element("SoftwareIdentity")
+        link._export_xml(root)
+        self.assertEqual(
+            ET.tostring(root),
+            b"<SoftwareIdentity>"
+            b'<Link href="http://test.com/" rel="see-also"/>'
+            b"</SoftwareIdentity>",
+        )
 
     def test_identity(self):
 
@@ -182,6 +202,21 @@ rel = see-also
         assert "uSWID" in tmp
         assert "uSWID-Entity" in tmp
         assert "uSWID-Link" in tmp
+
+        # XML export
+        identity.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
+        print(identity.export_xml())
+        self.assertEqual(
+            identity.export_xml(),
+            b"<?xml version='1.0' encoding='utf-8'?>\n"
+            b'<SoftwareIdentity name="HughskiColorHug.efi" tagId="acbd84ff-9898-4922-8ade-dd4bbe2e40ba" '
+            b'tagVersion="1" version="1.0.0">\n'
+            b'  <Entity name="Richard Hughes" regid="hughsie.com" role="tagCreator"/>\n'
+            b'  <Entity name="Hughski Limited" regid="hughski.com" role="aggregator"/>\n'
+            b'  <Link href="https://hughski.com/" rel="see-also"/>\n'
+            b'  <Meta colloquialVersion="22905301d08e69473393d94c3e787e4bf0453268"/>\n'
+            b"</SoftwareIdentity>\n",
+        )
 
 
 if __name__ == "__main__":

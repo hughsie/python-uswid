@@ -110,6 +110,15 @@ class uSwidLink:
             data["href"] = self.href
         return data
 
+    def _export_xml(self, root: ET.Element) -> None:
+        """exports a uSwidLink XML blob"""
+
+        node = ET.SubElement(root, "Link")
+        if self.href:
+            node.set("href", self.href)
+        if self.rel:
+            node.set("rel", self.rel)
+
     def _export_bytes(self) -> Dict[uSwidGlobalMap, Any]:
         """exports a uSwidLink CBOR blob"""
 
