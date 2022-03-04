@@ -188,6 +188,51 @@ class uSwidIdentity:
                 link._import_ini(config[group])
                 self.add_link(link)
 
+    def export_xml(self) -> str:
+
+        # identity
+        root = ET.Element("SoftwareIdentity")
+        # root.set('xml:lang', "en-us")
+        if self.software_name:
+            root.set("name", self.software_name)
+        if self.tag_id:
+            root.set("tagId", self.tag_id)
+        if self.tag_version:
+            root.set("tagVersion", str(self.tag_version))
+        if self.software_version:
+            root.set("version", self.software_version)
+
+        # entities
+        for entity in self._entities.values():
+            entity._export_xml(root)
+        for link in self._links.values():
+            link._export_xml(root)
+
+        # optional metadata
+        if (
+            self.summary
+            or self.revision
+            or self.product
+            or self.edition
+            or self.colloquial_version
+        ):
+            node = ET.SubElement(root, "Meta")
+            if self.summary:
+                node.set("summary", self.summary)
+            if self.revision:
+                node.set("revision", self.revision)
+            if self.product:
+                node.set("product", self.product)
+            if self.edition:
+                node.set("edition", self.edition)
+            if self.colloquial_version:
+                node.set("colloquialVersion", self.colloquial_version)
+
+        # success
+        return ET.tostring(
+            root, encoding="utf-8", xml_declaration=True, pretty_print=True
+        )
+
     def export_ini(self) -> str:
         config = configparser.ConfigParser()
 
