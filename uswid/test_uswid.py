@@ -206,10 +206,17 @@ rel = see-also
         # XML export
         identity.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
         print(identity.export_xml())
+        with open("/home/hughsie/Downloads/swid.xml", "wb") as f:
+            f.write(identity.export_xml())
         self.assertEqual(
             identity.export_xml(),
             b"<?xml version='1.0' encoding='utf-8'?>\n"
-            b'<SoftwareIdentity name="HughskiColorHug.efi" tagId="acbd84ff-9898-4922-8ade-dd4bbe2e40ba" '
+            b"<SoftwareIdentity "
+            b'xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd" '
+            b'xmlns:SHA256="http://www.w3.org/2001/04/xmlenc#sha256" '
+            b'xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512" '
+            b'xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0" '
+            b'xml:lang="en-US" name="HughskiColorHug.efi" tagId="acbd84ff-9898-4922-8ade-dd4bbe2e40ba" '
             b'tagVersion="1" version="1.0.0">\n'
             b'  <Entity name="Richard Hughes" regid="hughsie.com" role="tagCreator"/>\n'
             b'  <Entity name="Hughski Limited" regid="hughski.com" role="aggregator"/>\n'

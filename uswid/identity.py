@@ -191,8 +191,15 @@ class uSwidIdentity:
     def export_xml(self) -> str:
 
         # identity
-        root = ET.Element("SoftwareIdentity")
-        # root.set('xml:lang', "en-us")
+        NSMAP = {
+            None: "http://standards.iso.org/iso/19770/-2/2015/schema.xsd",
+            "SHA256": "http://www.w3.org/2001/04/xmlenc#sha256",
+            "SHA512": "http://www.w3.org/2001/04/xmlenc#sha512",
+            "n8060": "http://csrc.nist.gov/ns/swid/2015-extensions/1.0",
+        }
+        root = ET.Element("SoftwareIdentity", nsmap=NSMAP)
+        root.attrib["{http://www.w3.org/XML/1998/namespace}lang"] = "en-US"
+
         if self.software_name:
             root.set("name", self.software_name)
         if self.tag_id:
