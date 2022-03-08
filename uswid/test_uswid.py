@@ -65,7 +65,7 @@ class TestSwidEntity(unittest.TestCase):
         root = ET.Element("SoftwareIdentity")
         entity._export_xml(root)
         self.assertEqual(
-            ET.tostring(root),
+            ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
             b'<Entity name="foo" regid="bar" role="tagCreator maintainer"/>'
             b"</SoftwareIdentity>",
@@ -112,7 +112,7 @@ class TestSwidEntity(unittest.TestCase):
         root = ET.Element("SoftwareIdentity")
         link._export_xml(root)
         self.assertEqual(
-            ET.tostring(root),
+            ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
             b'<Link href="http://test.com/" rel="see-also"/>'
             b"</SoftwareIdentity>",
@@ -205,7 +205,6 @@ rel = see-also
 
         # XML export
         identity.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
-        print(identity.export_xml())
         with open("/home/hughsie/Downloads/swid.xml", "wb") as f:
             f.write(identity.export_xml())
         self.assertEqual(
