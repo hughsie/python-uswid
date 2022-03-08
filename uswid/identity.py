@@ -188,7 +188,7 @@ class uSwidIdentity:
                 link._import_ini(config[group])
                 self.add_link(link)
 
-    def export_xml(self) -> str:
+    def export_xml(self) -> bytes:
 
         # identity
         NSMAP = {
