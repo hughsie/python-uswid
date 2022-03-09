@@ -11,7 +11,7 @@ import configparser
 import io
 import struct
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import cbor
 from lxml import etree as ET
@@ -63,6 +63,16 @@ class uSwidIdentity:
         if not link.href:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
+
+    @property
+    def links(self) -> List[uSwidLink]:
+        """returns all the added links"""
+        return self._links.values()
+
+    @property
+    def entities(self) -> List[uSwidEntity]:
+        """returns all the added entities"""
+        return self._entities.values()
 
     def import_bytes(self, blob: bytes, use_header: bool = False) -> None:
         """imports a uSwidIdentity CBOR blob"""
