@@ -205,8 +205,6 @@ rel = see-also
 
         # XML export
         identity.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
-        with open("/home/hughsie/Downloads/swid.xml", "wb") as f:
-            f.write(identity.export_xml())
         self.assertEqual(
             identity.export_xml(),
             b"<?xml version='1.0' encoding='utf-8'?>\n"
