@@ -7,6 +7,7 @@
 #
 # pylint: disable=wrong-import-position
 
+from enum import Enum
 import argparse
 import tempfile
 import subprocess
@@ -19,16 +20,100 @@ sys.path.append(os.path.realpath("."))
 from uswid import uSwidIdentity, NotSupportedError
 
 
+def _import_efi(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
+    # EFI file
+    with tempfile.NamedTemporaryFile(
+        mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
+    ) as dst:
+        try:
+            # pylint: disable=unexpected-keyword-arg
+            subprocess.check_output(
+                [
+                    objcopy,
+                    "-O",
+                    "binary",
+                    "--only-section=.sbom",
+                    fn,
+                    dst.name,
+                ],
+                stderr=subprocess.PIPE,
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
+        identity.import_bytes(dst.read())
+
+
+def _export_efi(identity: uSwidIdentity, fn: str, cc: str, objcopy: str) -> None:
+    # EFI file
+    if not os.path.exists(fn):
+        subprocess.run([cc, "-x", "c", "-c", "-o", fn, "/dev/null"], check=True)
+
+    # save to file?
+    try:
+        blob = identity.export_bytes(use_header=False)
+    except NotSupportedError as e:
+        print(e)
+        sys.exit(1)
+
+    with tempfile.NamedTemporaryFile(
+        mode="wb", prefix="objcopy_", suffix=".bin", delete=True
+    ) as src:
+        src.write(blob)
+        src.flush()
+        try:
+            # pylint: disable=unexpected-keyword-arg
+            subprocess.check_output(
+                [
+                    objcopy,
+                    "--remove-section=.sbom",
+                    "--add-section",
+                    ".sbom={}".format(src.name),
+                    "--set-section-flags",
+                    ".sbom=contents,alloc,load,readonly,data",
+                    fn,
+                ]
+            )
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
+
+
+class SwidFormat(Enum):
+    UNKNOWN = 0
+    INI = 1
+    XML = 2
+    USWID = 3
+    PE = 4
+
+
+def _detect_format(fn: str) -> SwidFormat:
+    ext = fn.rsplit(".", maxsplit=1)[-1].lower()
+    if ext in ["exe", "efi"]:
+        return SwidFormat.PE
+    if ext in ["uswid", "raw", "bin"]:
+        return SwidFormat.USWID
+    if ext == "ini":
+        return SwidFormat.INI
+    if ext == "xml":
+        return SwidFormat.XML
+    return SwidFormat.UNKNOWN
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate CoSWID metadata")
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
-    parser.add_argument("--binfile", default=None, help="PE binary to modify")
-    parser.add_argument("--rawfile", default=None, help="RAW binary to modify")
     parser.add_argument(
-        "--inifile", action="append", default=None, help="INI data source"
+        "--load",
+        default=[],
+        action="append",
+        help="file to import, .efi,.ini,.uswid,.xml",
     )
     parser.add_argument(
-        "--xmlfile", action="append", default=None, help="SWID XML data source"
+        "--save",
+        default=[],
+        action="append",
+        help="file to export, .efi,.ini,.uswid,.xml",
     )
     parser.add_argument(
         "--objcopy", default="/usr/bin/objcopy", help="Binary file to use for objcopy"
@@ -41,113 +126,63 @@ def main():
         help="Show verbose operation",
     )
     args = parser.parse_args()
-    if not args.binfile and not args.inifile and not args.xmlfile and not args.rawfile:
+    if not args.load and not args.save:
         print("Use uswid --help for command line arguments")
         sys.exit(1)
 
     # collect data here
     identity = uSwidIdentity()
-
-    # load in existing uSwidIdentity object
-    if args.binfile and os.path.exists(args.binfile):
-        with tempfile.NamedTemporaryFile(
-            mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
-        ) as dst:
-            try:
-                # pylint: disable=unexpected-keyword-arg
-                subprocess.check_output(
-                    [
-                        args.objcopy,
-                        "-O",
-                        "binary",
-                        "--only-section=.sbom",
-                        args.binfile,
-                        dst.name,
-                    ],
-                    stderr=subprocess.PIPE,
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
-                sys.exit(1)
-            identity.import_bytes(dst.read())
-
-            # debug
-            if args.verbose:
-                print("Loaded:\n{}".format(identity))
-
-    # raw file
-    use_header = args.rawfile is not None
-    if args.rawfile and os.path.exists(args.rawfile):
-        with open(args.rawfile, "rb") as f:
-            try:
-                identity.import_bytes(f.read(), use_header=use_header)
-            except NotSupportedError as e:
-                print(e)
-                sys.exit(1)
-
-        # debug
-        if args.verbose:
-            print("Loaded:\n{}".format(identity))
-
-    # merge data
-    if args.xmlfile:
-        for xmlfile in args.xmlfile:
-            try:
-                with open(xmlfile, "rb") as f:
+    for fn in args.load:
+        try:
+            fmt = _detect_format(fn)
+            if fmt == SwidFormat.PE:
+                _import_efi(identity, fn, objcopy=args.objcopy)
+            elif fmt == SwidFormat.USWID:
+                with open(fn, "rb") as f:
+                    identity.import_bytes(f.read(), use_header=True)
+            elif fmt == SwidFormat.XML:
+                with open(fn, "rb") as f:
                     identity.import_xml(f.read())
-            except FileNotFoundError:
-                print("{} does not exist".format(xmlfile))
-                sys.exit(1)
-    if args.inifile:
-        for inifile in args.inifile:
-            try:
-                with open(inifile, "rb") as f:
+            elif fmt == SwidFormat.INI:
+                with open(fn, "rb") as f:
                     identity.import_ini(f.read().decode())
-            except FileNotFoundError:
-                print("{} does not exist".format(inifile))
+            else:
+                print("{} extension is not supported".format(fn))
                 sys.exit(1)
+        except FileNotFoundError:
+            print("{} does not exist".format(fn))
+            sys.exit(1)
+        except NotSupportedError as e:
+            print(e)
+            sys.exit(1)
 
-    # create empty EFI binary?
-    if args.binfile and not os.path.exists(args.binfile):
-        subprocess.run(
-            [args.cc, "-x", "c", "-c", "-o", args.binfile, "/dev/null"], check=True
-        )
+    # debug
+    if args.load and args.verbose:
+        print("Loaded:\n{}".format(identity))
 
-    # save to file?
-    if args.verbose:
+    # optional save
+    if args.save and args.verbose:
         print("Saving:\n{}".format(identity))
-    try:
-        blob = identity.export_bytes(use_header=use_header)
-    except NotSupportedError as e:
-        print(e)
-        sys.exit(1)
-    if args.binfile:
-        with tempfile.NamedTemporaryFile(
-            mode="wb", prefix="objcopy_", suffix=".bin", delete=True
-        ) as src:
-            src.write(blob)
-            src.flush()
-            try:
-                # pylint: disable=unexpected-keyword-arg
-                subprocess.check_output(
-                    [
-                        args.objcopy,
-                        "--remove-section=.sbom",
-                        "--add-section",
-                        ".sbom={}".format(src.name),
-                        "--set-section-flags",
-                        ".sbom=contents,alloc,load,readonly,data",
-                        args.binfile,
-                    ]
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
+    for fn in args.save:
+        try:
+            fmt = _detect_format(fn)
+            if fmt == SwidFormat.PE:
+                _export_efi(identity, fn, args.cc, args.objcopy)
+            elif fmt == SwidFormat.USWID:
+                with open(fn, "wb") as f:
+                    f.write(identity.export_bytes(use_header=True))
+            elif fmt == SwidFormat.XML:
+                with open(fn, "wb") as f:
+                    f.write(identity.export_xml())
+            elif fmt == SwidFormat.INI:
+                with open(fn, "wb") as f:
+                    f.write(identity.export_ini().encode())
+            else:
+                print("{} extension is not supported".format(fn))
                 sys.exit(1)
-    elif args.rawfile:
-        with open(args.rawfile, "wb") as f:
-            f.write(blob)
-    else:
-        print(blob)
+        except NotSupportedError as e:
+            print(e)
+            sys.exit(1)
 
     # success
     sys.exit(0)
