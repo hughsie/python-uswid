@@ -64,7 +64,7 @@ XML document:
 
 This can then be saved as `uswid.ini` and applied to the binary using:
 
-    uswid --inifile uswid.ini --binfile ./HughskiColorHug.efi
+    uswid --load uswid.ini --save ./HughskiColorHug.efi
 
 The `tag-id` value has to be unique, but for UEFI firmware this is typically
 the ESRT GUID value. The `product`, `summary`, `colloquial-version`, `revision`
@@ -98,7 +98,7 @@ file with these contents:
 
 ...and then use:
 
-    uswid --inifile oem.ini --binfile ./HughskiColorHug.efi
+    uswid --load ./HughskiColorHug.efi --load oem.ini --save ./HughskiColorHug.efi
 
 This will add the `Distributor` entity to the binary, or overwrite an existing
 entity with that role.
@@ -113,7 +113,7 @@ RAW Blobs
 uSWID can also export a raw blob that can be embedded in a unspecified data
 section. This allows coSWID metadata to be easily embedded in non-free tools.
 
-    uswid --inifile oem.ini --rawfile ./raw.bin
+    uswid --load oem.ini --save ./blob.uswid
 
 The `raw.bin` file also includes a 16 byte *random* GUID prefixing a simple
 header.
