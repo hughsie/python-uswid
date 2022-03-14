@@ -120,6 +120,24 @@ header.
 This allows a program to aggregate multiple coSWID sources from a composite
 image into a single SBOM.
 
+Reading and writing to PE files
+-------------------------------
+
+By default, the uswid command line uses `pefile` to read and write the `.sbom`
+section in the COFF header. Although reading is well supported and tested,
+support for writing modified files has only been lightly tested.
+
+If `pefile` doesn't do a very good job of adding the SWID metadata to the PE
+file, you can use the older more-trusted method of using `objcopy`, either
+available by default on Linux or installable using WSL on Windows.
+
+To use the tried-and-trusted objcopy method this you can use:
+
+    uswid --load oem.ini --save ./blob.uswid --objcopy /usr/bin/objcopy
+
+Please let us know if writing PE files does not work for you using the default
+`pefile` method as we'll be deprecating the `objcopy` method longer term.
+
 License Information
 -------------------
 

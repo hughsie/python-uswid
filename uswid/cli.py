@@ -8,20 +8,106 @@
 # pylint: disable=wrong-import-position
 
 from enum import Enum
+from typing import Optional
 import argparse
 import tempfile
 import subprocess
 
 import os
 import sys
+import shutil
+
+import pefile
 
 sys.path.append(os.path.realpath("."))
 
 from uswid import uSwidIdentity, NotSupportedError
 
 
-def _import_efi(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
-    # EFI file
+def adjust_SectionSize(sz, align):
+    if sz % align:
+        sz = ((sz + align) // align) * align
+    return sz
+
+
+def _pe_get_section_by_name(pe: pefile.PE, name: str) -> pefile.SectionStructure:
+    for sect in pe.sections:
+        if sect.Name == name.encode().ljust(8, b"\0"):
+            return sect
+    return None
+
+
+def _pe_delete_section(pe: pefile.PE, sect: pefile.SectionStructure) -> None:
+
+    # clear out data
+    pe.set_bytes_at_offset(sect.PointerToRawData, b"\x00" * sect.SizeOfRawData)
+
+    # clear header
+    sect.Name = b"\x00" * 8
+    sect.Misc_VirtualSize = 0x0
+    sect.Misc_PhysicalAddress = 0x0
+    sect.Misc = 0x0
+    sect.SizeOfRawData = 0x0
+    sect.PointerToRawData = 0x0
+    sect.Characteristics = 0x0
+
+    # write to __data__
+    pe.merge_modified_section_data()
+    pe.sections.remove(sect)
+
+
+def _pe_add_section(pe: pefile.PE, name: str, blob: bytes) -> None:
+
+    # new section filled with zeros
+    sect = pefile.SectionStructure(pe.__IMAGE_SECTION_HEADER_format__)
+    sect.__unpack__(bytearray(sect.sizeof()))
+
+    # place section header after last section header
+    last_section = pe.sections[-1]
+    sect.set_file_offset(last_section.get_file_offset() + last_section.sizeof())
+
+    # create
+    sect.Name = name.encode()
+    sect.SizeOfRawData = adjust_SectionSize(len(blob), pe.OPTIONAL_HEADER.FileAlignment)
+    blob_aligned = blob.ljust(sect.SizeOfRawData, b"\0")
+    sect.PointerToRawData = len(pe.__data__)
+    sect.Misc = sect.Misc_PhysicalAddress = sect.Misc_VirtualSize = len(blob)
+    sect.VirtualAddress = last_section.VirtualAddress + adjust_SectionSize(
+        last_section.Misc_VirtualSize, pe.OPTIONAL_HEADER.SectionAlignment
+    )
+    sect.Characteristics = (
+        pefile.SECTION_CHARACTERISTICS["IMAGE_SCN_CNT_INITIALIZED_DATA"]
+        | pefile.SECTION_CHARACTERISTICS["IMAGE_SCN_MEM_READ"]
+    )
+    pe.OPTIONAL_HEADER.SizeOfImage += adjust_SectionSize(
+        len(blob), pe.OPTIONAL_HEADER.SectionAlignment
+    )
+
+    # append new section to structures
+    pe.FILE_HEADER.NumberOfSections += 1
+    pe.sections.append(sect)
+    pe.__structures__.append(sect)
+
+    # add new section data
+    pe.__data__ = bytearray(pe.__data__) + blob_aligned
+
+
+def _import_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
+    """read EFI file using pefile"""
+    pe = pefile.PE(fn)
+    sect = _pe_get_section_by_name(pe, ".sbom")
+    if sect:
+        identity.import_bytes(sect.get_data())
+
+
+def _import_efi_objcopy(
+    identity: uSwidIdentity, fn: str, objcopy: Optional[str]
+) -> None:
+    """read EFI file using objcopy"""
+    objcopy_full = shutil.which(objcopy)
+    if not objcopy_full:
+        print("executable {} not found".format(objcopy))
+        sys.exit(1)
     with tempfile.NamedTemporaryFile(
         mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
     ) as dst:
@@ -29,7 +115,7 @@ def _import_efi(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
             # pylint: disable=unexpected-keyword-arg
             subprocess.check_output(
                 [
-                    objcopy,
+                    objcopy_full,
                     "-O",
                     "binary",
                     "--only-section=.sbom",
@@ -44,8 +130,37 @@ def _import_efi(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
         identity.import_bytes(dst.read())
 
 
-def _export_efi(identity: uSwidIdentity, fn: str, cc: str, objcopy: str) -> None:
-    # EFI file
+def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
+    """modify EFI file using pefile"""
+    blob = identity.export_bytes(use_header=False)
+    pe = pefile.PE(fn)
+    sect = _pe_get_section_by_name(pe, ".sbom")
+    if sect:
+        # can we squeeze the new uSWID blob into the existing space
+        if len(blob) <= sect.SizeOfRawData:
+            pe.set_bytes_at_offset(sect.PointerToRawData, blob)
+
+        # new data is too large for existing section, delete and start again
+        else:
+            _pe_delete_section(pe, sect)
+            sect = None
+
+    # add new section
+    if not sect:
+        _pe_add_section(pe, ".sbom", blob)
+
+    # save
+    pe.write(fn)
+
+
+def _export_efi_objcopy(
+    identity: uSwidIdentity, fn: str, cc: Optional[str], objcopy: Optional[str]
+) -> None:
+    """modify EFI file using objcopy"""
+    objcopy_full = shutil.which(objcopy)
+    if not objcopy_full:
+        print("executable {} not found".format(objcopy))
+        sys.exit(1)
     if not os.path.exists(fn):
         subprocess.run([cc, "-x", "c", "-c", "-o", fn, "/dev/null"], check=True)
 
@@ -65,7 +180,7 @@ def _export_efi(identity: uSwidIdentity, fn: str, cc: str, objcopy: str) -> None
             # pylint: disable=unexpected-keyword-arg
             subprocess.check_output(
                 [
-                    objcopy,
+                    objcopy_full,
                     "--remove-section=.sbom",
                     "--add-section",
                     ".sbom={}".format(src.name),
@@ -108,7 +223,7 @@ def main():
     parser.add_argument("--inifile", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--xmlfile", default=None, help=argparse.SUPPRESS)
     parser.add_argument(
-        "--objcopy", default="/usr/bin/objcopy", help="Binary file to use for objcopy"
+        "--objcopy", default=None, help="Binary file to use for objcopy"
     )
     parser.add_argument(
         "--load",
@@ -153,7 +268,10 @@ def main():
         try:
             fmt = _detect_format(fn)
             if fmt == SwidFormat.PE:
-                _import_efi(identity, fn, objcopy=args.objcopy)
+                if args.objcopy:
+                    _import_efi_objcopy(identity, fn, objcopy=args.objcopy)
+                else:
+                    _import_efi_pefile(identity, fn)
             elif fmt == SwidFormat.USWID:
                 with open(fn, "rb") as f:
                     identity.import_bytes(f.read(), use_header=True)
@@ -184,7 +302,10 @@ def main():
         try:
             fmt = _detect_format(fn)
             if fmt == SwidFormat.PE:
-                _export_efi(identity, fn, args.cc, args.objcopy)
+                if args.objcopy:
+                    _export_efi_objcopy(identity, fn, args.cc, args.objcopy)
+                else:
+                    _export_efi_pefile(identity, fn)
             elif fmt == SwidFormat.USWID:
                 with open(fn, "wb") as f:
                     f.write(identity.export_bytes(use_header=True))
