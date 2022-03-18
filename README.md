@@ -171,6 +171,12 @@ make the code more robust.
 
 # Release Process
 
-    update setup.py
+    export release_ver="0.2.0"
+    git commit -a -m "Release ${release_ver}"
+    git tag -s -f -m "Release ${release_ver}" "${release_ver}"
     make pkg
     ./env/bin/twine upload dist/*
+    git push --tags
+    # edit setup.py
+    git commit -a -m "trivial: post release version bump"
+    git push
