@@ -113,12 +113,51 @@ RAW Blobs
 uSWID can also export a raw blob that can be embedded in a unspecified data
 section. This allows coSWID metadata to be easily embedded in non-free tools.
 
+If we know how to parse the firmware and can lookup the offset the coSWID blob
+starts and ends (e.g. the PE COFF header says *data is stored at 0x123, length
+is 0x234*) then we don't need anything else to read the embedded coSWID data.
+The LVFS extracts the PE files from the UEFI capsule and know exactly where the
+coSWID can be found thanks to the COFF header, so we store raw coSWID in PE files.
+
+If we are asked to process lots of different kinds of firmware, we cannot always
+parse the secret vendor-specific header, e.g.
+
+    VENDOR_HEADER
+    ARC32_IMAGE1
+    ARC32_IMAGE2
+    FREE_SPACE
+    coSWID
+    FREE_SPACE
+
+With this the SBoM aggregator tool does not know *where* the coSWID data starts in
+the blob, or *how many* coSWID sections there might be.
+If we include a small header with a 16 byte magic GUID then we can search the image
+to discover the offsets to read the coSWID blobs, e.g.
+
+    VENDOR_HEADER
+    ARC32_IMAGE1
+    ARC32_IMAGE2
+    FREE_SPACE
+    uSWID_HEADER
+    coSWID
+    FREE_SPACE
+
+For space reasons, if we wanted to just include the "raw" coSWID blob in the file
+then we'd need to teach the LVFS how to process that specific kind of firmware blob.
+Which might actually be fine, but you'd be volunteering to do that work. :)
+
     uswid --load oem.ini --save ./blob.uswid
 
-The `raw.bin` file also includes a 16 byte *random* GUID prefixing a simple
-header.
-This allows a program to aggregate multiple coSWID sources from a composite
-image into a single SBOM.
+The `blob.uswid` file then includes a 16 byte *random* GUID prefixing a simple 7-byte
+little-endian header:
+
+    uint8_t[16]   magic string, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
+    uint8_t       header version, typically 0x01
+    uint16_t      header length, typically 0x17
+    uint32_t      payload length, typically 0x17
+
+This allows an aggregator tool to easily aggregate multiple coSWID sources from a
+composite image into a single SBoM.
 
 Reading and writing to PE files
 -------------------------------
