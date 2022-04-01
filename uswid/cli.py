@@ -17,8 +17,6 @@ import os
 import sys
 import shutil
 
-import pefile
-
 sys.path.append(os.path.realpath("."))
 
 from uswid import uSwidIdentity, uSwidContainer, NotSupportedError
@@ -29,31 +27,20 @@ from uswid.format_pkgconfig import uSwidFormatPkgconfig
 from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
+from uswid.pe import PeFile, PeSection, PeSectionFlag, PeCoffDllCharacteristics
 
 
-def adjust_SectionSize(sz, align):
-    if sz % align:
-        sz = ((sz + align) // align) * align
-    return sz
-
-
-def _pe_get_section_by_name(pe: pefile.PE, name: str) -> pefile.SectionStructure:
-    for sect in pe.sections:
-        if sect.Name == name.encode().ljust(8, b"\0"):
-            return sect
-    return None
-
-
-def _load_efi_pefile(filepath: str) -> uSwidContainer:
-    """read EFI file using pefile"""
-    pe = pefile.PE(filepath)
-    sect = _pe_get_section_by_name(pe, ".sbom")
+def _load_coff_pefile(filepath: str) -> uSwidContainer:
+    """read EFI file"""
+    with open(filepath, "rb") as f:
+        mype = PeFile(f.read())
+    sect = mype.get_section_by_name(".sbom")
     if not sect:
-        raise NotSupportedError("PE files have to have an linker-defined .sbom section")
-    return uSwidFormatCoswid().load(sect.get_data())
+        return uSwidContainer()
+    return uSwidFormatCoswid().load(sect.RawData)
 
 
-def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
+def _load_coff_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
     """read EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
@@ -81,25 +68,42 @@ def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
         return uSwidFormatCoswid().load(dst.read())
 
 
-def _save_efi_pefile(identity: uSwidIdentity, filepath: str) -> None:
-    """modify EFI file using pefile"""
+def _save_coff_pefile(identity: uSwidIdentity, filepath: str) -> None:
+    """modify EFI file"""
 
-    blob = uSwidFormatCoswid().save(uSwidContainer([identity]))
-    pe = pefile.PE(filepath)
-    sect = _pe_get_section_by_name(pe, ".sbom")
-    if not sect:
-        raise NotSupportedError("PE files have to have an linker-defined .sbom section")
+    # load file
+    if os.path.exists(filepath):
+        with open(filepath, "rb") as f:
+            mype = PeFile(f.read())
+    else:
+        mype = PeFile()
+        mype.coff_hdr.DllCharacteristics = PeCoffDllCharacteristics.NX_COMPAT
 
-    # can we squeeze the new uSWID blob into the existing space
-    sect.Misc = len(blob)
-    if len(blob) <= sect.SizeOfRawData:
-        pe.set_bytes_at_offset(sect.PointerToRawData, blob)
+        sect = PeSection()
+        sect.Name = ".text"
+        sect.RawData = b"Hello World"
+        sect.Characteristics = (
+            PeSectionFlag.IMAGE_SCN_CNT_INITIALIZED_DATA
+            | PeSectionFlag.IMAGE_SCN_MEM_READ
+            | PeSectionFlag.IMAGE_SCN_CNT_CODE
+        )
+        mype.add_section(sect)
 
-    # save
-    pe.write(filepath)
+    # add or replace section
+    sect = PeSection()
+    sect.Name = ".sbom"
+    sect.RawData = uSwidFormatCoswid().save(uSwidContainer([identity]))
+    sect.Characteristics = (
+        PeSectionFlag.IMAGE_SCN_CNT_INITIALIZED_DATA | PeSectionFlag.IMAGE_SCN_MEM_READ
+    )
+    mype.add_section(sect)
+
+    # save file
+    with open(filepath, "wb") as f:
+        f.write(mype.export())
 
 
-def _save_efi_objcopy(
+def _save_coff_objcopy(
     identity: uSwidIdentity, filepath: str, cc: Optional[str], objcopy: str
 ) -> None:
     """modify EFI file using objcopy"""
@@ -114,7 +118,7 @@ def _save_efi_objcopy(
 
     # save to file?
     try:
-        blob = uSwidFormatIni().save(uSwidContainer([identity]))
+        blob = uSwidFormatCoswid().save(uSwidContainer([identity]))
     except NotSupportedError as e:
         print(e)
         sys.exit(1)
@@ -158,7 +162,7 @@ def _detect_format(filepath: str) -> SwidFormat:
     if os.path.basename(filepath).endswith("bom.json"):
         return SwidFormat.CYCLONE_DX
     ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
-    if ext in ["exe", "efi", "o"]:
+    if ext in ["exe", "efi", "dll"]:
         return SwidFormat.PE
     if ext in ["uswid", "raw", "bin"]:
         return SwidFormat.USWID
@@ -260,9 +264,9 @@ def main():
                 fmt = SwidFormat.USWID
             if fmt == SwidFormat.PE:
                 if args.objcopy:
-                    container_tmp = _load_efi_objcopy(filepath, objcopy=args.objcopy)
+                    container_tmp = _load_coff_objcopy(filepath, objcopy=args.objcopy)
                 else:
-                    container_tmp = _load_efi_pefile(filepath)
+                    container_tmp = _load_coff_pefile(filepath)
                 for identity in container_tmp:
                     identity_new = container.merge(identity)
                     if identity_new:
@@ -314,9 +318,9 @@ def main():
                     print("cannot save PE when no default identity")
                     sys.exit(1)
                 if args.objcopy:
-                    _save_efi_objcopy(identity_pe, filepath, args.cc, args.objcopy)
+                    _save_coff_objcopy(identity_pe, filepath, args.cc, args.objcopy)
                 else:
-                    _save_efi_pefile(identity_pe, filepath)
+                    _save_coff_pefile(identity_pe, filepath)
             elif fmt in [
                 SwidFormat.INI,
                 SwidFormat.COSWID,
