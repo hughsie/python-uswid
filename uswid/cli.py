@@ -272,9 +272,6 @@ def main():
                     _import_efi_objcopy(identity, fn, objcopy=args.objcopy)
                 else:
                     _import_efi_pefile(identity, fn)
-            elif fmt == SwidFormat.USWID:
-                with open(fn, "rb") as f:
-                    identity.import_bytes(f.read(), use_header=True)
             elif fmt == SwidFormat.XML:
                 with open(fn, "rb") as f:
                     identity.import_xml(f.read())
@@ -282,8 +279,10 @@ def main():
                 with open(fn, "rb") as f:
                     identity.import_ini(f.read().decode())
             else:
-                print("{} extension is not supported".format(fn))
-                sys.exit(1)
+                print("{} has unknown extension, try to find uswid data by searching for MAGIC Value".format(fn))
+                with open(fn, "rb") as f:
+                    identity.import_bytes(f.read(), use_header=True)
+
         except FileNotFoundError:
             print("{} does not exist".format(fn))
             sys.exit(1)

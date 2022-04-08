@@ -80,13 +80,22 @@ class uSwidIdentity:
         if not blob:
             return
 
-        # discard magic GUID
+        # find and discard magic GUID
         if use_header:
-            (guid, _, hdrsz, payloadsz) = struct.unpack("<16sBHI", blob[:23])
-            if guid != USWID_HEADER_MAGIC:
-                raise NotSupportedError("header does not have expected magic GUID")
+            # find magic GUID in blob
+            offset = 0
+            found_guid = False
+            for offset in range(0, len(blob)):
+                if blob[offset:offset+16] == USWID_HEADER_MAGIC:
+                    found_guid = True
+                    print("Found USWID Magic Header")
+                    break
+            if found_guid == False:
+                raise NotSupportedError("file does not have expected magic GUID")
+
+            (guid, _, hdrsz, payloadsz) = struct.unpack("<16sBHI", blob[offset:offset+23])
             try:
-                data = cbor.load(io.BytesIO(blob[hdrsz : hdrsz + payloadsz]))
+                data = cbor.load(io.BytesIO(blob[offset + hdrsz : offset + hdrsz + payloadsz]))
             except EOFError as e:
                 raise NotSupportedError("invalid header") from e
         else:
