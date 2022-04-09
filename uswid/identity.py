@@ -82,16 +82,10 @@ class uSwidIdentity:
 
         # find and discard magic GUID
         if use_header:
-            # find magic GUID in blob
-            offset = 0
-            found_guid = False
-            for offset in range(0, len(blob)):
-                if blob[offset:offset+16] == USWID_HEADER_MAGIC:
-                    found_guid = True
-                    print("Found USWID Magic Header")
-                    break
-            if found_guid == False:
+            offset = blob.find(USWID_HEADER_MAGIC);
+            if offset == -1:
                 raise NotSupportedError("file does not have expected magic GUID")
+            print("Found USWID header at offset: {}".format(offset))
 
             (guid, _, hdrsz, payloadsz) = struct.unpack("<16sBHI", blob[offset:offset+23])
             try:

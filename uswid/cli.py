@@ -279,7 +279,7 @@ def main():
                 with open(fn, "rb") as f:
                     identity.import_ini(f.read().decode())
             else:
-                print("{} has unknown extension, try to find uswid data by searching for MAGIC Value".format(fn))
+                print("{} has unknown extension, using uSWID".format(fn))
                 with open(fn, "rb") as f:
                     identity.import_bytes(f.read(), use_header=True)
 
