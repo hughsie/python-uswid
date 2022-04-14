@@ -37,61 +37,6 @@ def _pe_get_section_by_name(pe: pefile.PE, name: str) -> pefile.SectionStructure
     return None
 
 
-def _pe_delete_section(pe: pefile.PE, sect: pefile.SectionStructure) -> None:
-
-    # clear out data
-    pe.set_bytes_at_offset(sect.PointerToRawData, b"\x00" * sect.SizeOfRawData)
-
-    # clear header
-    sect.Name = b"\x00" * 8
-    sect.Misc_VirtualSize = 0x0
-    sect.Misc_PhysicalAddress = 0x0
-    sect.Misc = 0x0
-    sect.SizeOfRawData = 0x0
-    sect.PointerToRawData = 0x0
-    sect.Characteristics = 0x0
-
-    # write to __data__
-    pe.merge_modified_section_data()
-    pe.sections.remove(sect)
-
-
-def _pe_add_section(pe: pefile.PE, name: str, blob: bytes) -> None:
-
-    # new section filled with zeros
-    sect = pefile.SectionStructure(pe.__IMAGE_SECTION_HEADER_format__)
-    sect.__unpack__(bytearray(sect.sizeof()))
-
-    # place section header after last section header
-    last_section = pe.sections[-1]
-    sect.set_file_offset(last_section.get_file_offset() + last_section.sizeof())
-
-    # create
-    sect.Name = name.encode()
-    sect.SizeOfRawData = adjust_SectionSize(len(blob), pe.OPTIONAL_HEADER.FileAlignment)
-    blob_aligned = blob.ljust(sect.SizeOfRawData, b"\0")
-    sect.PointerToRawData = len(pe.__data__)
-    sect.Misc = sect.Misc_PhysicalAddress = sect.Misc_VirtualSize = len(blob)
-    sect.VirtualAddress = last_section.VirtualAddress + adjust_SectionSize(
-        last_section.Misc_VirtualSize, pe.OPTIONAL_HEADER.SectionAlignment
-    )
-    sect.Characteristics = (
-        pefile.SECTION_CHARACTERISTICS["IMAGE_SCN_CNT_INITIALIZED_DATA"]
-        | pefile.SECTION_CHARACTERISTICS["IMAGE_SCN_MEM_READ"]
-    )
-    pe.OPTIONAL_HEADER.SizeOfImage += adjust_SectionSize(
-        len(blob), pe.OPTIONAL_HEADER.SectionAlignment
-    )
-
-    # append new section to structures
-    pe.FILE_HEADER.NumberOfSections += 1
-    pe.sections.append(sect)
-    pe.__structures__.append(sect)
-
-    # add new section data
-    pe.__data__ = bytearray(pe.__data__) + blob_aligned
-
-
 def _import_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
     """read EFI file using pefile"""
     pe = pefile.PE(fn)
@@ -135,19 +80,13 @@ def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
     blob = identity.export_bytes(use_header=False)
     pe = pefile.PE(fn)
     sect = _pe_get_section_by_name(pe, ".sbom")
-    if sect:
-        # can we squeeze the new uSWID blob into the existing space
-        if len(blob) <= sect.SizeOfRawData:
-            pe.set_bytes_at_offset(sect.PointerToRawData, blob)
-
-        # new data is too large for existing section, delete and start again
-        else:
-            _pe_delete_section(pe, sect)
-            sect = None
-
-    # add new section
     if not sect:
-        _pe_add_section(pe, ".sbom", blob)
+        raise NotSupportedError("PE files have to have an linker-defined .sbom section")
+
+    # can we squeeze the new uSWID blob into the existing space
+    sect.Misc = len(blob)
+    if len(blob) <= sect.SizeOfRawData:
+        pe.set_bytes_at_offset(sect.PointerToRawData, blob)
 
     # save
     pe.write(fn)
