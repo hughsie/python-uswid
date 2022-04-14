@@ -5,6 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 
+from uswid.container import uSwidContainer
 from uswid.link import uSwidLink, uSwidLinkRel
 from uswid.identity import uSwidIdentity
 from uswid.entity import uSwidEntity, uSwidEntityRole
