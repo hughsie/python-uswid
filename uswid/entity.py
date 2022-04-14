@@ -105,7 +105,7 @@ class uSwidEntity:
             except KeyError as e:
                 raise NotSupportedError(
                     "{} not supported from {}".format(
-                        role, ",".join(self._ENTITY_MAP_TO_XML)
+                        role, ",".join(self._ENTITY_MAP_TO_XML.values())
                     )
                 ) from e
         if roles:

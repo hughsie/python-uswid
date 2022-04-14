@@ -45,9 +45,7 @@ def _import_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
         identity.import_bytes(sect.get_data())
 
 
-def _import_efi_objcopy(
-    identity: uSwidIdentity, fn: str, objcopy: Optional[str]
-) -> None:
+def _import_efi_objcopy(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
     """read EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
@@ -93,7 +91,7 @@ def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
 
 
 def _export_efi_objcopy(
-    identity: uSwidIdentity, fn: str, cc: Optional[str], objcopy: Optional[str]
+    identity: uSwidIdentity, fn: str, cc: Optional[str], objcopy: str
 ) -> None:
     """modify EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
@@ -101,6 +99,8 @@ def _export_efi_objcopy(
         print("executable {} not found".format(objcopy))
         sys.exit(1)
     if not os.path.exists(fn):
+        if not cc:
+            raise NotSupportedError("compiler is required for missing section")
         subprocess.run([cc, "-x", "c", "-c", "-o", fn, "/dev/null"], check=True)
 
     # save to file?

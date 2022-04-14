@@ -67,12 +67,12 @@ class uSwidIdentity:
     @property
     def links(self) -> List[uSwidLink]:
         """returns all the added links"""
-        return self._links.values()
+        return list(self._links.values())
 
     @property
     def entities(self) -> List[uSwidEntity]:
         """returns all the added entities"""
-        return self._entities.values()
+        return list(self._entities.values())
 
     def import_bytes(self, blob: bytes, use_header: bool = False) -> None:
         """imports a uSwidIdentity CBOR blob"""
@@ -82,14 +82,18 @@ class uSwidIdentity:
 
         # find and discard magic GUID
         if use_header:
-            offset = blob.find(USWID_HEADER_MAGIC);
+            offset = blob.find(USWID_HEADER_MAGIC)
             if offset == -1:
                 raise NotSupportedError("file does not have expected magic GUID")
             print("Found USWID header at offset: {}".format(offset))
 
-            (guid, _, hdrsz, payloadsz) = struct.unpack("<16sBHI", blob[offset:offset+23])
+            (_, _, hdrsz, payloadsz) = struct.unpack(
+                "<16sBHI", blob[offset : offset + 23]
+            )
             try:
-                data = cbor.load(io.BytesIO(blob[offset + hdrsz : offset + hdrsz + payloadsz]))
+                data = cbor.load(
+                    io.BytesIO(blob[offset + hdrsz : offset + hdrsz + payloadsz])
+                )
             except EOFError as e:
                 raise NotSupportedError("invalid header") from e
         else:
@@ -261,7 +265,7 @@ class uSwidIdentity:
         if self.tag_id:
             main["tag-id"] = self.tag_id
         if self.tag_version:
-            main["tag-version"] = self.tag_version
+            main["tag-version"] = str(self.tag_version)
         if self.software_name:
             main["software-name"] = self.software_name
         if self.software_version:
