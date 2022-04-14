@@ -9,7 +9,6 @@
 
 import configparser
 import io
-import struct
 
 from typing import Dict, Any, Optional, List
 
@@ -19,9 +18,6 @@ from lxml import etree as ET
 from .errors import NotSupportedError
 from .enums import (
     uSwidGlobalMap,
-    USWID_HEADER_MAGIC,
-    USWID_HEADER_VERSION,
-    USWID_HEADER_SIZE,
 )
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
@@ -74,30 +70,18 @@ class uSwidIdentity:
         """returns all the added entities"""
         return list(self._entities.values())
 
-    def import_bytes(self, blob: bytes, use_header: bool = False) -> None:
+    def import_bytes(self, blob: bytes, offset: Optional[int] = 0) -> int:
         """imports a uSwidIdentity CBOR blob"""
 
         if not blob:
-            return
-
-        # find and discard magic GUID
-        if use_header:
-            offset = blob.find(USWID_HEADER_MAGIC)
-            if offset == -1:
-                raise NotSupportedError("file does not have expected magic GUID")
-            print("Found USWID header at offset: {}".format(offset))
-
-            (_, _, hdrsz, payloadsz) = struct.unpack(
-                "<16sBHI", blob[offset : offset + 23]
-            )
-            try:
-                data = cbor.load(
-                    io.BytesIO(blob[offset + hdrsz : offset + hdrsz + payloadsz])
-                )
-            except EOFError as e:
-                raise NotSupportedError("invalid header") from e
-        else:
-            data = cbor.load(io.BytesIO(blob))
+            return 0
+        consumed: int = 0
+        try:
+            f = io.BytesIO(blob[offset:])
+            data = cbor.load(f)
+            consumed = f.tell()
+        except EOFError as e:
+            raise NotSupportedError("invalid header") from e
 
         # identity
         self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
@@ -129,6 +113,9 @@ class uSwidIdentity:
                 continue
             self.add_entity(entity)
         self._auto_increment_tag_version = True
+
+        # number of bytes consumed, i.e. where the next CBOR blob is found
+        return consumed
 
     def import_xml(self, xml: bytes) -> None:
         """imports a SWID XML blob"""
@@ -298,7 +285,7 @@ class uSwidIdentity:
             f.seek(0)
             return f.read()
 
-    def export_bytes(self, use_header: bool = False) -> bytes:
+    def export_bytes(self) -> bytes:
         """exports a uSwidIdentity CBOR blob"""
 
         # general identity section
@@ -352,19 +339,6 @@ class uSwidIdentity:
         data[uSwidGlobalMap.LINK] = [
             link._export_bytes() for link in self._links.values()
         ]
-
-        if use_header:
-            payload = cbor.dumps(data)
-            return (
-                struct.pack(
-                    "<16sBHI",
-                    USWID_HEADER_MAGIC,
-                    USWID_HEADER_VERSION,
-                    USWID_HEADER_SIZE,
-                    len(payload),
-                )
-                + payload
-            )
         return cbor.dumps(data)
 
     def __repr__(self) -> str:

@@ -21,7 +21,7 @@ import pefile
 
 sys.path.append(os.path.realpath("."))
 
-from uswid import uSwidIdentity, NotSupportedError
+from uswid import uSwidIdentity, uSwidContainer, NotSupportedError
 
 
 def adjust_SectionSize(sz, align):
@@ -75,7 +75,7 @@ def _import_efi_objcopy(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
 
 def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
     """modify EFI file using pefile"""
-    blob = identity.export_bytes(use_header=False)
+    blob = identity.export_bytes()
     pe = pefile.PE(fn)
     sect = _pe_get_section_by_name(pe, ".sbom")
     if not sect:
@@ -105,7 +105,7 @@ def _export_efi_objcopy(
 
     # save to file?
     try:
-        blob = identity.export_bytes(use_header=False)
+        blob = identity.export_bytes()
     except NotSupportedError as e:
         print(e)
         sys.exit(1)
@@ -177,6 +177,13 @@ def main():
         help="file to export, .efi,.ini,.uswid,.xml",
     )
     parser.add_argument(
+        "--compress",
+        dest="compress",
+        default=False,
+        action="store_true",
+        help="Compress uSWID containers",
+    )
+    parser.add_argument(
         "--verbose",
         dest="verbose",
         default=False,
@@ -202,25 +209,37 @@ def main():
         sys.exit(1)
 
     # collect data here
-    identity = uSwidIdentity()
+    container = uSwidContainer()
     for fn in load_fns:
         try:
             fmt = _detect_format(fn)
             if fmt == SwidFormat.PE:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot load PE when no default identity")
+                    sys.exit(1)
                 if args.objcopy:
                     _import_efi_objcopy(identity, fn, objcopy=args.objcopy)
                 else:
                     _import_efi_pefile(identity, fn)
             elif fmt == SwidFormat.XML:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot load XML when no default identity")
+                    sys.exit(1)
                 with open(fn, "rb") as f:
                     identity.import_xml(f.read())
             elif fmt == SwidFormat.INI:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot load INI when no default identity")
+                    sys.exit(1)
                 with open(fn, "rb") as f:
                     identity.import_ini(f.read().decode())
             else:
                 print("{} has unknown extension, using uSWID".format(fn))
                 with open(fn, "rb") as f:
-                    identity.import_bytes(f.read(), use_header=True)
+                    container.import_bytes(f.read())
 
         except FileNotFoundError:
             print("{} does not exist".format(fn))
@@ -231,26 +250,38 @@ def main():
 
     # debug
     if load_fns and args.verbose:
-        print("Loaded:\n{}".format(identity))
+        print("Loaded:\n{}".format(container))
 
     # optional save
     if save_fns and args.verbose:
-        print("Saving:\n{}".format(identity))
+        print("Saving:\n{}".format(container))
     for fn in save_fns:
         try:
             fmt = _detect_format(fn)
             if fmt == SwidFormat.PE:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot save PE when no default identity")
+                    sys.exit(1)
                 if args.objcopy:
                     _export_efi_objcopy(identity, fn, args.cc, args.objcopy)
                 else:
                     _export_efi_pefile(identity, fn)
             elif fmt == SwidFormat.USWID:
                 with open(fn, "wb") as f:
-                    f.write(identity.export_bytes(use_header=True))
+                    f.write(container.export_bytes(compress=args.compress))
             elif fmt == SwidFormat.XML:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot save XML when no default identity")
+                    sys.exit(1)
                 with open(fn, "wb") as f:
                     f.write(identity.export_xml())
             elif fmt == SwidFormat.INI:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot save INI when no default identity")
+                    sys.exit(1)
                 with open(fn, "wb") as f:
                     f.write(identity.export_ini().encode())
             else:

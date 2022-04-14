@@ -152,12 +152,25 @@ The `blob.uswid` file then includes a 16 byte *random* GUID prefixing a simple 7
 little-endian header:
 
     uint8_t[16]   magic string, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
-    uint8_t       header version, typically 0x01
+    uint8_t       header version, typically 0x02
     uint16_t      header length, typically 0x17
     uint32_t      payload length, typically 0x17
+    uint8_t       flags
+                    0x01: zlib compressed payload
 
 This allows an aggregator tool to easily aggregate multiple coSWID sources from a
 composite image into a single SBoM.
+
+Multiple coSWIDs in one uSWID
+-----------------------------
+
+You can merge multiple uSWID files into one uSWID, and compress the result to
+dramatically reduce the amount of space used for multiple SWID blobs -- while
+still being compatible with any tools using uswid like the LVFS.
+
+To merge multiple uSWID files into a compressed single file, simply do:
+
+    uswid --load ucode.uswid --load acm.uswid--save ./combined.uswid --compress
 
 Reading and writing to PE files
 -------------------------------
