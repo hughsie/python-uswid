@@ -37,35 +37,50 @@ class uSwidContainer:
             self.identities.append(uSwidIdentity())
         return self.identities[0]
 
-    def import_bytes(self, blob: bytes) -> None:
-        """imports a uSWID container blob"""
+    def _import_bytes(self, blob: bytes, offset: int) -> int:
 
-        # find and discard magic GUID
-        offset = blob.find(USWID_HEADER_MAGIC)
-        if offset == -1:
-            raise NotSupportedError("file does not have expected magic GUID")
-        print("Found USWID header at offset: {}".format(offset))
+        _USWID_HEADER_FMT = "<BHI"
 
         # this is the most basic of headers
-        (hdrver, hdrsz, payloadsz) = struct.unpack(
-            "<BHI", blob[offset + 16 : offset + 23]
+        (hdrver, hdrsz, payloadsz) = struct.unpack_from(
+            _USWID_HEADER_FMT, blob, offset + len(USWID_HEADER_MAGIC)
         )
         if hdrver == 0:
             raise NotSupportedError("file does not have expected header version")
         payload = blob[offset + hdrsz : offset + hdrsz + payloadsz]
 
         # load flags and possibly decompress payload
+        offset += struct.calcsize(_USWID_HEADER_FMT)
         if hdrver >= 2:
-            (flags,) = struct.unpack("<B", blob[offset + 23 : offset + 24])
+            (flags,) = struct.unpack_from("<B", blob, offset)
             if flags | USWID_HEADER_FLAG_COMPRESSED:
                 payload = zlib.decompress(payload)
 
         # read each CBOR blob
-        offset = 0
-        while offset < len(payload):
+        payload_offset = 0
+        while payload_offset < len(payload):
             identity = uSwidIdentity()
-            offset += identity.import_bytes(payload, offset)
+            payload_offset += identity.import_bytes(payload, payload_offset)
             self.append(identity)
+
+        # consumed
+        return hdrsz + payloadsz
+
+    def import_bytes(self, blob: bytes) -> None:
+        """imports a uSWID container blob"""
+
+        # find magic GUIDs marking external uSWID sections
+        offset: int = 0
+        cnt: int = 0
+        while 1:
+            offset = blob.find(USWID_HEADER_MAGIC, offset)
+            if offset == -1:
+                break
+            print("Found USWID header at offset: {}".format(offset))
+            offset += self._import_bytes(blob, offset)
+            cnt += 1
+        if cnt == 0:
+            raise NotSupportedError("file does not have expected magic GUID")
 
     def export_bytes(self, compress: bool) -> bytes:
         """exports a uSWID container blob"""
