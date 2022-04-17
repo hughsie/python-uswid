@@ -22,22 +22,26 @@ class uSwidContainer:
 
     def __init__(self, blob: Optional[bytes] = None):
 
-        self.identities: List[uSwidIdentity] = []
+        self._identities: List[uSwidIdentity] = []
         if blob:
             self.import_bytes(blob)
 
+    def __iter__(self):
+        for identity in self._identities:
+            yield identity
+
     def append(self, identity: uSwidIdentity) -> None:
 
-        self.identities.append(identity)
+        self._identities.append(identity)
 
     def get_default(self) -> Optional[uSwidIdentity]:
         """returns the existing identity, or creates one if none already exist"""
 
-        if len(self.identities) > 1:
+        if len(self._identities) > 1:
             return None
-        if not self.identities:
-            self.identities.append(uSwidIdentity())
-        return self.identities[0]
+        if not self._identities:
+            self._identities.append(uSwidIdentity())
+        return self._identities[0]
 
     def _import_bytes(self, blob: bytes, offset: int) -> int:
 
@@ -88,7 +92,7 @@ class uSwidContainer:
         """exports a uSWID container blob"""
 
         blob: bytes = b""
-        for identity in self.identities:
+        for identity in self._identities:
             blob += identity.export_bytes()
 
         # v2 header specifies the flags
@@ -119,4 +123,4 @@ class uSwidContainer:
         )
 
     def __repr__(self) -> str:
-        return "uSwidContainer({})".format(self.identities)
+        return "uSwidContainer({})".format(self._identities)
