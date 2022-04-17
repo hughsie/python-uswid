@@ -20,9 +20,11 @@ from .enums import USWID_HEADER_MAGIC, USWID_HEADER_FLAG_COMPRESSED
 class uSwidContainer:
     """represents a uSWID container"""
 
-    def __init__(self):
+    def __init__(self, blob: Optional[bytes] = None):
 
         self.identities: List[uSwidIdentity] = []
+        if blob:
+            self.import_bytes(blob)
 
     def append(self, identity: uSwidIdentity) -> None:
 
