@@ -59,7 +59,7 @@ class uSwidContainer:
         offset += struct.calcsize(_USWID_HEADER_FMT)
         if hdrver >= 2:
             (flags,) = struct.unpack_from("<B", blob, offset)
-            if flags | USWID_HEADER_FLAG_COMPRESSED:
+            if flags & USWID_HEADER_FLAG_COMPRESSED:
                 payload = zlib.decompress(payload)
 
         # read each CBOR blob
