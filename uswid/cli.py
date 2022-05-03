@@ -139,6 +139,7 @@ class SwidFormat(Enum):
     XML = 2
     USWID = 3
     PE = 4
+    JSON = 5
 
 
 def _detect_format(fn: str) -> SwidFormat:
@@ -151,6 +152,8 @@ def _detect_format(fn: str) -> SwidFormat:
         return SwidFormat.INI
     if ext == "xml":
         return SwidFormat.XML
+    if ext == "json":
+        return SwidFormat.JSON
     return SwidFormat.UNKNOWN
 
 
@@ -168,13 +171,13 @@ def main():
         "--load",
         default=None,
         action="append",
-        help="file to import, .efi,.ini,.uswid,.xml",
+        help="file to import, .efi,.ini,.uswid,.xml,.json",
     )
     parser.add_argument(
         "--save",
         default=None,
         action="append",
-        help="file to export, .efi,.ini,.uswid,.xml",
+        help="file to export, .efi,.ini,.uswid,.xml,.json",
     )
     parser.add_argument(
         "--compress",
@@ -229,6 +232,13 @@ def main():
                     sys.exit(1)
                 with open(fn, "rb") as f:
                     identity.import_xml(f.read())
+            elif fmt == SwidFormat.JSON:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot load JSON when no default identity")
+                    sys.exit(1)
+                with open(fn, "rb") as f:
+                    identity.import_json(f.read())
             elif fmt == SwidFormat.INI:
                 identity = container.get_default()
                 if not identity:
@@ -277,6 +287,13 @@ def main():
                     sys.exit(1)
                 with open(fn, "wb") as f:
                     f.write(identity.export_xml())
+            elif fmt == SwidFormat.JSON:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot save JSON when no default identity")
+                    sys.exit(1)
+                with open(fn, "wb") as f:
+                    f.write(identity.export_json())
             elif fmt == SwidFormat.INI:
                 identity = container.get_default()
                 if not identity:

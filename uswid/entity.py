@@ -111,6 +111,41 @@ class uSwidEntity:
         if roles:
             node.set("role", " ".join(roles))
 
+    def _import_json(self, node: Dict[str, str]) -> None:
+        """imports a uSwidEntity JSON blob"""
+
+        self.name = node.get("entity-name")
+        self.regid = node.get("reg-id")
+        for role_str in node["role"]:
+            try:
+                self.roles.append(self._ENTITY_MAP_FROM_XML[role_str])
+            except KeyError as e:
+                raise NotSupportedError(
+                    "{} not supported from {}".format(
+                        role_str, ",".join(self._ENTITY_MAP_FROM_XML)
+                    )
+                ) from e
+
+    def _export_json(self) -> Dict[str, Any]:
+        """exports a uSwidEntity JSON blob"""
+
+        node: Dict[str, Any] = {}
+        if self.name:
+            node["entity-name"] = self.name
+        if self.regid:
+            node["reg-id"] = self.regid
+        node["role"]: List[str] = []
+        for role in self.roles:
+            try:
+                node["role"].append(self._ENTITY_MAP_TO_XML[role])
+            except KeyError as e:
+                raise NotSupportedError(
+                    "{} not supported from {}".format(
+                        role, ",".join(self._ENTITY_MAP_TO_XML.values())
+                    )
+                ) from e
+        return node
+
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidEntity data section"""
 

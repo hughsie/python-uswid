@@ -54,6 +54,22 @@ class uSwidLink:
         rel_data = node.get("rel")
         self.rel = LINK_MAP.get(rel_data, rel_data)
 
+    def _import_json(self, node: Dict[str, str]) -> None:
+        """imports a uSwidLink JSON blob"""
+
+        self.href = node.get("href")
+        self.rel = node.get("rel")
+
+    def _export_json(self) -> Dict[str, str]:
+        """exports a uSwidLink JSON blob"""
+
+        node: Dict[str, str] = {}
+        if self.href:
+            node["href"] = self.href
+        if self.rel:
+            node["rel"] = self.rel
+        return node
+
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidLink data section"""
 

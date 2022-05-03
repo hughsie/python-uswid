@@ -9,6 +9,7 @@
 
 import configparser
 import io
+import json
 
 from typing import Dict, Any, Optional, List
 
@@ -154,6 +155,102 @@ class uSwidIdentity:
             link = uSwidLink()
             link._import_xml(node)
             self.add_link(link)
+
+    def import_json(self, blob: bytes) -> None:
+        """imports a SWID JSON blob"""
+
+        try:
+            identity = json.loads(blob)
+        except json.decoder.JSONDecodeError as e:
+            raise NotSupportedError("invalid JSON: {}".format(e)) from e
+
+        # identity
+        self.tag_id = identity.get("tag-id")
+        self.tag_version = identity.get("tag-version")
+        self.software_name = identity.get("software-name")
+        self.software_version = identity.get("software-version")
+
+        # optional metadata
+        for meta in identity["software-meta"]:
+            for attr_name, attrib_name in [
+                ("summary", "summary"),
+                ("revision", "revision"),
+                ("product", "product"),
+                ("edition", "edition"),
+                ("colloquial-version", "colloquial_version"),
+            ]:
+                if attr_name in meta:
+                    setattr(self, attrib_name, meta[attr_name])
+
+        # entities
+        try:
+            for node in identity["entity"]:
+                entity = uSwidEntity()
+                entity._import_json(node)
+                self.add_entity(entity)
+        except KeyError:
+            pass
+
+        # links
+        try:
+            for node in identity["links"]:
+                link = uSwidLink()
+                link._import_json(node)
+                self.add_link(link)
+        except KeyError:
+            pass
+
+    def export_json(self) -> bytes:
+
+        # identity
+        root: Dict[str, Any] = {"lang": "en-US"}
+        if self.tag_id:
+            root["tag-id"] = self.tag_id
+        if self.tag_version:
+            root["tag-version"] = self.tag_version
+        if self.software_name:
+            root["software-name"] = self.software_name
+        if self.software_version:
+            root["software-version"] = self.software_version
+
+        # optional metadata
+        if (
+            self.summary
+            or self.revision
+            or self.product
+            or self.edition
+            or self.colloquial_version
+        ):
+            node: Dict[str, str] = {}
+            if self.summary:
+                node["summary"] = self.summary
+            if self.revision:
+                node["revision"] = self.revision
+            if self.product:
+                node["product"] = self.product
+            if self.edition:
+                node["edition"] = self.edition
+            if self.colloquial_version:
+                node["colloquial-version"] = self.colloquial_version
+            # the CoSWID spec says: 'software-meta => one-or-more'
+            root["software-meta"] = [node]
+
+        # entities
+        nodes = self._entities.values()
+        if nodes:
+            root["entity"] = []
+            for entity in nodes:
+                root["entity"].append(entity._export_json())
+
+        # links
+        nodes = self._links.values()
+        if nodes:
+            root["link"] = []
+            for link in nodes:
+                root["link"].append(link._export_json())
+
+        # success
+        return json.dumps(root, indent=2).encode("utf-8")
 
     def import_ini(self, ini: str) -> None:
         """imports a ini file as overrides to the uSwidIdentity data"""
