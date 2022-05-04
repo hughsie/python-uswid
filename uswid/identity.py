@@ -45,6 +45,7 @@ class uSwidIdentity:
         self.colloquial_version: Optional[str] = None
         self.revision: Optional[str] = None
         self.edition: Optional[str] = None
+        self.lang: Optional[str] = "en-US"
         self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
@@ -203,7 +204,9 @@ class uSwidIdentity:
     def export_json(self) -> bytes:
 
         # identity
-        root: Dict[str, Any] = {"lang": "en-US"}
+        root: Dict[str, Any] = {}
+        if self.lang:
+            root["lang"] = self.lang
         if self.tag_id:
             root["tag-id"] = self.tag_id
         if self.tag_version:
@@ -299,8 +302,8 @@ class uSwidIdentity:
             "n8060": "http://csrc.nist.gov/ns/swid/2015-extensions/1.0",
         }
         root = ET.Element("SoftwareIdentity", nsmap=NSMAP)
-        root.attrib["{http://www.w3.org/XML/1998/namespace}lang"] = "en-US"
-
+        if self.lang:
+            root.attrib["{http://www.w3.org/XML/1998/namespace}lang"] = self.lang
         if self.software_name:
             root.set("name", self.software_name)
         if self.tag_id:
