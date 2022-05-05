@@ -126,6 +126,7 @@ class TestSwidEntity(unittest.TestCase):
             software_name="foo",
             software_version="1.2.3",
         )
+        identity.version_scheme = "multipartnumeric"
         self.assertEqual(str(identity), "uSwidIdentity(foobarbaz,5,foo,1.2.3)")
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]

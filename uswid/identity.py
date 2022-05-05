@@ -40,6 +40,7 @@ class uSwidIdentity:
         self.tag_version: int = tag_version
         self.software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
+        self.version_scheme: Optional[str] = None
         self.summary: Optional[str] = None
         self.product: Optional[str] = None
         self.colloquial_version: Optional[str] = None
@@ -90,6 +91,7 @@ class uSwidIdentity:
         self.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         self.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
+        self.version_scheme = data.get(uSwidGlobalMap.VERSION_SCHEME, None)
 
         # optional metadata
         for key, value in data.get(uSwidGlobalMap.SOFTWARE_META, {}).items():
@@ -132,6 +134,7 @@ class uSwidIdentity:
         self.tag_version = identity.get("tagVersion")
         self.software_name = identity.get("name")
         self.software_version = identity.get("version")
+        self.version_scheme = identity.get("versionScheme")
 
         # optional metadata
         for meta in identity.xpath("ns:Meta", namespaces=namespaces):
@@ -170,6 +173,7 @@ class uSwidIdentity:
         self.tag_version = identity.get("tag-version")
         self.software_name = identity.get("software-name")
         self.software_version = identity.get("software-version")
+        self.version_scheme = identity.get("version-scheme")
 
         # optional metadata
         for meta in identity["software-meta"]:
@@ -215,6 +219,8 @@ class uSwidIdentity:
             root["software-name"] = self.software_name
         if self.software_version:
             root["software-version"] = self.software_version
+        if self.version_scheme:
+            root["version-scheme"] = self.version_scheme
 
         # optional metadata
         if (
@@ -271,6 +277,8 @@ class uSwidIdentity:
                         self.software_name = value
                     elif key == "software-version":
                         self.software_version = value
+                    elif key == "version-scheme":
+                        self.version_scheme = value
                     elif key == "summary":
                         self.summary = value
                     elif key == "revision":
@@ -312,6 +320,8 @@ class uSwidIdentity:
             root.set("tagVersion", str(self.tag_version))
         if self.software_version:
             root.set("version", self.software_version)
+        if self.version_scheme:
+            root.set("versionScheme", self.version_scheme)
 
         # entities
         for entity in self._entities.values():
@@ -357,6 +367,8 @@ class uSwidIdentity:
             main["software-name"] = self.software_name
         if self.software_version:
             main["software-version"] = self.software_version
+        if self.version_scheme:
+            main["version-scheme"] = self.version_scheme
         if self.summary:
             main["summary"] = self.summary
         if self.revision:
@@ -403,6 +415,7 @@ class uSwidIdentity:
         if not self.software_version:
             raise NotSupportedError("a software_version MUST be provided")
         data[uSwidGlobalMap.SOFTWARE_VERSION] = self.software_version
+        data[uSwidGlobalMap.VERSION_SCHEME] = self.version_scheme
 
         # metadata section
         metadata: Dict[uSwidGlobalMap, Any] = {uSwidGlobalMap.GENERATOR: self.generator}

@@ -56,6 +56,7 @@ XML document:
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
     software-name = HughskiColorHug.efi
     software-version = 1.2.3
+    version-scheme = multipartnumeric
     product = ColorHug
     summary = Open Source Display Colorimeter
     colloquial-version = b2ed6f1ed8587bf01a2951d74512a70f1a512d38
