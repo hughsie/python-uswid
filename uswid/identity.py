@@ -94,22 +94,29 @@ class uSwidIdentity:
         self.version_scheme = data.get(uSwidGlobalMap.VERSION_SCHEME, None)
 
         # optional metadata
-        for key, value in data.get(uSwidGlobalMap.SOFTWARE_META, {}).items():
-            if key == uSwidGlobalMap.GENERATOR:
-                self.generator = value
-            elif key == uSwidGlobalMap.SUMMARY:
-                self.summary = value
-            elif key == uSwidGlobalMap.REVISION:
-                self.revision = value
-            elif key == uSwidGlobalMap.PRODUCT:
-                self.product = value
-            elif key == uSwidGlobalMap.EDITION:
-                self.edition = value
-            elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
-                self.colloquial_version = value
+        software_metas = data.get(uSwidGlobalMap.SOFTWARE_META, [])
+        if isinstance(software_metas, dict):
+            software_metas = [software_metas]
+        for sm in software_metas:
+            for key, value in sm.items():
+                if key == uSwidGlobalMap.GENERATOR:
+                    self.generator = value
+                elif key == uSwidGlobalMap.SUMMARY:
+                    self.summary = value
+                elif key == uSwidGlobalMap.REVISION:
+                    self.revision = value
+                elif key == uSwidGlobalMap.PRODUCT:
+                    self.product = value
+                elif key == uSwidGlobalMap.EDITION:
+                    self.edition = value
+                elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
+                    self.colloquial_version = value
 
         # entities
-        for entity_data in data.get(uSwidGlobalMap.ENTITY, []):
+        entities = data.get(uSwidGlobalMap.ENTITY, [])
+        if isinstance(entities, dict):
+            entities = [entities]
+        for entity_data in entities:
             entity = uSwidEntity()
             entity._import_data(entity_data)
             # skip invalid entries

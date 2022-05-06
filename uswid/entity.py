@@ -148,10 +148,12 @@ class uSwidEntity:
 
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidEntity data section"""
-
         self.name = data.get(uSwidGlobalMap.ENTITY_NAME)
         self.regid = data.get(uSwidGlobalMap.REG_ID, None)
-        for role in data.get(uSwidGlobalMap.ROLE, []):
+        entity_roles = data.get(uSwidGlobalMap.ROLE, [])
+        if isinstance(entity_roles, int):
+            entity_roles = [entity_roles]
+        for role in entity_roles:
             try:
                 self.roles.append(uSwidEntityRole(int(role)))
             except KeyError:
