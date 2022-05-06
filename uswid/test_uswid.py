@@ -30,7 +30,7 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(str(entity), "uSwidEntity(test,example.com->MAINTAINER)")
         self.assertEqual(
             str(entity._export_bytes()),
-            "{<uSwidGlobalMap.SOFTWARE_NAME: 1>: 'test', "
+            "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
             + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
             + "<uSwidGlobalMap.ROLE: 33>: [<uSwidEntityRole.MAINTAINER: 6>]}",
         )
