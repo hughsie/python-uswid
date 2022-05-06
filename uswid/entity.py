@@ -149,7 +149,7 @@ class uSwidEntity:
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidEntity data section"""
 
-        self.name = data.get(uSwidGlobalMap.SOFTWARE_NAME)
+        self.name = data.get(uSwidGlobalMap.ENTITY_NAME)
         self.regid = data.get(uSwidGlobalMap.REG_ID, None)
         for role in data.get(uSwidGlobalMap.ROLE, []):
             try:
@@ -213,7 +213,7 @@ class uSwidEntity:
         """exports a uSwidEntity CBOR blob"""
 
         data: Dict[uSwidGlobalMap, Any] = {}
-        data[uSwidGlobalMap.SOFTWARE_NAME] = self.name
+        data[uSwidGlobalMap.ENTITY_NAME] = self.name
         if self.regid:
             data[uSwidGlobalMap.REG_ID] = self.regid
         data[uSwidGlobalMap.ROLE] = self.roles
