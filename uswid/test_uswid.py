@@ -142,7 +142,7 @@ class TestSwidEntity(unittest.TestCase):
         xml = b"""<?xml version='1.0' encoding='UTF-8'?>
 <SoftwareIdentity name="DellBiosConnectNetwork"
 tagId="acbd84ff-9898-4922-8ade-dd4bbe2e40ba" tagVersion="1" version="1.5.2"
-versionScheme="unknown" xml:lang="en-us"
+versionScheme="semver" xml:lang="en-us"
 xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd"
 xmlns:SHA256="http://www.w3.org/2001/04/xmlenc#sha256"
 xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512"
