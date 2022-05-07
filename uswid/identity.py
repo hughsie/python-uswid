@@ -409,6 +409,9 @@ class uSwidIdentity:
 
         # general identity section
         data: Dict[uSwidGlobalMap, Any] = {}
+
+        if self.lang:
+            data[uSwidGlobalMap.LANG] = self.lang
         if self.tag_id:
             data[uSwidGlobalMap.TAG_ID] = self.tag_id
         if self.tag_version:
