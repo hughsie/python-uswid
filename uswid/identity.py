@@ -10,6 +10,7 @@
 import configparser
 import io
 import json
+import uuid
 
 from typing import Dict, Any, Optional, List
 
@@ -42,14 +43,18 @@ class uSwidIdentity:
 
     def __init__(
         self,
-        tag_id: Optional[str] = None,
+        tag_id: Optional[None] = None,
         tag_version: int = 0,
         software_name: Optional[str] = None,
         software_version: Optional[str] = None,
     ):
 
         self._auto_increment_tag_version = False
-        self.tag_id: Optional[str] = tag_id
+        try:
+            self.tag_id: Optional[uuid.UUID] = uuid.UUID(tag_id)
+        except:
+            self.tag_id: Optional[str] = tag_id
+        self.tag_id: Optional[None] = tag_id
         self.tag_version: int = tag_version
         self.software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
@@ -85,6 +90,24 @@ class uSwidIdentity:
     def entities(self) -> List[uSwidEntity]:
         """returns all the added entities"""
         return list(self._entities.values())
+
+    # get a string representation of tag_id
+    # it's either just the plain tag_id or a hex representation of an UUID
+    def get_tagid_string(self) -> str:
+        if type(self.tag_id) is str:
+            return self.tag_id
+        elif type(self.tag_id) is bytes:
+            return uuid.UUID(bytes=self.tag_id).hex
+        else:
+            raise NotSupportedError("unsupported type for tag-id")
+
+    # set tagid from a given string, if tagid is a valid UUID, we can
+    # just save the UUID in bytes in self.tag_id
+    def set_tagid_string(self, tagid: str):
+        try:
+            self.tag_id = uuid.UUID(hex=tagid).bytes
+        except:
+            self.tag_id = tagid
 
     def import_bytes(self, blob: bytes, offset: Optional[int] = 0) -> int:
         """imports a uSwidIdentity CBOR blob"""
@@ -150,7 +173,7 @@ class uSwidIdentity:
         identity = tree.xpath("/ns:SoftwareIdentity", namespaces=namespaces)[0]
 
         # identity
-        self.tag_id = identity.get("tagId")
+        self.set_tagid_string(identity.get("tagId"))
         self.tag_version = identity.get("tagVersion")
         self.software_name = identity.get("name")
         self.software_version = identity.get("version")
@@ -194,7 +217,7 @@ class uSwidIdentity:
             raise NotSupportedError("invalid JSON: {}".format(e)) from e
 
         # identity
-        self.tag_id = identity.get("tag-id")
+        self.set_tagid_string(identity.get("tag-id"))
         self.tag_version = identity.get("tag-version")
         self.software_name = identity.get("software-name")
         self.software_version = identity.get("software-version")
@@ -239,7 +262,7 @@ class uSwidIdentity:
         if self.lang:
             root["lang"] = self.lang
         if self.tag_id:
-            root["tag-id"] = self.tag_id
+            root["tag-id"] = self.get_tagid_string()
         if self.tag_version:
             root["tag-version"] = self.tag_version
         if self.software_name:
@@ -296,7 +319,7 @@ class uSwidIdentity:
             if group == "uSWID":
                 for key, value in config[group].items():
                     if key == "tag-id":
-                        self.tag_id = value
+                        self.set_tagid_string(value)
                     elif key == "tag-version":
                         self.tag_version = int(value)
                         self._auto_increment_tag_version = False
@@ -342,7 +365,7 @@ class uSwidIdentity:
         if self.software_name:
             root.set("name", self.software_name)
         if self.tag_id:
-            root.set("tagId", self.tag_id)
+            root.set("tagId", self.get_tagid_string())
         if self.tag_version:
             root.set("tagVersion", str(self.tag_version))
         if self.software_version:
@@ -389,7 +412,7 @@ class uSwidIdentity:
         # main section
         main = {}
         if self.tag_id:
-            main["tag-id"] = self.tag_id
+            main["tag-id"] = self.get_tagid_string()
         if self.tag_version:
             main["tag-version"] = str(self.tag_version)
         if self.software_name:
