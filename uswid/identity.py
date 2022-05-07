@@ -95,8 +95,8 @@ class uSwidIdentity:
         except:
             return self.tag_id
 
-    # set tagid from a given bytes, if tagid is a valid UUID, we can
-    # just save the UUID in bytes in self.tag_id
+    # if tagid is a UUID in bytes, it tries to generate a string hex
+    # representation and save it in self.tag_id, otherwise plain tagid is saved
     def set_tagid(self, tagid):
         if type(tagid) is bytes:
             try:
