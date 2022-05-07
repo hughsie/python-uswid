@@ -68,6 +68,14 @@ class uSwidGlobalMap(IntEnum):
     UNSPSC_VERSION = 57
 
 
+class uSwidVersionScheme(IntEnum):
+    MULTIPARTNUMERIC = 1
+    MULTIPARTNUMERIC_SUFFIX = 2
+    ALPHANUMERIC = 3
+    DECIMAL = 4
+    SEMVER = 16384
+
+
 USWID_HEADER_MAGIC = b"\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
 
 USWID_HEADER_FLAG_COMPRESSED = 0x01

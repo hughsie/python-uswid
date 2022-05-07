@@ -18,6 +18,7 @@ sys.path.append(os.path.realpath("."))
 from .errors import NotSupportedError
 from .link import uSwidLink
 from .entity import uSwidEntity, uSwidEntityRole
+from .enums import uSwidVersionScheme
 from .identity import uSwidIdentity
 
 
@@ -126,7 +127,7 @@ class TestSwidEntity(unittest.TestCase):
             software_name="foo",
             software_version="1.2.3",
         )
-        identity.version_scheme = "multipartnumeric"
+        identity.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
         self.assertEqual(str(identity), "uSwidIdentity(foobarbaz,5,foo,1.2.3)")
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
