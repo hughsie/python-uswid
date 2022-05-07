@@ -43,18 +43,14 @@ class uSwidIdentity:
 
     def __init__(
         self,
-        tag_id: Optional[None] = None,
+        tag_id: Optional[str] = None,
         tag_version: int = 0,
         software_name: Optional[str] = None,
         software_version: Optional[str] = None,
     ):
 
         self._auto_increment_tag_version = False
-        try:
-            self.tag_id: Optional[uuid.UUID] = uuid.UUID(tag_id)
-        except:
-            self.tag_id: Optional[str] = tag_id
-        self.tag_id: Optional[None] = tag_id
+        self.tag_id = tag_id
         self.tag_version: int = tag_version
         self.software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
@@ -91,23 +87,27 @@ class uSwidIdentity:
         """returns all the added entities"""
         return list(self._entities.values())
 
-    # get a string representation of tag_id
-    # it's either just the plain tag_id or a hex representation of an UUID
-    def get_tagid_string(self) -> str:
-        if type(self.tag_id) is str:
-            return self.tag_id
-        elif type(self.tag_id) is bytes:
-            return uuid.UUID(bytes=self.tag_id).hex
-        else:
-            raise NotSupportedError("unsupported type for tag-id")
-
-    # set tagid from a given string, if tagid is a valid UUID, we can
-    # just save the UUID in bytes in self.tag_id
-    def set_tagid_string(self, tagid: str):
+    # get tag_id either in bytes if it's a valid UUID
+    # otherwise return tag_id as string
+    def get_tagid(self):
         try:
-            self.tag_id = uuid.UUID(hex=tagid).bytes
+            return uuid.UUID(hex="urn:uuid:"+self.tag_id).bytes
         except:
+            return self.tag_id
+
+    # set tagid from a given bytes, if tagid is a valid UUID, we can
+    # just save the UUID in bytes in self.tag_id
+    def set_tagid(self, tagid):
+        if type(tagid) is bytes:
+            try:
+                self.tag_id = uuid.UUID(bytes=tagid).urn[9:]
+            except:
+                raise NotSupportedError("tagid is in bytes, but not parseable to a UUID")
+        elif type(tagid) is str:
             self.tag_id = tagid
+        else:
+            raise NotSupportedError("tagid has an unsupported format")
+
 
     def import_bytes(self, blob: bytes, offset: Optional[int] = 0) -> int:
         """imports a uSwidIdentity CBOR blob"""
@@ -123,7 +123,7 @@ class uSwidIdentity:
             raise NotSupportedError("invalid header") from e
 
         # identity
-        self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
+        self.set_tagid(data.get(uSwidGlobalMap.TAG_ID, None))
         self.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         self.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
@@ -173,7 +173,7 @@ class uSwidIdentity:
         identity = tree.xpath("/ns:SoftwareIdentity", namespaces=namespaces)[0]
 
         # identity
-        self.set_tagid_string(identity.get("tagId"))
+        self.tag_id = identity.get("tagId")
         self.tag_version = identity.get("tagVersion")
         self.software_name = identity.get("name")
         self.software_version = identity.get("version")
@@ -217,7 +217,7 @@ class uSwidIdentity:
             raise NotSupportedError("invalid JSON: {}".format(e)) from e
 
         # identity
-        self.set_tagid_string(identity.get("tag-id"))
+        self.tag_id = identity.get("tag-id")
         self.tag_version = identity.get("tag-version")
         self.software_name = identity.get("software-name")
         self.software_version = identity.get("software-version")
@@ -262,7 +262,7 @@ class uSwidIdentity:
         if self.lang:
             root["lang"] = self.lang
         if self.tag_id:
-            root["tag-id"] = self.get_tagid_string()
+            root["tag-id"] = self.tag_id
         if self.tag_version:
             root["tag-version"] = self.tag_version
         if self.software_name:
@@ -319,7 +319,7 @@ class uSwidIdentity:
             if group == "uSWID":
                 for key, value in config[group].items():
                     if key == "tag-id":
-                        self.set_tagid_string(value)
+                        self.tag_id = value
                     elif key == "tag-version":
                         self.tag_version = int(value)
                         self._auto_increment_tag_version = False
@@ -365,7 +365,7 @@ class uSwidIdentity:
         if self.software_name:
             root.set("name", self.software_name)
         if self.tag_id:
-            root.set("tagId", self.get_tagid_string())
+            root.set("tagId", self.tag_id)
         if self.tag_version:
             root.set("tagVersion", str(self.tag_version))
         if self.software_version:
@@ -412,7 +412,7 @@ class uSwidIdentity:
         # main section
         main = {}
         if self.tag_id:
-            main["tag-id"] = self.get_tagid_string()
+            main["tag-id"] = self.tag_id
         if self.tag_version:
             main["tag-version"] = str(self.tag_version)
         if self.software_name:
@@ -458,7 +458,7 @@ class uSwidIdentity:
         if self.lang:
             data[uSwidGlobalMap.LANG] = self.lang
         if self.tag_id:
-            data[uSwidGlobalMap.TAG_ID] = self.tag_id
+            data[uSwidGlobalMap.TAG_ID] = self.get_tagid()
         if self.tag_version:
             tag_version = self.tag_version
             if self._auto_increment_tag_version:
