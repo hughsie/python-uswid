@@ -252,17 +252,17 @@ class uSwidIdentity:
             root["software-meta"] = [node]
 
         # entities
-        nodes = self._entities.values()
-        if nodes:
+        entities = self._entities.values()
+        if entities:
             root["entity"] = []
-            for entity in nodes:
+            for entity in entities:
                 root["entity"].append(entity._export_json())
 
         # links
-        nodes = self._links.values()
-        if nodes:
+        links = self._links.values()
+        if links:
             root["link"] = []
-            for link in nodes:
+            for link in links:
                 root["link"].append(link._export_json())
 
         # success

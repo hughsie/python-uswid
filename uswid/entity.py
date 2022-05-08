@@ -134,7 +134,7 @@ class uSwidEntity:
             node["entity-name"] = self.name
         if self.regid:
             node["reg-id"] = self.regid
-        node["role"]: List[str] = []
+        node["role"] = []
         for role in self.roles:
             try:
                 node["role"].append(self._ENTITY_MAP_TO_XML[role])
