@@ -10,6 +10,7 @@
 import configparser
 import io
 import json
+import uuid
 
 from typing import Dict, Any, Optional, List
 
@@ -99,8 +100,16 @@ class uSwidIdentity:
         except EOFError as e:
             raise NotSupportedError("invalid header") from e
 
-        # identity
-        self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
+        # identity can be specified as a string or in binary
+        tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
+        if isinstance(self.tag_id, str):
+            self.tag_id = tag_id_bytes
+        else:
+            try:
+                self.tag_id = str(uuid.UUID(bytes=tag_id_bytes))
+            except ValueError:
+                self.tag_id = tag_id_bytes.hex()
+
         self.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         self.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
@@ -442,7 +451,10 @@ class uSwidIdentity:
         if self.lang:
             data[uSwidGlobalMap.LANG] = self.lang
         if self.tag_id:
-            data[uSwidGlobalMap.TAG_ID] = self.tag_id
+            try:
+                data[uSwidGlobalMap.TAG_ID] = uuid.UUID(hex=self.tag_id).bytes
+            except KeyError:
+                data[uSwidGlobalMap.TAG_ID] = self.tag_id
         if self.tag_version:
             tag_version = self.tag_version
             if self._auto_increment_tag_version:
