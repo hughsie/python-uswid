@@ -99,10 +99,11 @@ class uSwidIdentity:
     # representation and save it in self.tag_id, otherwise plain tagid is saved
     def set_tagid(self, tagid):
         if type(tagid) is bytes:
-            try:
-                self.tag_id = uuid.UUID(bytes=tagid).urn[9:]
-            except:
-                raise NotSupportedError("tagid is in bytes, but not parseable to a UUID")
+            if len(tagid) == 16:
+                hex_string = tagid.hex();
+                self.tag_id = str.format("{0}-{1}-{2}-{3}-{4}", hex_string[:8], hex_string[8:12], hex_string[12:16], hex_string[16:20], hex_string[20:32])
+            else:
+                raise NotSupportedError("tag-id is a byte array with length different than 16")
         elif type(tagid) is str:
             self.tag_id = tagid
         else:
