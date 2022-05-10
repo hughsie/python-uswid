@@ -136,6 +136,13 @@ class uSwidIdentity:
             if not entity.roles:
                 continue
             self.add_entity(entity)
+
+        # links
+        for link_data in data.get(uSwidGlobalMap.LINK, []):
+            link = uSwidLink()
+            link._import_data(link_data)
+            self.add_link(link)
+
         self._auto_increment_tag_version = True
 
         # number of bytes consumed, i.e. where the next CBOR blob is found
