@@ -10,6 +10,7 @@
 import configparser
 import io
 import json
+import uuid
 
 from typing import Dict, Any, Optional, List
 
@@ -49,7 +50,7 @@ class uSwidIdentity:
     ):
 
         self._auto_increment_tag_version = False
-        self.tag_id: Optional[str] = tag_id
+        self.tag_id = tag_id
         self.tag_version: int = tag_version
         self.software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
@@ -86,6 +87,29 @@ class uSwidIdentity:
         """returns all the added entities"""
         return list(self._entities.values())
 
+    # get tag_id either in bytes if it's a valid UUID
+    # otherwise return tag_id as string
+    def get_tagid(self):
+        try:
+            return uuid.UUID(hex="urn:uuid:"+self.tag_id).bytes
+        except:
+            return self.tag_id
+
+    # if tagid is a UUID in bytes, it tries to generate a string hex
+    # representation and save it in self.tag_id, otherwise plain tagid is saved
+    def set_tagid(self, tagid):
+        if type(tagid) is bytes:
+            if len(tagid) == 16:
+                hex_string = tagid.hex();
+                self.tag_id = str.format("{0}-{1}-{2}-{3}-{4}", hex_string[:8], hex_string[8:12], hex_string[12:16], hex_string[16:20], hex_string[20:32])
+            else:
+                raise NotSupportedError("tag-id is a byte array with length different than 16")
+        elif type(tagid) is str:
+            self.tag_id = tagid
+        else:
+            raise NotSupportedError("tagid has an unsupported format")
+
+
     def import_bytes(self, blob: bytes, offset: Optional[int] = 0) -> int:
         """imports a uSwidIdentity CBOR blob"""
 
@@ -100,7 +124,7 @@ class uSwidIdentity:
             raise NotSupportedError("invalid header") from e
 
         # identity
-        self.tag_id = data.get(uSwidGlobalMap.TAG_ID, None)
+        self.set_tagid(data.get(uSwidGlobalMap.TAG_ID, None))
         self.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         self.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
         self.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
@@ -442,7 +466,7 @@ class uSwidIdentity:
         if self.lang:
             data[uSwidGlobalMap.LANG] = self.lang
         if self.tag_id:
-            data[uSwidGlobalMap.TAG_ID] = self.tag_id
+            data[uSwidGlobalMap.TAG_ID] = self.get_tagid()
         if self.tag_version:
             tag_version = self.tag_version
             if self._auto_increment_tag_version:
