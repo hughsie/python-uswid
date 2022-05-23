@@ -140,6 +140,7 @@ class SwidFormat(Enum):
     USWID = 3
     PE = 4
     JSON = 5
+    PKG_CONFIG = 6
 
 
 def _detect_format(filepath: str) -> SwidFormat:
@@ -154,6 +155,8 @@ def _detect_format(filepath: str) -> SwidFormat:
         return SwidFormat.XML
     if ext == "json":
         return SwidFormat.JSON
+    if ext == "pc":
+        return SwidFormat.PKG_CONFIG
     return SwidFormat.UNKNOWN
 
 
@@ -246,6 +249,13 @@ def main():
                     sys.exit(1)
                 with open(filepath, "rb") as f:
                     identity.import_ini(f.read().decode())
+            elif fmt == SwidFormat.PKG_CONFIG:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot load PKG_CONFIG when no default identity")
+                    sys.exit(1)
+                with open(filepath, "rb") as f:
+                    identity.import_pkg_config(f.read().decode(), filepath=filepath)
             else:
                 print("{} has unknown extension, using uSWID".format(filepath))
                 with open(filepath, "rb") as f:

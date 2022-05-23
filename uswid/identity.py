@@ -9,6 +9,7 @@
 
 import configparser
 import io
+import os
 import json
 import uuid
 
@@ -303,6 +304,31 @@ class uSwidIdentity:
 
         # success
         return json.dumps(root, indent=2).encode("utf-8")
+
+    def import_pkg_config(self, txt: str, filepath=None) -> None:
+        """imports a pkg-conifg file as overrides to the uSwidIdentity data"""
+
+        # filename base is the ID
+        if filepath:
+            self.tag_id = os.path.basename(filepath)
+            if self.tag_id.endswith(".pc"):
+                self.tag_id = self.tag_id[:-3]
+
+        # read out properties
+        for line in txt.split("\n"):
+            try:
+                key, value = line.split(":", maxsplit=2)
+            except ValueError:
+                continue
+            if key == "Name":
+                self.software_name = value.strip()
+                continue
+            if key == "Description":
+                self.summary = value.strip()
+                continue
+            if key == "Version":
+                self.software_version = value.strip()
+                continue
 
     def import_ini(self, ini: str) -> None:
         """imports a ini file as overrides to the uSwidIdentity data"""
