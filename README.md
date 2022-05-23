@@ -42,7 +42,9 @@ The example program supports loading from either:
 
  * The `.sbom` section that already exists in the binary
  * A SWID XML document
+ * A JSON version of the same XML schema
  * A ini-file override document
+ * A pkg-config library definition
 
 The data sources are loaded in this order, and all are optional. In general
 values overwrite each other, with the exception of entities, which are appended.
