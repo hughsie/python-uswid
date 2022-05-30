@@ -37,15 +37,15 @@ def _pe_get_section_by_name(pe: pefile.PE, name: str) -> pefile.SectionStructure
     return None
 
 
-def _import_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
+def _import_efi_pefile(identity: uSwidIdentity, filepath: str) -> None:
     """read EFI file using pefile"""
-    pe = pefile.PE(fn)
+    pe = pefile.PE(filepath)
     sect = _pe_get_section_by_name(pe, ".sbom")
     if sect:
         identity.import_bytes(sect.get_data())
 
 
-def _import_efi_objcopy(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
+def _import_efi_objcopy(identity: uSwidIdentity, filepath: str, objcopy: str) -> None:
     """read EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
@@ -62,7 +62,7 @@ def _import_efi_objcopy(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
                     "-O",
                     "binary",
                     "--only-section=.sbom",
-                    fn,
+                    filepath,
                     dst.name,
                 ],
                 stderr=subprocess.PIPE,
@@ -73,10 +73,10 @@ def _import_efi_objcopy(identity: uSwidIdentity, fn: str, objcopy: str) -> None:
         identity.import_bytes(dst.read())
 
 
-def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
+def _export_efi_pefile(identity: uSwidIdentity, filepath: str) -> None:
     """modify EFI file using pefile"""
     blob = identity.export_bytes()
-    pe = pefile.PE(fn)
+    pe = pefile.PE(filepath)
     sect = _pe_get_section_by_name(pe, ".sbom")
     if not sect:
         raise NotSupportedError("PE files have to have an linker-defined .sbom section")
@@ -87,21 +87,21 @@ def _export_efi_pefile(identity: uSwidIdentity, fn: str) -> None:
         pe.set_bytes_at_offset(sect.PointerToRawData, blob)
 
     # save
-    pe.write(fn)
+    pe.write(filepath)
 
 
 def _export_efi_objcopy(
-    identity: uSwidIdentity, fn: str, cc: Optional[str], objcopy: str
+    identity: uSwidIdentity, filepath: str, cc: Optional[str], objcopy: str
 ) -> None:
     """modify EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
         print("executable {} not found".format(objcopy))
         sys.exit(1)
-    if not os.path.exists(fn):
+    if not os.path.exists(filepath):
         if not cc:
             raise NotSupportedError("compiler is required for missing section")
-        subprocess.run([cc, "-x", "c", "-c", "-o", fn, "/dev/null"], check=True)
+        subprocess.run([cc, "-x", "c", "-c", "-o", filepath, "/dev/null"], check=True)
 
     # save to file?
     try:
@@ -125,7 +125,7 @@ def _export_efi_objcopy(
                     ".sbom={}".format(src.name),
                     "--set-section-flags",
                     ".sbom=contents,alloc,load,readonly,data",
-                    fn,
+                    filepath,
                 ]
             )
         except subprocess.CalledProcessError as e:
@@ -142,8 +142,8 @@ class SwidFormat(Enum):
     JSON = 5
 
 
-def _detect_format(fn: str) -> SwidFormat:
-    ext = fn.rsplit(".", maxsplit=1)[-1].lower()
+def _detect_format(filepath: str) -> SwidFormat:
+    ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
     if ext in ["exe", "efi"]:
         return SwidFormat.PE
     if ext in ["uswid", "raw", "bin"]:
@@ -194,115 +194,115 @@ def main():
         help="Show verbose operation",
     )
     args = parser.parse_args()
-    load_fns = args.load if args.load else []
-    save_fns = args.save if args.save else []
+    load_filepaths = args.load if args.load else []
+    save_filepaths = args.save if args.save else []
 
     # deprecated arguments
     if args.binfile:
-        load_fns.append(args.binfile)
-        save_fns.append(args.binfile)
+        load_filepaths.append(args.binfile)
+        save_filepaths.append(args.binfile)
     if args.rawfile:
-        save_fns.append(args.rawfile)
+        save_filepaths.append(args.rawfile)
     if args.xmlfile:
-        load_fns.append(args.xmlfile)
+        load_filepaths.append(args.xmlfile)
 
     # sanity check
-    if not load_fns and not save_fns:
+    if not load_filepaths and not save_filepaths:
         print("Use uswid --help for command line arguments")
         sys.exit(1)
 
     # collect data here
     container = uSwidContainer()
-    for fn in load_fns:
+    for filepath in load_filepaths:
         try:
-            fmt = _detect_format(fn)
+            fmt = _detect_format(filepath)
             if fmt == SwidFormat.PE:
                 identity = container.get_default()
                 if not identity:
                     print("cannot load PE when no default identity")
                     sys.exit(1)
                 if args.objcopy:
-                    _import_efi_objcopy(identity, fn, objcopy=args.objcopy)
+                    _import_efi_objcopy(identity, filepath, objcopy=args.objcopy)
                 else:
-                    _import_efi_pefile(identity, fn)
+                    _import_efi_pefile(identity, filepath)
             elif fmt == SwidFormat.XML:
                 identity = container.get_default()
                 if not identity:
                     print("cannot load XML when no default identity")
                     sys.exit(1)
-                with open(fn, "rb") as f:
+                with open(filepath, "rb") as f:
                     identity.import_xml(f.read())
             elif fmt == SwidFormat.JSON:
                 identity = container.get_default()
                 if not identity:
                     print("cannot load JSON when no default identity")
                     sys.exit(1)
-                with open(fn, "rb") as f:
+                with open(filepath, "rb") as f:
                     identity.import_json(f.read())
             elif fmt == SwidFormat.INI:
                 identity = container.get_default()
                 if not identity:
                     print("cannot load INI when no default identity")
                     sys.exit(1)
-                with open(fn, "rb") as f:
+                with open(filepath, "rb") as f:
                     identity.import_ini(f.read().decode())
             else:
-                print("{} has unknown extension, using uSWID".format(fn))
-                with open(fn, "rb") as f:
+                print("{} has unknown extension, using uSWID".format(filepath))
+                with open(filepath, "rb") as f:
                     container.import_bytes(f.read())
 
         except FileNotFoundError:
-            print("{} does not exist".format(fn))
+            print("{} does not exist".format(filepath))
             sys.exit(1)
         except NotSupportedError as e:
             print(e)
             sys.exit(1)
 
     # debug
-    if load_fns and args.verbose:
+    if load_filepaths and args.verbose:
         print("Loaded:\n{}".format(container))
 
     # optional save
-    if save_fns and args.verbose:
+    if save_filepaths and args.verbose:
         print("Saving:\n{}".format(container))
-    for fn in save_fns:
+    for filepath in save_filepaths:
         try:
-            fmt = _detect_format(fn)
+            fmt = _detect_format(filepath)
             if fmt == SwidFormat.PE:
                 identity = container.get_default()
                 if not identity:
                     print("cannot save PE when no default identity")
                     sys.exit(1)
                 if args.objcopy:
-                    _export_efi_objcopy(identity, fn, args.cc, args.objcopy)
+                    _export_efi_objcopy(identity, filepath, args.cc, args.objcopy)
                 else:
-                    _export_efi_pefile(identity, fn)
+                    _export_efi_pefile(identity, filepath)
             elif fmt == SwidFormat.USWID:
-                with open(fn, "wb") as f:
+                with open(filepath, "wb") as f:
                     f.write(container.export_bytes(compress=args.compress))
             elif fmt == SwidFormat.XML:
                 identity = container.get_default()
                 if not identity:
                     print("cannot save XML when no default identity")
                     sys.exit(1)
-                with open(fn, "wb") as f:
+                with open(filepath, "wb") as f:
                     f.write(identity.export_xml())
             elif fmt == SwidFormat.JSON:
                 identity = container.get_default()
                 if not identity:
                     print("cannot save JSON when no default identity")
                     sys.exit(1)
-                with open(fn, "wb") as f:
+                with open(filepath, "wb") as f:
                     f.write(identity.export_json())
             elif fmt == SwidFormat.INI:
                 identity = container.get_default()
                 if not identity:
                     print("cannot save INI when no default identity")
                     sys.exit(1)
-                with open(fn, "wb") as f:
+                with open(filepath, "wb") as f:
                     f.write(identity.export_ini().encode())
             else:
-                print("{} extension is not supported".format(fn))
+                print("{} extension is not supported".format(filepath))
                 sys.exit(1)
         except NotSupportedError as e:
             print(e)
