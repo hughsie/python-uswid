@@ -1,3 +1,3 @@
-cbor
+cbor==1.0.0
 lxml
 pefile
