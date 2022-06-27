@@ -150,7 +150,7 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
 <Entity name="Dell Technologies" regid="dell.com" role="softwareCreator tagCreator" />
 <Link rel="seeAlso" href="http://hughsie.com"/>
 <Link rel="license" href="www.gnu.org/licenses/gpl.txt"/>
-<Meta product="Fedora" colloquialVersion="29"
+<Meta product="Fedora" colloquialVersion="29" persistentId="org.hughski.colorhug"
   summary="Linux distribution developed by the community-supported Fedora Project" />
 </SoftwareIdentity>"""
         identity = uSwidIdentity()
@@ -168,6 +168,7 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
         )
         self.assertEqual(identity.product, "Fedora")
         self.assertEqual(identity.colloquial_version, "29")
+        self.assertEqual(identity.persistent_id, "org.hughski.colorhug")
 
         # INI import
         ini = """[uSWID]
@@ -175,6 +176,7 @@ tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
 tag-version = 1
 software-name = HughskiColorHug.efi
 software-version = 1.0.0
+persistent-id = org.hughski.colorhug
 
 [uSWID-Entity:TagCreator]
 name = Richard Hughes
@@ -220,7 +222,8 @@ rel = see-also
             b'  <Entity name="Richard Hughes" regid="hughsie.com" role="tagCreator"/>\n'
             b'  <Entity name="Hughski Limited" regid="hughski.com" role="aggregator"/>\n'
             b'  <Link href="https://hughski.com/" rel="see-also"/>\n'
-            b'  <Meta colloquialVersion="22905301d08e69473393d94c3e787e4bf0453268"/>\n'
+            b'  <Meta colloquialVersion="22905301d08e69473393d94c3e787e4bf0453268" '
+            b'persistentId="org.hughski.colorhug"/>\n'
             b"</SoftwareIdentity>\n",
         )
 
