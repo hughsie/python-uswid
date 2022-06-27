@@ -67,6 +67,35 @@ class uSwidIdentity:
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
 
+    def merge(self, identity_new: "uSwidIdentity") -> None:
+        """adds new things from the new identity into the current one"""
+        if identity_new.tag_version:
+            self.tag_version = identity_new.tag_version
+        if identity_new.software_name:
+            self.software_name = identity_new.software_name
+        if identity_new.software_version:
+            self.software_version = identity_new.software_version
+        if identity_new.version_scheme:
+            self.version_scheme = identity_new.version_scheme
+        if identity_new.summary:
+            self.summary = identity_new.summary
+        if identity_new.product:
+            self.product = identity_new.product
+        if identity_new.colloquial_version:
+            self.colloquial_version = identity_new.colloquial_version
+        if identity_new.revision:
+            self.revision = identity_new.revision
+        if identity_new.edition:
+            self.edition = identity_new.edition
+        if identity_new.persistent_id:
+            self.persistent_id = identity_new.persistent_id
+        if identity_new.lang:
+            self.lang = identity_new.lang
+        for entity in identity_new.entities:
+            self.add_entity(entity)
+        for link in identity_new.links:
+            self.add_link(link)
+
     def add_entity(self, entity: uSwidEntity) -> None:
         """only adds the latest entity"""
         if not entity.name:

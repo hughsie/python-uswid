@@ -111,6 +111,55 @@ Usefully, if you load a uswid blob from an existing binary, the tag version is
 incremented when you save it again. If you don't want that, set an explicit
 `tag-version` in the `[uSWID]` section.
 
+If there are multiple loaded identities (for instance, using a `uswid` file, or
+using `--load` multiple times) then you can specify the correct identity using:
+
+    [uSWID]
+    tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
+
+    [uSWID-Entity:Distributor]
+    name = OEM Vendor
+    regid = oem.homepage.com
+
+Adding Deps
+-----------
+
+Dependancies like compilers or other security-relevant libraries can be done using:
+
+    uswid --load uswid.ini --load compiler.ini --save ./example.uswid
+
+Where we've added an extra link section in `uswid.ini`:
+
+    [uSWID-Link:gcc]
+    rel = see-also
+    href = swid:077b4576-92f7-52fd-94eb-af9fc3d52c58
+
+Where `compiler.ini` looks something like:
+
+    [uSWID]
+    tag-id = 077b4576-92f7-52fd-94eb-af9fc3d52c58
+    software-name = gcc
+    software-version = 12.1.1
+    version-scheme = multipartnumeric
+
+    [uSWID-Entity:TagCreator]
+    name = Hughski Limited
+    regid = hughski.com
+
+...or for several dependencies that have been included into the firmware:
+
+    [uSWID-Link:libpng]
+    rel = requires
+    href = swid:077b4576-92f7-52fd-94eb-af9fc3d52c58
+
+    [uSWID-Link:libjpeg]
+    rel = requires
+    href = swid:3aab57c3-5661-5731-800d-db5a7f0886c1
+
+NOTE: The GUID can be constructed from the tool or library name combined with
+the version, e.g using `appstream-util generate-guid gcc-12.1.1` or the
+[online tool hosted by the LVFS](https://fwupd.org/lvfs/guid).
+
 RAW Blobs
 ---------
 

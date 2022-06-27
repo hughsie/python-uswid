@@ -214,48 +214,70 @@ def main():
         print("Use uswid --help for command line arguments")
         sys.exit(1)
 
-    # collect data here
+    # always load into a temporary identity so that we can query the tag_id
     container = uSwidContainer()
+
+    # collect data here
     for filepath in load_filepaths:
         try:
             fmt = _detect_format(filepath)
             if fmt == SwidFormat.PE:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot load PE when no default identity")
-                    sys.exit(1)
+                identity = uSwidIdentity()
                 if args.objcopy:
                     _import_efi_objcopy(identity, filepath, objcopy=args.objcopy)
                 else:
                     _import_efi_pefile(identity, filepath)
+                identity_new = container.merge(identity)
+                if identity_new:
+                    print(
+                        "{} was merged into existing identity {}".format(
+                            filepath, identity_new.tag_id
+                        )
+                    )
             elif fmt == SwidFormat.XML:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot load XML when no default identity")
-                    sys.exit(1)
+                identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
                     identity.import_xml(f.read())
+                identity_new = container.merge(identity)
+                if identity_new:
+                    print(
+                        "{} was merged into existing identity {}".format(
+                            filepath, identity_new.tag_id
+                        )
+                    )
             elif fmt == SwidFormat.JSON:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot load JSON when no default identity")
-                    sys.exit(1)
+                identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
                     identity.import_json(f.read())
+                identity_new = container.merge(identity)
+                if identity_new:
+                    print(
+                        "{} was merged into existing identity {}".format(
+                            filepath, identity_new.tag_id
+                        )
+                    )
             elif fmt == SwidFormat.INI:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot load INI when no default identity")
-                    sys.exit(1)
+                identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
                     identity.import_ini(f.read().decode())
+                identity_new = container.merge(identity)
+                if identity_new:
+                    print(
+                        "{} was merged into existing identity {}".format(
+                            filepath, identity_new.tag_id
+                        )
+                    )
             elif fmt == SwidFormat.PKG_CONFIG:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot load PKG_CONFIG when no default identity")
-                    sys.exit(1)
+                identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
                     identity.import_pkg_config(f.read().decode(), filepath=filepath)
+                identity_new = container.merge(identity)
+                if identity_new:
+                    print(
+                        "{} was merged into existing identity {}".format(
+                            filepath, identity_new.tag_id
+                        )
+                    )
             else:
                 print("{} has unknown extension, using uSWID".format(filepath))
                 with open(filepath, "rb") as f:
@@ -267,7 +289,6 @@ def main():
         except NotSupportedError as e:
             print(e)
             sys.exit(1)
-
     # debug
     if load_filepaths and args.verbose:
         print("Loaded:\n{}".format(container))
