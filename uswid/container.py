@@ -34,6 +34,29 @@ class uSwidContainer:
 
         self._identities.append(identity)
 
+    def merge(self, identity: uSwidIdentity) -> Optional[uSwidIdentity]:
+        """merges one identity into another, returning False if the tag_id does not exist"""
+
+        # just patching the default (and only) identity
+        if not identity.tag_id:
+            identity_default = self.get_default()
+            if not identity_default:
+                raise NotSupportedError(
+                    "cannot merge file without a tag_id and no default identity"
+                )
+            identity_default.merge(identity)
+            return identity_default
+
+        # does this tag ID already exist?
+        identity_old = self._get_by_id(identity.tag_id)
+        if identity_old:
+            identity_old.merge(identity)
+            return identity_old
+
+        # new to us
+        self.append(identity)
+        return None
+
     def get_default(self) -> Optional[uSwidIdentity]:
         """returns the existing identity, or creates one if none already exist"""
 
@@ -42,6 +65,14 @@ class uSwidContainer:
         if not self._identities:
             self._identities.append(uSwidIdentity())
         return self._identities[0]
+
+    def _get_by_id(self, tag_id: str) -> Optional[uSwidIdentity]:
+        """returns the identity that matches the tag ID"""
+
+        for identity in self._identities:
+            if identity.tag_id == tag_id:
+                return identity
+        return None
 
     def _import_bytes(self, blob: bytes, offset: int) -> int:
 
