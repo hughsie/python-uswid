@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 #
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-boolean-expressions
 
 import configparser
 import io
@@ -61,6 +61,7 @@ class uSwidIdentity:
         self.colloquial_version: Optional[str] = None
         self.revision: Optional[str] = None
         self.edition: Optional[str] = None
+        self.persistent_id: Optional[str] = None
         self.lang: Optional[str] = "en-US"
         self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
@@ -134,6 +135,8 @@ class uSwidIdentity:
                     self.edition = value
                 elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
                     self.colloquial_version = value
+                elif key == uSwidGlobalMap.PERSISTENT_ID:
+                    self.persistent_id = value
 
         # entities
         entities = data.get(uSwidGlobalMap.ENTITY, [])
@@ -186,6 +189,7 @@ class uSwidIdentity:
                 ("product", "product"),
                 ("edition", "edition"),
                 ("colloquialVersion", "colloquial_version"),
+                ("persistentId", "persistent_id"),
             ]:
                 if attr_name in meta.attrib:
                     setattr(self, attrib_name, meta.attrib[attr_name])
@@ -273,6 +277,7 @@ class uSwidIdentity:
             or self.product
             or self.edition
             or self.colloquial_version
+            or self.persistent_id
         ):
             node: Dict[str, str] = {}
             if self.summary:
@@ -285,6 +290,8 @@ class uSwidIdentity:
                 node["edition"] = self.edition
             if self.colloquial_version:
                 node["colloquial-version"] = self.colloquial_version
+            if self.persistent_id:
+                node["persistent-id"] = self.persistent_id
             # the CoSWID spec says: 'software-meta => one-or-more'
             root["software-meta"] = [node]
 
@@ -329,6 +336,9 @@ class uSwidIdentity:
             if key == "Version":
                 self.software_version = value.strip()
                 continue
+            if key == "AppstreamId":
+                self.persistent_id = value.strip()
+                continue
 
     def import_ini(self, ini: str) -> None:
         """imports a ini file as overrides to the uSwidIdentity data"""
@@ -358,6 +368,8 @@ class uSwidIdentity:
                         self.edition = value
                     elif key == "colloquial-version":
                         self.colloquial_version = value
+                    elif key == "persistent-id":
+                        self.persistent_id = value
                     else:
                         print("unknown key {} found in ini file!".format(key))
             if group.startswith("uSWID-Entity:"):
@@ -407,10 +419,9 @@ class uSwidIdentity:
             or self.product
             or self.edition
             or self.colloquial_version
+            or self.persistent_id
         ):
             node = ET.SubElement(root, "Meta")
-            if self.summary:
-                node.set("summary", self.summary)
             if self.revision:
                 node.set("revision", self.revision)
             if self.product:
@@ -419,6 +430,8 @@ class uSwidIdentity:
                 node.set("edition", self.edition)
             if self.colloquial_version:
                 node.set("colloquialVersion", self.colloquial_version)
+            if self.persistent_id:
+                node.set("persistentId", self.persistent_id)
 
         # success
         return ET.tostring(
@@ -450,6 +463,8 @@ class uSwidIdentity:
             main["edition"] = self.edition
         if self.colloquial_version:
             main["colloquial-version"] = self.colloquial_version
+        if self.persistent_id:
+            main["persistent-id"] = self.persistent_id
         config["uSWID"] = main
 
         # entity
@@ -507,6 +522,8 @@ class uSwidIdentity:
             metadata[uSwidGlobalMap.EDITION] = self.edition
         if self.colloquial_version:
             metadata[uSwidGlobalMap.COLLOQUIAL_VERSION] = self.colloquial_version
+        if self.persistent_id:
+            metadata[uSwidGlobalMap.PERSISTENT_ID] = self.persistent_id
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
 
         # entities

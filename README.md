@@ -64,6 +64,7 @@ XML document:
     colloquial-version = b2ed6f1ed8587bf01a2951d74512a70f1a512d38
     edition = v2021+
     revision = 2
+    persistent-id = com.hughski.colorhug
 
 This can then be saved as `uswid.ini` and applied to the binary using:
 
