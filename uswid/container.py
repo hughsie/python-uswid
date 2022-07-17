@@ -89,7 +89,7 @@ class uSwidContainer:
         # load flags and possibly decompress payload
         offset += struct.calcsize(_USWID_HEADER_FMT)
         if hdrver >= 2:
-            (flags,) = struct.unpack_from("<B", blob, offset)
+            (flags,) = struct.unpack_from("<B", blob, len(USWID_HEADER_MAGIC) + offset)
             if flags & USWID_HEADER_FLAG_COMPRESSED:
                 payload = zlib.decompress(payload)
 

@@ -207,7 +207,7 @@ little-endian header:
     uint8_t[16]   magic string, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
     uint8_t       header version, typically 0x02
     uint16_t      header length, typically 0x17
-    uint32_t      payload length, typically 0x17
+    uint32_t      payload length
     uint8_t       flags
                     0x01: zlib compressed payload
 
