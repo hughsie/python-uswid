@@ -19,6 +19,7 @@ from .enums import uSwidGlobalMap
 
 
 class uSwidLinkRel(IntEnum):
+    LICENSE = -2
     ANCESTOR = 1
     COMPONENT = 2
     FEATURE = 3
