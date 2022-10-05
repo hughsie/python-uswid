@@ -145,7 +145,7 @@ class SwidFormat(Enum):
 
 def _detect_format(filepath: str) -> SwidFormat:
     ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
-    if ext in ["exe", "efi"]:
+    if ext in ["exe", "efi", "o"]:
         return SwidFormat.PE
     if ext in ["uswid", "raw", "bin"]:
         return SwidFormat.USWID
