@@ -523,7 +523,7 @@ class uSwidIdentity:
         if self.tag_id:
             try:
                 data[uSwidGlobalMap.TAG_ID] = uuid.UUID(hex=self.tag_id).bytes
-            except KeyError:
+            except (KeyError, ValueError):
                 data[uSwidGlobalMap.TAG_ID] = self.tag_id
         if self.tag_version:
             tag_version = self.tag_version
