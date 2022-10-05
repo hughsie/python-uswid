@@ -3,6 +3,7 @@
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=yes
+extension-pkg-whitelist=lxml
 
 [MESSAGES CONTROL]
 
