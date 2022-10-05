@@ -141,6 +141,7 @@ class SwidFormat(Enum):
     PE = 4
     JSON = 5
     PKG_CONFIG = 6
+    COSWID = 7
 
 
 def _detect_format(filepath: str) -> SwidFormat:
@@ -149,6 +150,8 @@ def _detect_format(filepath: str) -> SwidFormat:
         return SwidFormat.PE
     if ext in ["uswid", "raw", "bin"]:
         return SwidFormat.USWID
+    if ext == "coswid":
+        return SwidFormat.COSWID
     if ext == "ini":
         return SwidFormat.INI
     if ext == "xml":
@@ -311,6 +314,13 @@ def main():
             elif fmt == SwidFormat.USWID:
                 with open(filepath, "wb") as f:
                     f.write(container.export_bytes(compress=args.compress))
+            elif fmt == SwidFormat.COSWID:
+                identity = container.get_default()
+                if not identity:
+                    print("cannot save XML when no default identity")
+                    sys.exit(1)
+                with open(filepath, "wb") as f:
+                    f.write(identity.export_bytes())
             elif fmt == SwidFormat.XML:
                 identity = container.get_default()
                 if not identity:
