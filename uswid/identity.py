@@ -341,7 +341,7 @@ class uSwidIdentity:
         # success
         return json.dumps(root, indent=2).encode("utf-8")
 
-    def import_pkg_config(self, txt: str, filepath=None) -> None:
+    def import_pkg_config(self, txt: str, filepath: Optional[str] = None) -> None:
         """imports a pkg-conifg file as overrides to the uSwidIdentity data"""
 
         # filename base is the ID
