@@ -89,7 +89,7 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(
             str(link._export_bytes()),
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
-            + "<uSwidGlobalMap.REL: 40>: 'license'}",
+            + "<uSwidGlobalMap.REL: 40>: <uSwidLinkRel.LICENSE: -2>}",
         )
 
         # XML import
