@@ -84,6 +84,8 @@ class uSwidLink:
             self.rel = rel_data
         if isinstance(rel_data, uSwidLinkRel):
             LINK_MAP: Dict[uSwidLinkRel, str] = {
+                uSwidLinkRel.LICENSE: "license",
+                uSwidLinkRel.COMPILER: "compiler",
                 uSwidLinkRel.ANCESTOR: "ancestor",
                 uSwidLinkRel.COMPONENT: "component",
                 uSwidLinkRel.FEATURE: "feature",
@@ -146,6 +148,8 @@ class uSwidLink:
         # map back into a uSwidLinkRel if possible
         if self.rel:
             LINK_MAP: Dict[str, uSwidLinkRel] = {
+                "license": uSwidLinkRel.LICENSE,
+                "compiler": uSwidLinkRel.COMPILER,
                 "ancestor": uSwidLinkRel.ANCESTOR,
                 "component": uSwidLinkRel.COMPONENT,
                 "feature": uSwidLinkRel.FEATURE,
