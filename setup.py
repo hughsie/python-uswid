@@ -9,7 +9,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 
 setup(
     name="uswid",
-    version="0.3.3",
+    version="0.3.4",
     license="LGPL-2.1-or-later",
     description="A pure-python library for embedding CoSWID data",
     long_description=long_desc,
