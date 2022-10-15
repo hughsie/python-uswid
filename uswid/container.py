@@ -61,6 +61,10 @@ class uSwidContainer:
         """returns the existing identity, or creates one if none already exist"""
 
         if len(self._identities) > 1:
+            print("Found multiple tag IDs:", len(self._identities))
+            for identity in self._identities:
+                print("  -", identity.tag_id)
+
             return None
         if not self._identities:
             self._identities.append(uSwidIdentity())
