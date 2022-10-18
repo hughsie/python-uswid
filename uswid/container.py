@@ -5,11 +5,12 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 #
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,protected-access
 
 from typing import List, Optional
 import struct
 import zlib
+import json
 
 from .identity import uSwidIdentity
 from .errors import NotSupportedError
@@ -152,6 +153,14 @@ class uSwidContainer:
             )
             + blob
         )
+
+    def export_json(self) -> bytes:
+        """exports a JSON container blob"""
+
+        root = []
+        for identity in self._identities:
+            root.append(identity._export_json())
+        return json.dumps(root, indent=2).encode("utf-8")
 
     def __repr__(self) -> str:
         return "uSwidContainer({})".format(self._identities)

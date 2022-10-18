@@ -332,12 +332,8 @@ def main():
                 with open(filepath, "wb") as f:
                     f.write(identity.export_xml())
             elif fmt == SwidFormat.JSON:
-                identity = container.get_default()
-                if not identity:
-                    print("cannot save JSON when no default identity")
-                    sys.exit(1)
                 with open(filepath, "wb") as f:
-                    f.write(identity.export_json())
+                    f.write(container.export_json())
             elif fmt == SwidFormat.INI:
                 identity = container.get_default()
                 if not identity:
