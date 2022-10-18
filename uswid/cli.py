@@ -270,6 +270,9 @@ def main():
                             filepath, identity_new.tag_id
                         )
                     )
+            elif fmt == SwidFormat.USWID:
+                with open(filepath, "rb") as f:
+                    container.import_bytes(f.read())
             elif fmt == SwidFormat.PKG_CONFIG:
                 identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
