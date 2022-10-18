@@ -282,7 +282,7 @@ class uSwidIdentity:
         except KeyError:
             pass
 
-    def export_json(self) -> bytes:
+    def _export_json(self) -> Dict[str, Any]:
 
         # identity
         root: Dict[str, Any] = {}
@@ -339,7 +339,12 @@ class uSwidIdentity:
                 root["link"].append(link._export_json())
 
         # success
-        return json.dumps(root, indent=2).encode("utf-8")
+        return root
+
+    def export_json(self) -> bytes:
+
+        # just proxy
+        return json.dumps(self._export_json(), indent=2).encode("utf-8")
 
     def import_pkg_config(self, txt: str, filepath: Optional[str] = None) -> None:
         """imports a pkg-conifg file as overrides to the uSwidIdentity data"""
