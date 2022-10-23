@@ -33,7 +33,16 @@ class TestSwidEntity(unittest.TestCase):
             str(entity._export_bytes()),
             "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
             + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
-            + "<uSwidGlobalMap.ROLE: 33>: [<uSwidEntityRole.MAINTAINER: 6>]}",
+            + "<uSwidGlobalMap.ROLE: 33>: <uSwidEntityRole.MAINTAINER: 6>}",
+        )
+
+        entity.roles.append(uSwidEntityRole.SOFTWARE_CREATOR)
+        self.assertEqual(
+            str(entity._export_bytes()),
+            "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
+            + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
+            + "<uSwidGlobalMap.ROLE: 33>: [<uSwidEntityRole.MAINTAINER: 6>, "
+            + "<uSwidEntityRole.SOFTWARE_CREATOR: 2>]}",
         )
 
         # XML import
