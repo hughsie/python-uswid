@@ -116,7 +116,10 @@ class uSwidEntity:
 
         self.name = node.get("entity-name")
         self.regid = node.get("reg-id")
-        for role_str in node["role"]:
+        roles = node.get("role")
+        if isinstance(roles, str):
+            roles = [roles]
+        for role_str in roles:
             try:
                 self.roles.append(self._ENTITY_MAP_FROM_XML[role_str])
             except KeyError as e:
@@ -134,16 +137,21 @@ class uSwidEntity:
             node["entity-name"] = self.name
         if self.regid:
             node["reg-id"] = self.regid
-        node["role"] = []
+        roles = []
         for role in self.roles:
             try:
-                node["role"].append(self._ENTITY_MAP_TO_XML[role])
+                roles.append(self._ENTITY_MAP_TO_XML[role])
             except KeyError as e:
                 raise NotSupportedError(
                     "{} not supported from {}".format(
                         role, ",".join(self._ENTITY_MAP_TO_XML.values())
                     )
                 ) from e
+        # use string if only one role
+        if len(roles) == 1:
+            node["role"] = roles[0]
+        else:
+            node["role"] = roles
         return node
 
     def _import_data(self, data: Dict[uSwidGlobalMap, Any]) -> None:
@@ -218,7 +226,10 @@ class uSwidEntity:
         data[uSwidGlobalMap.ENTITY_NAME] = self.name
         if self.regid:
             data[uSwidGlobalMap.REG_ID] = self.regid
-        data[uSwidGlobalMap.ROLE] = self.roles
+        if len(self.roles) == 1:
+            data[uSwidGlobalMap.ROLE] = self.roles[0]
+        else:
+            data[uSwidGlobalMap.ROLE] = self.roles
         return data
 
     def __repr__(self) -> str:
