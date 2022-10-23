@@ -154,6 +154,18 @@ class uSwidContainer:
             + blob
         )
 
+    def import_json(self, blob: bytes) -> None:
+        """imports a JSON container blob"""
+
+        try:
+            identities = json.loads(blob)
+        except json.decoder.JSONDecodeError as e:
+            raise NotSupportedError("invalid JSON: {}".format(e)) from e
+        for identity_json in identities:
+            identity = uSwidIdentity()
+            identity._import_json(identity_json)
+            self.merge(identity)
+
     def export_json(self) -> bytes:
         """exports a JSON container blob"""
 
