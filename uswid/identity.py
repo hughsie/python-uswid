@@ -242,6 +242,9 @@ class uSwidIdentity:
             identity = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
             raise NotSupportedError("invalid JSON: {}".format(e)) from e
+        self._import_json(identity)
+
+    def _import_json(self, identity: Dict[str, Any]) -> None:
 
         # identity
         self.tag_id = identity.get("tag-id")

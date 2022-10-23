@@ -249,16 +249,8 @@ def main():
                         )
                     )
             elif fmt == SwidFormat.JSON:
-                identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
-                    identity.import_json(f.read())
-                identity_new = container.merge(identity)
-                if identity_new:
-                    print(
-                        "{} was merged into existing identity {}".format(
-                            filepath, identity_new.tag_id
-                        )
-                    )
+                    container.import_json(f.read())
             elif fmt == SwidFormat.INI:
                 identity = uSwidIdentity()
                 with open(filepath, "rb") as f:
