@@ -46,6 +46,13 @@ class uSwidLink:
         self.href: Optional[str] = href
         self.rel: Optional[str] = rel
 
+    def _fixup(self) -> None:
+        if not self.rel:
+            if self.href and self.href.startswith("swid"):
+                self.rel = "component"
+            elif self.href and self.href.startswith("https://spdx.org/"):
+                self.rel = "license"
+
     def _import_xml(self, node: ET.SubElement) -> None:
         """imports a uSwidLink XML blob"""
 
@@ -55,12 +62,14 @@ class uSwidLink:
         self.href = node.get("href")
         rel_data = node.get("rel")
         self.rel = LINK_MAP.get(rel_data, rel_data)
+        self._fixup()
 
     def _import_json(self, node: Dict[str, str]) -> None:
         """imports a uSwidLink JSON blob"""
 
         self.href = node.get("href")
         self.rel = node.get("rel")
+        self._fixup()
 
     def _export_json(self) -> Dict[str, str]:
         """exports a uSwidLink JSON blob"""
@@ -106,6 +115,7 @@ class uSwidLink:
                         rel_data, ",".join(LINK_MAP.values())
                     )
                 ) from e
+        self._fixup()
 
     def _import_ini(self, data: configparser.SectionProxy) -> None:
         """imports a uSwidLink INI section"""
@@ -119,6 +129,7 @@ class uSwidLink:
                 print("unknown key {} found in ini file!".format(key))
         if not self.href:
             raise NotSupportedError("all entities MUST have a href")
+        self._fixup()
 
     def _export_ini(self) -> Dict[str, Any]:
         """exports a uSwidLink INI section"""
