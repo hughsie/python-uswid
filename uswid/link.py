@@ -53,6 +53,12 @@ class uSwidLink:
             elif self.href and self.href.startswith("https://spdx.org/"):
                 self.rel = "license"
 
+    @property
+    def href_for_display(self) -> Optional[str]:
+        if not self.href:
+            return None
+        return self.href.split("/")[-1].replace(".html", "")
+
     def _import_xml(self, node: ET.SubElement) -> None:
         """imports a uSwidLink XML blob"""
 
