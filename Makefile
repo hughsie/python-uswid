@@ -34,7 +34,7 @@ $(BLACK):
 	$(PIP) install black
 
 check: $(PYTEST) $(MYPY)
-	$(MYPY) uswid
+	$(MYPY) --check-untyped-defs uswid
 	$(PYTEST) uswid
 	$(PYLINT) --rcfile pylintrc uswid/*.py *.py
 
