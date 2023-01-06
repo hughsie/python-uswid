@@ -11,3 +11,9 @@ from uswid.identity import uSwidIdentity
 from uswid.entity import uSwidEntity, uSwidEntityRole
 from uswid.enums import uSwidGlobalMap, uSwidVersionScheme, USWID_HEADER_MAGIC
 from uswid.errors import NotSupportedError
+from uswid.format_coswid import uSwidFormatCoswid
+from uswid.format_goswid import uSwidFormatGoswid
+from uswid.format_ini import uSwidFormatIni
+from uswid.format_pkgconfig import uSwidFormatPkgconfig
+from uswid.format_swid import uSwidFormatSwid
+from uswid.format_uswid import uSwidFormatUswid

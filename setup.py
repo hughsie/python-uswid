@@ -9,7 +9,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 
 setup(
     name="uswid",
-    version="0.3.5",
+    version="0.4.0",
     license="LGPL-2.1-or-later",
     description="A pure-python library for embedding CoSWID data",
     long_description=long_desc,
@@ -43,6 +43,12 @@ setup(
             "entity.pyi",
             "enums.pyi",
             "errors.pyi",
+            "format_coswid.pyi",
+            "format_goswid.pyi",
+            "format_ini.pyi",
+            "format.pyi",
+            "format_swid.pyi",
+            "format_uswid.pyi",
             "identity.pyi",
             "link.pyi",
             "__init__.pyi",
