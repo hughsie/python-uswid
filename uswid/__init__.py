@@ -17,3 +17,4 @@ from uswid.format_ini import uSwidFormatIni
 from uswid.format_pkgconfig import uSwidFormatPkgconfig
 from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
+from uswid.format_cyclonedx import uSwidFormatCycloneDX

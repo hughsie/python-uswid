@@ -25,6 +25,7 @@ from .identity import uSwidIdentity
 from .format_ini import uSwidFormatIni
 from .format_coswid import uSwidFormatCoswid
 from .format_swid import uSwidFormatSwid
+from .format_cyclonedx import uSwidFormatCycloneDX
 
 
 class TestSwidEntity(unittest.TestCase):
@@ -246,6 +247,13 @@ rel = see-also
             b'persistentId="org.hughski.colorhug"/>\n'
             b"</SoftwareIdentity>\n",
         )
+
+        # CycloneDX export
+        tmp = uSwidFormatCycloneDX().save(uSwidContainer([identity])).decode()
+        assert "CycloneDX" in tmp
+        assert "uSWID" in tmp
+        assert "org.hughski.colorhug" in tmp
+        assert "22905301d08e69473393d94c3e787e4bf0453268" in tmp
 
 
 if __name__ == "__main__":
