@@ -36,7 +36,7 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertEqual(str(entity), "uSwidEntity(test,example.com->MAINTAINER)")
         self.assertEqual(
-            str(uSwidFormatCoswid()._save_entity(entity)),
+            str(uSwidFormatCoswid()._save_entity(entity)),  # type: ignore
             "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
             + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
             + "<uSwidGlobalMap.ROLE: 33>: <uSwidEntityRole.MAINTAINER: 6>}",
@@ -44,7 +44,7 @@ class TestSwidEntity(unittest.TestCase):
 
         entity.roles.append(uSwidEntityRole.SOFTWARE_CREATOR)
         self.assertEqual(
-            str(uSwidFormatCoswid()._save_entity(entity)),
+            str(uSwidFormatCoswid()._save_entity(entity)),  # type: ignore
             "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
             + "<uSwidGlobalMap.REG_ID: 32>: 'example.com', "
             + "<uSwidGlobalMap.ROLE: 33>: [<uSwidEntityRole.MAINTAINER: 6>, "
@@ -53,7 +53,7 @@ class TestSwidEntity(unittest.TestCase):
 
         # SWID XML import
         entity = uSwidEntity()
-        uSwidFormatSwid()._load_entity(
+        uSwidFormatSwid()._load_entity(  # type: ignore
             entity,
             ET.Element(
                 "Entity",
@@ -62,7 +62,7 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertEqual(str(entity), "uSwidEntity(foo,bar->TAG_CREATOR,MAINTAINER)")
         with self.assertRaises(NotSupportedError):
-            uSwidFormatSwid()._load_entity(
+            uSwidFormatSwid()._load_entity(  # type: ignore
                 entity,
                 ET.Element(
                     "Entity", attrib={"name": "foo", "regid": "bar", "role": "baz"}
@@ -71,20 +71,20 @@ class TestSwidEntity(unittest.TestCase):
 
         # INI import
         entity = uSwidEntity()
-        uSwidFormatIni()._load_entity(
+        uSwidFormatIni()._load_entity(  # type: ignore
             entity,
             {"name": "foo", "regid": "bar", "extra-roles": "TagCreator,Maintainer"},
             role_hint="Distributor",
         )
         self.assertEqual(str(entity), "uSwidEntity(foo,bar->TAG_CREATOR,MAINTAINER)")
         with self.assertRaises(NotSupportedError):
-            uSwidFormatIni()._load_entity(
+            uSwidFormatIni()._load_entity(  # type: ignore
                 entity, {"name": "foo", "regid": "bar", "extra-roles": "baz"}
             )
 
         # SWID XML export
         root = ET.Element("SoftwareIdentity")
-        uSwidFormatSwid()._save_entity(entity, root)
+        uSwidFormatSwid()._save_entity(entity, root)  # type: ignore
         self.assertEqual(
             ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
@@ -98,7 +98,7 @@ class TestSwidEntity(unittest.TestCase):
         link = uSwidLink(href="http://test.com/", rel="see-also")
         self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
         self.assertEqual(
-            str(uSwidFormatCoswid()._save_link(link)),
+            str(uSwidFormatCoswid()._save_link(link)),  # type: ignore
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
             + "<uSwidGlobalMap.REL: 40>: <uSwidLinkRel.SEE_ALSO: 9>}",
         )
@@ -107,14 +107,14 @@ class TestSwidEntity(unittest.TestCase):
         link = uSwidLink(href="http://test.com/", rel="license")
         self.assertEqual(str(link), "uSwidLink(http://test.com/,license)")
         self.assertEqual(
-            str(uSwidFormatCoswid()._save_link(link)),
+            str(uSwidFormatCoswid()._save_link(link)),  # type: ignore
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
             + "<uSwidGlobalMap.REL: 40>: <uSwidLinkRel.LICENSE: -2>}",
         )
 
         # SWID XML import
         link = uSwidLink()
-        uSwidFormatSwid()._load_link(
+        uSwidFormatSwid()._load_link(  # type: ignore
             link,
             ET.Element(
                 "Url",
@@ -125,7 +125,7 @@ class TestSwidEntity(unittest.TestCase):
 
         # INI import
         link = uSwidLink()
-        uSwidFormatIni()._load_link(
+        uSwidFormatIni()._load_link(  # type: ignore
             link,
             {"href": "http://test.com/", "rel": "see-also"},
         )
@@ -133,7 +133,7 @@ class TestSwidEntity(unittest.TestCase):
 
         # SWID XML export
         root = ET.Element("SoftwareIdentity")
-        uSwidFormatSwid()._save_link(link, root)
+        uSwidFormatSwid()._save_link(link, root)  # type: ignore
         self.assertEqual(
             ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
