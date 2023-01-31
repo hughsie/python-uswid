@@ -107,7 +107,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
             raise NotSupportedError("a software_version MUST be provided")
         data[uSwidGlobalMap.SOFTWARE_VERSION] = identity.software_version
         if identity.version_scheme:
-            data[uSwidGlobalMap.VERSION_SCHEME] = identity.version_scheme.value
+            data[uSwidGlobalMap.VERSION_SCHEME] = identity.version_scheme
 
         # metadata section
         metadata: Dict[uSwidGlobalMap, Any] = {
