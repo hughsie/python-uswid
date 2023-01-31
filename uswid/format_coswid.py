@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional
 
 import io
 import uuid
-import cbor
+import cbor2
 
 from .enums import uSwidGlobalMap
 from .container import uSwidContainer
@@ -148,7 +148,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         data[uSwidGlobalMap.LINK] = [
             self._save_link(link) for link in identity._links.values()
         ]
-        return cbor.dumps(data)
+        return cbor2.dumps(data)
 
     def _load_link(self, link: uSwidLink, data: Dict[uSwidGlobalMap, Any]) -> None:
         """imports a uSwidLink CoSWID section"""
@@ -214,7 +214,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         consumed: int = 0
         try:
             f = io.BytesIO(blob[offset:])
-            data = cbor.load(f)
+            data = cbor2.load(f)
             consumed = f.tell()
         except EOFError as e:
             raise NotSupportedError("invalid header") from e
