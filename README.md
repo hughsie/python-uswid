@@ -276,7 +276,7 @@ make the code more robust.
 
 # Release Process
 
-    export release_ver="0.4.1"
+    export release_ver="0.4.2"
     git commit -a -m "Release ${release_ver}"
     git tag -s -f -m "Release ${release_ver}" "${release_ver}"
     make pkg
