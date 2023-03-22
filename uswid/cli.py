@@ -207,8 +207,7 @@ def main():
     )
     parser.add_argument(
         "--load",
-        default=None,
-        action="append",
+        nargs="+",
         help="file to import, .efi,.ini,.uswid,.xml,.json",
     )
     parser.add_argument(
@@ -232,7 +231,7 @@ def main():
         help="Show verbose operation",
     )
     args = parser.parse_args()
-    load_filepaths = args.load if args.load else []
+    load_filepaths = args.load
     save_filepaths = args.save if args.save else []
 
     # deprecated arguments
