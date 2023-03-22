@@ -102,7 +102,7 @@ file with these contents:
 
 ...and then use:
 
-    uswid --load ./HughskiColorHug.efi --load oem.ini --save ./HughskiColorHug.efi
+    uswid --load ./HughskiColorHug.efi oem.ini --save ./HughskiColorHug.efi
 
 This will add the `Distributor` entity to the binary, or overwrite an existing
 entity with that role.
@@ -112,7 +112,7 @@ incremented when you save it again. If you don't want that, set an explicit
 `tag-version` in the `[uSWID]` section.
 
 If there are multiple loaded identities (for instance, using a `uswid` file, or
-using `--load` multiple times) then you can specify the correct identity using:
+using multiple files on `--load`) then you can specify the correct identity using:
 
     [uSWID]
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
@@ -126,7 +126,7 @@ Adding Deps
 
 Dependancies like compilers or other security-relevant libraries can be done using:
 
-    uswid --load uswid.ini --load compiler.ini --save ./example.uswid
+    uswid --load uswid.ini compiler.ini --save ./example.uswid
 
 Where we've added an extra link section in `uswid.ini`:
 
@@ -223,7 +223,7 @@ still being compatible with any tools using uswid like the LVFS.
 
 To merge multiple uSWID files into a compressed single file, simply do:
 
-    uswid --load ucode.uswid --load acm.uswid--save ./combined.uswid --compress
+    uswid --load ucode.uswid acm.uswid --save ./combined.uswid --compress
 
 Reading and writing to PE files
 -------------------------------
