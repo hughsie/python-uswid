@@ -8,7 +8,8 @@
 # pylint: disable=wrong-import-position
 
 from enum import IntEnum
-from typing import Optional, Any
+from random import choices, randrange
+from typing import Optional, Any, List
 import argparse
 import tempfile
 import subprocess
@@ -16,12 +17,21 @@ import subprocess
 import os
 import sys
 import shutil
+import uuid
+import string
 
 import pefile
 
 sys.path.append(os.path.realpath("."))
 
-from uswid import uSwidIdentity, uSwidContainer, NotSupportedError
+from uswid import (
+    NotSupportedError,
+    uSwidContainer,
+    uSwidEntity,
+    uSwidEntityRole,
+    uSwidIdentity,
+    uSwidVersionScheme,
+)
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_ini import uSwidFormatIni
 from uswid.format_goswid import uSwidFormatGoswid
@@ -224,6 +234,13 @@ def main():
         help="Compress uSWID containers",
     )
     parser.add_argument(
+        "--generate",
+        dest="generate",
+        default=False,
+        action="store_true",
+        help="Generate plausible SWID entries",
+    )
+    parser.add_argument(
         "--verbose",
         dest="verbose",
         default=False,
@@ -252,6 +269,39 @@ def main():
 
     # always load into a temporary identity so that we can query the tag_id
     container = uSwidContainer()
+
+    # generate 1000 plausible identities, each with:
+    # - unique tag-id GUID
+    # - unique software-name of size 4-30 chars
+    # - colloquial-version from a random selection of 10 SHA-1 hashes
+    # - edition from a random SHA-1 hash
+    # - semantic version of size 3-8 chars
+    # - entity from a random selection of 10 entities
+    if args.generate:
+        tree_hashes: List[str] = []
+        entities: List[uSwidEntity] = []
+        for _ in range(10):
+            tree_hashes.append("".join(choices("0123456789abcdef", k=40)))
+        for i in range(10):
+            entity = uSwidEntity()
+            entity.name = "Entity#" + str(i)
+            entity.regid = "com.entity" + str(i)
+            entity.roles = [uSwidEntityRole.TAG_CREATOR]
+            entities.append(entity)
+        for i in range(1000):
+            identity = uSwidIdentity()
+            identity.tag_id = str(uuid.uuid4())
+            identity.software_name = "".join(
+                choices(string.ascii_lowercase, k=randrange(4, 30))
+            )
+            identity.software_version = "1." + "".join(
+                choices("123456789", k=randrange(1, 6))
+            )
+            identity.colloquial_version = tree_hashes[randrange(len(tree_hashes))]
+            identity.edition = "".join(choices("0123456789abcdef", k=40))
+            identity.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
+            identity.add_entity(entities[randrange(len(entities))])
+            container.append(identity)
 
     # collect data here
     for filepath in load_filepaths:
