@@ -29,7 +29,6 @@ class uSwidEntity:
         regid: Optional[str] = None,
         roles: Optional[List[uSwidEntityRole]] = None,
     ):
-
         self.name: Optional[str] = name
         self.regid: Optional[str] = regid
         self.roles: List[uSwidEntityRole] = []

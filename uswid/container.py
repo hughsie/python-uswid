@@ -17,7 +17,6 @@ class uSwidContainer:
     """represents a uSWID container"""
 
     def __init__(self, identities: Optional[List[uSwidIdentity]] = None) -> None:
-
         self._identities: List[uSwidIdentity] = []
         if identities:
             for identity in identities:
@@ -28,7 +27,6 @@ class uSwidContainer:
             yield identity
 
     def append(self, identity: uSwidIdentity) -> None:
-
         self._identities.append(identity)
 
     def merge(self, identity: uSwidIdentity) -> Optional[uSwidIdentity]:

@@ -40,7 +40,6 @@ class uSwidIdentity:
         software_name: Optional[str] = None,
         software_version: Optional[str] = None,
     ):
-
         self._auto_increment_tag_version = False
         self.tag_id: Optional[str] = tag_id
         self.tag_version: int = tag_version

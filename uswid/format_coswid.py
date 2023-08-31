@@ -26,18 +26,15 @@ class uSwidFormatCoswid(uSwidFormatBase):
     """CoSWID file"""
 
     def __init__(self) -> None:
-
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         identity = uSwidIdentity()
         container = uSwidContainer([identity])
         self._load_identity(identity, blob)
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
-
         identity = container.get_default()
         if not identity:
             raise NotSupportedError("cannot save when no default identity")

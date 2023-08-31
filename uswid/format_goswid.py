@@ -28,11 +28,9 @@ class uSwidFormatGoswid(uSwidFormatBase):
     """goSWID file"""
 
     def __init__(self) -> None:
-
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         try:
             data = json.loads(blob)
         except json.decoder.JSONDecodeError as e:

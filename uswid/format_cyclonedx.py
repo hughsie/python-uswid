@@ -21,11 +21,9 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
     """CycloneDX file"""
 
     def __init__(self) -> None:
-
         uSwidFormatBase.__init__(self)
 
     def save(self, container: uSwidContainer) -> bytes:
-
         # header
         root: Dict[str, Any] = {}
         root["bomFormat"] = "CycloneDX"
@@ -70,7 +68,6 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         return json.dumps(root, indent=2).encode()
 
     def _save_identity(self, identity: uSwidIdentity) -> Dict[str, Any]:
-
         component: Dict[str, Any] = {}
         component["type"] = "firmware"
         if identity.persistent_id:

@@ -44,17 +44,14 @@ class uSwidFormatSwid(uSwidFormatBase):
     """SWID file"""
 
     def __init__(self) -> None:
-
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         identity = uSwidIdentity()
         self._load_identity(identity, blob)
         return uSwidContainer([identity])
 
     def save(self, container: uSwidContainer) -> bytes:
-
         identity = container.get_default()
         if not identity:
             raise NotSupportedError("cannot save when no default identity")

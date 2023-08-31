@@ -22,12 +22,10 @@ class uSwidFormatUswid(uSwidFormatBase):
     """uSWID file"""
 
     def __init__(self, compress: bool = True) -> None:
-
         uSwidFormatBase.__init__(self)
         self.compress: bool = compress
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         container = uSwidContainer()
 
         # find magic GUIDs marking external uSWID sections
@@ -45,7 +43,6 @@ class uSwidFormatUswid(uSwidFormatBase):
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
-
         blob: bytes = b""
         for identity in container:
             blob += uSwidFormatCoswid()._save_identity(identity)
@@ -78,7 +75,6 @@ class uSwidFormatUswid(uSwidFormatBase):
         )
 
     def _load_bytes(self, container: uSwidContainer, blob: bytes, offset: int) -> int:
-
         _USWID_HEADER_FMT = "<BHI"
 
         # this is the most basic of headers

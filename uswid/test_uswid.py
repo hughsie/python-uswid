@@ -30,7 +30,6 @@ from .format_cyclonedx import uSwidFormatCycloneDX
 
 class TestSwidEntity(unittest.TestCase):
     def test_entity(self):
-
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
@@ -93,7 +92,6 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_link(self):
-
         # enumerated type
         link = uSwidLink(href="http://test.com/", rel="see-also")
         self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
@@ -142,7 +140,6 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_identity(self):
-
         identity = uSwidIdentity(
             tag_id="foobarbaz",
             tag_version=5,

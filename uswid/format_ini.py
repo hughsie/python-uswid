@@ -45,17 +45,14 @@ class uSwidFormatIni(uSwidFormatBase):
     """INI file"""
 
     def __init__(self) -> None:
-
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         identity = uSwidIdentity()
         self._load_identity(identity, blob)
         return uSwidContainer([identity])
 
     def save(self, container: uSwidContainer) -> bytes:
-
         identity = container.get_default()
         if not identity:
             raise NotSupportedError("cannot save when no default identity")
@@ -89,7 +86,6 @@ class uSwidFormatIni(uSwidFormatBase):
         return data
 
     def _save_identity(self, identity: uSwidIdentity) -> bytes:
-
         config = configparser.ConfigParser()
 
         # main section
@@ -185,7 +181,6 @@ class uSwidFormatIni(uSwidFormatBase):
             )
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-
         config = configparser.ConfigParser()
         config.read_string(blob.decode())
         for group in config.sections():

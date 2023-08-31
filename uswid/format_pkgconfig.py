@@ -38,12 +38,10 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
     """INI file"""
 
     def __init__(self, filepath: Optional[str] = None) -> None:
-
         uSwidFormatBase.__init__(self)
         self.filepath: Optional[str] = filepath
 
     def load(self, blob: bytes) -> uSwidContainer:
-
         identity = uSwidIdentity()
         self._load_identity(identity, blob)
         return uSwidContainer([identity])
