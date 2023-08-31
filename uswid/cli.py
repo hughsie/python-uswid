@@ -232,6 +232,8 @@ def main():
     )
     args = parser.parse_args()
     load_filepaths = args.load
+    if not load_filepaths:
+        load_filepaths = []
     save_filepaths = args.save if args.save else []
 
     # deprecated arguments
