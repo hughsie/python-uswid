@@ -45,7 +45,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def save(self, container: uSwidContainer) -> bytes:
         root = []
         for identity in container:
-            root.append(self._save_identity(identity))
+            root.append(self._save_identity_internal(identity))
         return json.dumps(root, indent=2).encode()
 
     def _save_link(self, link: uSwidLink) -> Dict[str, str]:
@@ -83,9 +83,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
             node["role"] = roles
         return node
 
-    def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """exports a uSwidIdentity goSWID blob"""
-
+    def _save_identity_internal(self, identity: uSwidIdentity) -> Dict[str, Any]:
         # identity
         root: Dict[str, Any] = {}
         if identity.lang:
@@ -139,7 +137,13 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 root["link"].append(self._save_link(link))
 
         # success
-        return json.dumps(root, indent=2).encode("utf-8")
+        return root
+
+    def _save_identity(self, identity: uSwidIdentity) -> bytes:
+        """exports a uSwidIdentity goSWID blob"""
+        return json.dumps(self._save_identity_internal(identity), indent=2).encode(
+            "utf-8"
+        )
 
     def _load_link(self, link: uSwidLink, node: Dict[str, str]) -> None:
         """imports a uSwidLink goSWID section"""
