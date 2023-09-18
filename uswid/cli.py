@@ -352,11 +352,15 @@ def main():
             sys.exit(1)
     # debug
     if load_filepaths and args.verbose:
-        print("Loaded:\n{}".format(container))
+        print("Loaded:")
+        for identity in container:
+            print(f"{identity}")
 
     # optional save
     if save_filepaths and args.verbose:
-        print("Saving:\n{}".format(container))
+        print("Saving:")
+        for identity in container:
+            print(f"{identity}")
     for filepath in save_filepaths:
         try:
             fmt = _detect_format(filepath)

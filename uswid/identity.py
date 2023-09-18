@@ -116,10 +116,10 @@ class uSwidIdentity:
             tmp += ":"
         if self._links:
             tmp += "\n{}".format(
-                "\n".join([str(e) for e in self._links.values()]),
+                "\n".join([f" - {str(e)}" for e in self._links.values()]),
             )
         if self._entities:
             tmp += "\n{}".format(
-                "\n".join([str(e) for e in self._entities.values()]),
+                "\n".join([f" - {str(e)}" for e in self._entities.values()]),
             )
         return tmp
