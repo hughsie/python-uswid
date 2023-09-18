@@ -11,6 +11,9 @@ setup(
     name="uswid",
     version="0.4.2",
     license="LGPL-2.1-or-later",
+    license_files=[
+        "LICENSE",
+    ],
     description="A pure-python library for embedding CoSWID data",
     long_description=long_desc,
     author="Richard Hughes",
@@ -55,4 +58,5 @@ setup(
             "__init__.pyi",
         ]
     },
+    setup_requires=["wheel"],
 )
