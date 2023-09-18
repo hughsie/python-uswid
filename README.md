@@ -160,6 +160,13 @@ NOTE: The GUID can be constructed from the tool or library name combined with
 the version, e.g using `appstream-util generate-guid gcc-12.1.1` or the
 [online tool hosted by the LVFS](https://fwupd.org/lvfs/guid).
 
+...or, if a component has been previously defined, you can use the name to
+contruct the SWID automatically:
+
+    [uSWID-Link:image_loading_lib]
+    rel = requires
+    href = swid:libjpeg
+
 RAW Blobs
 ---------
 
