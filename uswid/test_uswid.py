@@ -154,7 +154,8 @@ class TestSwidEntity(unittest.TestCase):
         identity.add_entity(entity)
         self.assertEqual(
             str(identity),
-            "uSwidIdentity(foobarbaz,5,foo,1.2.3):\nuSwidEntity(test,example.com->MAINTAINER)",
+            "uSwidIdentity(foobarbaz,5,foo,1.2.3):\n"
+            " - uSwidEntity(test,example.com->MAINTAINER)",
         )
 
         # SWID XML import
@@ -176,9 +177,9 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
         self.assertEqual(
             str(identity),
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,DellBiosConnectNetwork,1.5.2):\n"
-            "uSwidLink(http://hughsie.com,see-also)\n"
-            "uSwidLink(www.gnu.org/licenses/gpl.txt,license)\n"
-            "uSwidEntity(Dell Technologies,dell.com->SOFTWARE_CREATOR,TAG_CREATOR)",
+            " - uSwidLink(http://hughsie.com,see-also)\n"
+            " - uSwidLink(www.gnu.org/licenses/gpl.txt,license)\n"
+            " - uSwidEntity(Dell Technologies,dell.com->SOFTWARE_CREATOR,TAG_CREATOR)",
         )
         self.assertEqual(
             identity.summary,
@@ -214,9 +215,9 @@ rel = see-also
         self.assertEqual(
             str(identity),
             "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,HughskiColorHug.efi,1.0.0):\n"
-            "uSwidLink(https://hughski.com/,see-also)\n"
-            "uSwidEntity(Richard Hughes,hughsie.com->TAG_CREATOR)\n"
-            "uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
+            " - uSwidLink(https://hughski.com/,see-also)\n"
+            " - uSwidEntity(Richard Hughes,hughsie.com->TAG_CREATOR)\n"
+            " - uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
         )
 
         # INI export
