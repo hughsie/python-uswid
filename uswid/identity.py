@@ -8,6 +8,7 @@
 # pylint: disable=protected-access,too-many-boolean-expressions
 
 from typing import Dict, Optional, List
+import uuid
 
 from .errors import NotSupportedError
 from .enums import uSwidVersionScheme
@@ -43,7 +44,7 @@ class uSwidIdentity:
         self._auto_increment_tag_version = False
         self.tag_id: Optional[str] = tag_id
         self.tag_version: int = tag_version
-        self.software_name: Optional[str] = software_name
+        self._software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
         self.version_scheme: Optional[uSwidVersionScheme] = None
         self.summary: Optional[str] = None
@@ -56,6 +57,16 @@ class uSwidIdentity:
         self.generator = "uSWID"
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
+
+    @property
+    def software_name(self) -> Optional[str]:
+        return self._software_name
+
+    @software_name.setter
+    def software_name(self, software_name: Optional[str]) -> None:
+        if not self.tag_id and software_name:
+            self.tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, software_name))
+        self._software_name = software_name
 
     def merge(self, identity_new: "uSwidIdentity") -> None:
         """adds new things from the new identity into the current one"""
