@@ -38,7 +38,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         container = uSwidContainer()
         for identity_json in data:
             identity = uSwidIdentity()
-            self._load_identity(identity, identity_json)
+            self._load_identity_internal(identity, identity_json)
             container.merge(identity)
         return container
 
@@ -173,14 +173,9 @@ class uSwidFormatGoswid(uSwidFormatBase):
                     )
                 ) from e
 
-    def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """imports a uSwidIdentity goSWID blob"""
-
-        try:
-            data: Dict[str, Any] = json.loads(blob)
-        except json.decoder.JSONDecodeError as e:
-            raise NotSupportedError("invalid goSWID: {}".format(e)) from e
-
+    def _load_identity_internal(
+        self, identity: uSwidIdentity, data: Dict[str, Any]
+    ) -> None:
         # identity
         identity.tag_id = data.get("tag-id")
         tag_version = data.get("tag-version")
@@ -221,3 +216,12 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 identity.add_link(link)
         except KeyError:
             pass
+
+    def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
+        """imports a uSwidIdentity goSWID blob"""
+
+        try:
+            data: Dict[str, Any] = json.loads(blob)
+        except json.decoder.JSONDecodeError as e:
+            raise NotSupportedError("invalid goSWID: {}".format(e)) from e
+        self._load_identity_internal(self, data)
