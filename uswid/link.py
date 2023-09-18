@@ -8,6 +8,7 @@
 # pylint: disable=too-few-public-methods
 
 from enum import IntEnum
+import uuid
 
 from typing import Optional
 
@@ -36,7 +37,7 @@ class uSwidLink:
         href: Optional[str] = None,
         rel: Optional[str] = None,
     ):
-        self.href: Optional[str] = href
+        self._href: Optional[str] = href
         self._rel: Optional[str] = rel
 
     @property
@@ -51,6 +52,20 @@ class uSwidLink:
     @rel.setter
     def rel(self, rel: Optional[str]) -> None:
         self._rel = rel
+
+    @property
+    def href(self) -> Optional[str]:
+        return self._href
+
+    @href.setter
+    def href(self, href: Optional[str]) -> None:
+        if href.startswith("swid:"):
+            maybe_uuid: str = href.split(":")[1]
+            try:
+                _ = uuid.UUID(maybe_uuid)
+            except ValueError:
+                href = f"swid:{str(uuid.uuid5(uuid.NAMESPACE_DNS, maybe_uuid))}"
+        self._href = href
 
     @property
     def href_for_display(self) -> Optional[str]:
