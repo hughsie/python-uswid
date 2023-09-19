@@ -188,16 +188,17 @@ class uSwidFormatGoswid(uSwidFormatBase):
             identity.version_scheme = _VERSION_SCHEME_FROM_STRING[version_scheme]
 
         # optional metadata
-        for meta in data["software-meta"]:
-            for attr_name, attrib_name in [
-                ("summary", "summary"),
-                ("revision", "revision"),
-                ("product", "product"),
-                ("edition", "edition"),
-                ("colloquial-version", "colloquial_version"),
-            ]:
-                if attr_name in meta:
-                    setattr(identity, attrib_name, meta[attr_name])
+        if "software-meta" in data:
+            for meta in data["software-meta"]:
+                for attr_name, attrib_name in [
+                    ("summary", "summary"),
+                    ("revision", "revision"),
+                    ("product", "product"),
+                    ("edition", "edition"),
+                    ("colloquial-version", "colloquial_version"),
+                ]:
+                    if attr_name in meta:
+                        setattr(identity, attrib_name, meta[attr_name])
 
         # entities
         try:
