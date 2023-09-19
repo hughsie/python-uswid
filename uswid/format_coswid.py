@@ -218,7 +218,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
         # identity can be specified as a string or in binary
         tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
-        if isinstance(identity.tag_id, str):
+        if isinstance(tag_id_bytes, str):
             identity.tag_id = tag_id_bytes
         else:
             try:
