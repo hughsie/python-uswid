@@ -326,6 +326,7 @@ def main():
             elif fmt in [
                 SwidFormat.INI,
                 SwidFormat.JSON,
+                SwidFormat.COSWID,
                 SwidFormat.USWID,
                 SwidFormat.XML,
                 SwidFormat.PKG_CONFIG,
