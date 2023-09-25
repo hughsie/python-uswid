@@ -225,4 +225,4 @@ class uSwidFormatGoswid(uSwidFormatBase):
             data: Dict[str, Any] = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
             raise NotSupportedError("invalid goSWID: {}".format(e)) from e
-        self._load_identity_internal(self, data)
+        self._load_identity_internal(identity, data)
