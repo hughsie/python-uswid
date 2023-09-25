@@ -21,6 +21,7 @@ from .identity import (
 )
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
+from .hash import uSwidHash, uSwidHashAlg
 
 _ENTITY_MAP_FROM_XML = {
     "tagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -65,6 +66,14 @@ class uSwidFormatSwid(uSwidFormatBase):
             node.set("href", link.href)
         if link.rel:
             node.set("rel", link.rel)
+
+    def _save_hash(self, ihash: uSwidHash, root: ET.Element) -> None:
+        """exports a uSwidHash SWID section"""
+
+        node = ET.SubElement(root, "Hash")
+        node.set("alg_id", ihash.alg_id.name)
+        if ihash.value:
+            node.set("value", ihash.value)
 
     def _save_entity(self, entity: uSwidEntity, root: ET.Element) -> None:
         """exports a uSwidEntity SWID section"""
@@ -118,6 +127,8 @@ class uSwidFormatSwid(uSwidFormatBase):
             self._save_entity(entity, root)
         for link in identity._links.values():
             self._save_link(link, root)
+        for ihash in identity.hashes:
+            self._save_hash(ihash, root)
 
         # optional metadata
         if (
@@ -154,6 +165,11 @@ class uSwidFormatSwid(uSwidFormatBase):
         link.href = node.get("href")
         rel_data = node.get("rel")
         link.rel = LINK_MAP.get(rel_data, rel_data)
+
+    def _load_hash(self, ihash: uSwidHash, node: ET.SubElement) -> None:
+        """imports a uSwidHash SWID section"""
+        ihash.value = node.get("value")
+        ihash.alg_id = uSwidHashAlg.from_string(node.get("alg_id"))
 
     def _load_entity(
         self,
@@ -218,3 +234,9 @@ class uSwidFormatSwid(uSwidFormatBase):
             link = uSwidLink()
             self._load_link(link, node)
             identity.add_link(link)
+
+        # hashes
+        for node in element.xpath("ns:Hash", namespaces=namespaces):
+            ihash = uSwidHash()
+            self._load_hash(ihash, hash)
+            identity.add_hash(ihash)

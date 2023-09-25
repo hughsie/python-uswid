@@ -21,6 +21,7 @@ from .link import uSwidLink
 from .entity import uSwidEntity, uSwidEntityRole
 from .enums import uSwidVersionScheme
 from .identity import uSwidIdentity
+from .hash import uSwidHash, uSwidHashAlg
 
 from .format_ini import uSwidFormatIni
 from .format_coswid import uSwidFormatCoswid
@@ -136,6 +137,57 @@ class TestSwidEntity(unittest.TestCase):
             ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
             b'<Link href="http://test.com/" rel="see-also"/>'
+            b"</SoftwareIdentity>",
+        )
+
+    def test_hash(self):
+        # enumerated type
+        ihash = uSwidHash(
+            alg_id=uSwidHashAlg.SHA256, value="067cb8292dc062eabbe05734ef7987eb1333b6b6"
+        )
+        self.assertEqual(
+            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+        )
+        self.assertEqual(
+            str(uSwidFormatCoswid()._save_hash(ihash)),  # type: ignore
+            "(<uSwidHashAlg.SHA256: 1>, b'\\x06|\\xb8)-\\xc0b\\xea\\xbb\\xe0W4\\xefy\\x87\\xeb\\x133\\xb6\\xb6')",
+        )
+
+        # SWID XML import
+        ihash = uSwidHash()
+        uSwidFormatSwid()._load_hash(  # type: ignore
+            ihash,
+            ET.Element(
+                "Hash",
+                attrib={
+                    "value": "067cb8292dc062eabbe05734ef7987eb1333b6b6",
+                    "alg_id": "SHA256",
+                },
+            ),
+        )
+        self.assertEqual(
+            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+        )
+
+        # INI import
+        ihash = uSwidHash()
+        uSwidFormatIni()._load_hash(  # type: ignore
+            ihash,
+            {"value": "067cb8292dc062eabbe05734ef7987eb1333b6b6"},
+            "uSWID-Hash:SHA256",
+        )
+        self.assertEqual(
+            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+        )
+
+        # SWID XML export
+        root = ET.Element("SoftwareIdentity")
+        uSwidFormatSwid()._save_hash(ihash, root)  # type: ignore
+        print(ET.tostring(root, encoding="utf-8"))
+        self.assertEqual(
+            ET.tostring(root, encoding="utf-8"),
+            b"<SoftwareIdentity>"
+            b'<Hash alg_id="SHA256" value="067cb8292dc062eabbe05734ef7987eb1333b6b6"/>'
             b"</SoftwareIdentity>",
         )
 
