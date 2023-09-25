@@ -21,6 +21,7 @@ from .identity import (
 )
 from .entity import uSwidEntity
 from .link import uSwidLink
+from .hash import uSwidHash, uSwidHashAlg
 from .format_swid import _ENTITY_MAP_FROM_XML, _ENTITY_MAP_TO_XML
 
 
@@ -56,6 +57,14 @@ class uSwidFormatGoswid(uSwidFormatBase):
             node["href"] = link.href
         if link.rel:
             node["rel"] = link.rel
+        return node
+
+    def _save_hash(self, ihash: uSwidHash) -> Dict[str, str]:
+        """exports a uSwidLink goSWID section"""
+
+        node: Dict[str, str] = {}
+        node["alg_id"] = ihash.alg_id.name
+        node["value"] = ihash.value
         return node
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -124,6 +133,12 @@ class uSwidFormatGoswid(uSwidFormatBase):
             # the CoSWID spec says: 'software-meta => one-or-more'
             root["software-meta"] = [node]
 
+        # checksum
+        if identity.hashes:
+            root["hash"] = []
+            for link in identity.hashes:
+                root["hash"].append(self._save_hash(link))
+
         # entities
         if identity.entities:
             root["entity"] = []
@@ -150,6 +165,18 @@ class uSwidFormatGoswid(uSwidFormatBase):
 
         link.href = node.get("href")
         link.rel = node.get("rel")
+
+    def _load_hash(self, ihash: uSwidHash, node: Dict[str, str]) -> None:
+        """imports a uSwidLink goSWID section"""
+
+        ihash.alg_id = uSwidHashAlg.from_string(node.get("alg_id"))
+        ihash.value = node.get("value")
+
+    def _load_hash(self, ihash: uSwidHash, node: Dict[str, str]) -> None:
+        """imports a uSwidLink goSWID section"""
+
+        ihash.alg_id = node.get("alg_id")
+        ihash.value = node.get("value")
 
     def _load_entity(
         self,
@@ -215,6 +242,15 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 link = uSwidLink()
                 self._load_link(link, node)
                 identity.add_link(link)
+        except KeyError:
+            pass
+
+        # hashes
+        try:
+            for node in data["hashes"]:
+                ihash = uSwidHash()
+                self._load_hash(ihash, node)
+                identity.add_hash(ihash)
         except KeyError:
             pass
 

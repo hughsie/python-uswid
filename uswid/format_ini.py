@@ -22,6 +22,7 @@ from .identity import (
 )
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
+from .hash import uSwidHash, uSwidHashAlg
 
 _ENTITY_MAP_FROM_INI = {
     "TagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -68,6 +69,14 @@ class uSwidFormatIni(uSwidFormatBase):
             data["href"] = link.href
         return data
 
+    def _save_hash(self, ihash: uSwidHash) -> Dict[str, Any]:
+        """exports a uSwidLink INI section"""
+
+        data: Dict[str, Any] = {}
+        if ihash.value:
+            data["value"] = ihash.value
+        return data
+
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
         """exports a uSwidEntity INI section"""
 
@@ -110,6 +119,8 @@ class uSwidFormatIni(uSwidFormatBase):
             main["edition"] = identity.edition
         if identity.colloquial_version:
             main["colloquial-version"] = identity.colloquial_version
+        if identity.hashes:
+            main["hash"] = identity.hashes
         if identity.persistent_id:
             main["persistent-id"] = identity.persistent_id
         config["uSWID"] = main
@@ -121,6 +132,10 @@ class uSwidFormatIni(uSwidFormatBase):
         # link
         if identity.links:
             config["uSWID-Link"] = self._save_link(identity.links[0])
+
+        # hash
+        for ihash in identity.hashes:
+            config[f"uSWID-Hash:{ihash.alg_id.name}"] = self._save_hash(ihash)
 
         # as string
         with io.StringIO() as f:
@@ -142,6 +157,27 @@ class uSwidFormatIni(uSwidFormatBase):
                 print("unknown key {} found in ini file!".format(key))
         if not link.href:
             raise NotSupportedError("all entities MUST have a href")
+
+    def _load_hash(
+        self,
+        ihash: uSwidHash,
+        data: Union[configparser.SectionProxy, Dict[str, str]],
+        alg_hint: Optional[str] = None,
+    ) -> None:
+        """imports a uSwidHash INI section"""
+
+        if alg_hint:
+            try:
+                ihash.alg_id = uSwidHashAlg.from_string(alg_hint.split(":")[1])
+            except (KeyError, TypeError, IndexError):
+                pass
+        for key, value in data.items():
+            if key == "value":
+                ihash.value = value
+            else:
+                print("unknown key {} found in ini file!".format(key))
+        if not ihash.value:
+            raise NotSupportedError("all hashes MUST have a value")
 
     def _load_entity(
         self,
@@ -219,3 +255,7 @@ class uSwidFormatIni(uSwidFormatBase):
                 link = uSwidLink()
                 self._load_link(link, config[group])
                 identity.add_link(link)
+            if group.startswith("uSWID-Hash"):
+                ihash = uSwidHash()
+                self._load_hash(ihash, config[group], alg_hint=group)
+                identity.add_hash(ihash)

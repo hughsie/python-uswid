@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 import io
 import uuid
@@ -20,6 +20,7 @@ from .errors import NotSupportedError
 from .identity import uSwidIdentity
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
+from .hash import uSwidHash, uSwidHashAlg
 
 
 class uSwidFormatCoswid(uSwidFormatBase):
@@ -65,6 +66,10 @@ class uSwidFormatCoswid(uSwidFormatBase):
             }
             data[uSwidGlobalMap.REL] = LINK_MAP.get(link.rel, link.rel)
         return data
+
+    def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
+        """exports a uSwidHash CoSWID section"""
+        return (ihash.alg_id, bytes.fromhex(ihash.value))
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[uSwidGlobalMap, Any]:
         """exports a uSwidEntity CoSWID section"""
@@ -124,6 +129,11 @@ class uSwidFormatCoswid(uSwidFormatBase):
             metadata[uSwidGlobalMap.PERSISTENT_ID] = identity.persistent_id
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
 
+        # hashes
+        data[uSwidGlobalMap.HASH] = [
+            self._save_hash(ihash) for ihash in identity.hashes
+        ]
+
         # entities
         if not identity._entities:
             raise NotSupportedError("at least one entity MUST be provided")
@@ -181,6 +191,11 @@ class uSwidFormatCoswid(uSwidFormatBase):
                         rel_data, ",".join(LINK_MAP.values())
                     )
                 ) from e
+
+    def _load_hash(self, ihash: uSwidHash, data: Dict[uSwidGlobalMap, Any]) -> None:
+        """imports a uSwidHash CoSWID section"""
+        ihash.alg_id = uSwidHashAlg(data[0])
+        ihash.value = bytes.hex(data[1])
 
     def _load_entity(
         self,
@@ -251,6 +266,12 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     identity.colloquial_version = value
                 elif key == uSwidGlobalMap.PERSISTENT_ID:
                     identity.persistent_id = value
+
+        hashes = data.get(uSwidGlobalMap.HASH, [])
+        for hash_data in hashes:
+            ihash = uSwidHash()
+            self._load_hash(ihash, hash_data)
+            identity.add_hash(ihash)
 
         # entities
         entities = data.get(uSwidGlobalMap.ENTITY, [])

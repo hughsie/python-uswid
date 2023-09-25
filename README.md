@@ -61,8 +61,8 @@ XML document:
     version-scheme = multipartnumeric
     product = ColorHug
     summary = Open Source Display Colorimeter
-    colloquial-version = b2ed6f1ed8587bf01a2951d74512a70f1a512d38
-    edition = v2021+
+    colloquial-version = b2ed6f1ed8587bf01a2951d74512a70f1a512d38 # of all the source files
+    edition = v2021+ # identifier of the project tree, e.g. the output of 'git describe'
     revision = 2
     persistent-id = com.hughski.colorhug
 
@@ -120,6 +120,17 @@ using multiple files on `--load`) then you can specify the correct identity usin
     [uSWID-Entity:Distributor]
     name = OEM Vendor
     regid = oem.homepage.com
+
+If we're talking about a "detached" binary, and want to make sure that we can verify
+the blob is valid, we can also add one or more file hashes:
+
+    [uSWID-Hash]
+    value = 067cb8292dc062eabbe05734ef7987eb1333b6b6
+
+Additional hashes can also be provided:
+
+    [uSWID-Hash:SHA256]
+    value = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
 
 Adding Deps
 -----------

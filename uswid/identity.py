@@ -14,6 +14,7 @@ from .errors import NotSupportedError
 from .enums import uSwidVersionScheme
 from .entity import uSwidEntity
 from .link import uSwidLink
+from .hash import uSwidHash
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -55,6 +56,7 @@ class uSwidIdentity:
         self.persistent_id: Optional[str] = None
         self.lang: Optional[str] = "en-US"
         self.generator = "uSWID"
+        self.hashes: List[uSwidHash] = []
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
 
@@ -96,6 +98,8 @@ class uSwidIdentity:
             self.add_entity(entity)
         for link in identity_new.links:
             self.add_link(link)
+        for ihash in identity_new.hashes:
+            self.add_hash(ihash)
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """only adds the latest entity"""
@@ -108,6 +112,12 @@ class uSwidIdentity:
         if not link.href:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
+
+    def add_hash(self, ihash: uSwidHash) -> None:
+        """only adds the deduped link"""
+        if not ihash.value:
+            raise NotSupportedError("the hash value MUST be provided")
+        self.hashes.append(ihash)
 
     @property
     def links(self) -> List[uSwidLink]:
@@ -132,5 +142,9 @@ class uSwidIdentity:
         if self._entities:
             tmp += "\n{}".format(
                 "\n".join([f" - {str(e)}" for e in self._entities.values()]),
+            )
+        if self.hashes:
+            tmp += "\n{}".format(
+                "\n".join([f" - {str(e)}" for e in self.hashes]),
             )
         return tmp
