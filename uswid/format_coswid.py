@@ -114,7 +114,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
             metadata[uSwidGlobalMap.SUMMARY] = identity.summary
         if identity.revision:
             metadata[uSwidGlobalMap.REVISION] = identity.revision
-        if identity.edition:
+        if identity.product:
             metadata[uSwidGlobalMap.PRODUCT] = identity.product
         if identity.edition:
             metadata[uSwidGlobalMap.EDITION] = identity.edition
