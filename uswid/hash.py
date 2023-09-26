@@ -13,7 +13,7 @@ from typing import Optional
 
 
 class uSwidHashAlg(IntEnum):
-    SHA1 = 0
+    UNKNOWN = 0
     SHA256 = 1
     SHA384 = 7
     SHA512 = 8
@@ -22,7 +22,6 @@ class uSwidHashAlg(IntEnum):
     def from_string(cls, alg_id: str) -> "uSwidHashAlg":
         return cls(
             {
-                "SHA1": uSwidHashAlg.SHA1,
                 "SHA256": uSwidHashAlg.SHA256,
                 "SHA384": uSwidHashAlg.SHA384,
                 "SHA512": uSwidHashAlg.SHA512,
@@ -48,9 +47,7 @@ class uSwidHash:
     @value.setter
     def value(self, value: Optional[str]) -> None:
         if self.alg_id is None and value:
-            if len(value) == 40:
-                self.alg_id = uSwidHashAlg.SHA1
-            elif len(value) == 64:
+            if len(value) == 64:
                 self.alg_id = uSwidHashAlg.SHA256
             elif len(value) == 96:
                 self.alg_id = uSwidHashAlg.SHA384
@@ -60,5 +57,5 @@ class uSwidHash:
 
     def __repr__(self) -> str:
         return "uSwidHash({},{})".format(
-            self.alg_id.name if self.alg_id else uSwidHashAlg.SHA1.name, self.value
+            self.alg_id.name if self.alg_id else uSwidHashAlg.UNKNOWN.name, self.value
         )

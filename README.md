@@ -122,15 +122,15 @@ using multiple files on `--load`) then you can specify the correct identity usin
     regid = oem.homepage.com
 
 If we're talking about a "detached" binary, and want to make sure that we can verify
-the blob is valid, we can also add one or more file hashes:
+the blob is valid, we can also add a file hash:
 
     [uSWID-Hash]
-    value = 067cb8292dc062eabbe05734ef7987eb1333b6b6
+    value = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
 
 Additional hashes can also be provided:
 
-    [uSWID-Hash:SHA256]
-    value = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
+    [uSWID-Hash:SHA512]
+    value = 50db094fc160e758e5cc14f47688ce3d862ab2f3ced91b97e89ef7702293cbca…
 
 Adding Deps
 -----------
