@@ -172,7 +172,7 @@ def _detect_format(filepath: str) -> SwidFormat:
         return SwidFormat.PE
     if ext in ["uswid", "raw", "bin"]:
         return SwidFormat.USWID
-    if ext == "coswid":
+    if ext in ["coswid", "cbor"]:
         return SwidFormat.COSWID
     if ext == "ini":
         return SwidFormat.INI
