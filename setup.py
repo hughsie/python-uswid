@@ -53,6 +53,7 @@ setup(
             "format.pyi",
             "format_swid.pyi",
             "format_uswid.pyi",
+            "hash.pyi",
             "identity.pyi",
             "link.pyi",
             "__init__.pyi",
