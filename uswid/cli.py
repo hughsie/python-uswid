@@ -20,6 +20,11 @@ import shutil
 import uuid
 import string
 
+if sys.version_info >= (3, 8):
+    from importlib import metadata as importlib_metadata
+else:
+    import importlib_metadata
+
 import pefile
 
 sys.path.append(os.path.realpath("."))
@@ -206,7 +211,8 @@ def _type_for_fmt(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate CoSWID metadata")
+    parser = argparse.ArgumentParser(prog="uswid", description="Generate CoSWID metadata")
+    parser.add_argument("--version", action="version", version="%(prog)s " + importlib_metadata.version("uswid"))
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
     parser.add_argument("--binfile", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--rawfile", default=None, help=argparse.SUPPRESS)

@@ -23,7 +23,12 @@ setup(
         "uswid",
     ],
     include_package_data=True,
-    install_requires=["cbor2", "lxml", "pefile"],
+    install_requires=[
+        "cbor2",
+        "lxml",
+        "pefile",
+        "importlib-metadata >= 1.0 ; python_version < '3.8'"
+    ],
     entry_points={
         "console_scripts": [
             "uswid = uswid.cli:main",
