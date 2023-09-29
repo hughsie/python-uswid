@@ -56,6 +56,5 @@ class uSwidHash:
         self._value = value
 
     def __repr__(self) -> str:
-        return "uSwidHash({},{})".format(
-            self.alg_id.name if self.alg_id else uSwidHashAlg.UNKNOWN.name, self.value
-        )
+        alg_id_str = self.alg_id.name if self.alg_id else uSwidHashAlg.UNKNOWN.name
+        return f'uSwidHash(alg_id={alg_id_str},value="{self.value}")'

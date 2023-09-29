@@ -74,4 +74,4 @@ class uSwidLink:
         return self.href.split("/")[-1].replace(".html", "")
 
     def __repr__(self) -> str:
-        return "uSwidLink({},{})".format(self.href, str(self.rel))
+        return f'uSwidLink(rel="{self.rel or "none"}",href="{self.href}")'

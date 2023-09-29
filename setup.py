@@ -27,7 +27,7 @@ setup(
         "cbor2",
         "lxml",
         "pefile",
-        "importlib-metadata >= 1.0 ; python_version < '3.8'"
+        "importlib-metadata >= 1.0 ; python_version < '3.8'",
     ],
     entry_points={
         "console_scripts": [
@@ -59,6 +59,7 @@ setup(
             "format_swid.pyi",
             "format_uswid.pyi",
             "hash.pyi",
+            "payload.pyi",
             "identity.pyi",
             "link.pyi",
             "__init__.pyi",

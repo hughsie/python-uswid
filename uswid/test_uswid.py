@@ -22,6 +22,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .enums import uSwidVersionScheme
 from .identity import uSwidIdentity
 from .hash import uSwidHash, uSwidHashAlg
+from .payload import uSwidPayload
 
 from .format_ini import uSwidFormatIni
 from .format_coswid import uSwidFormatCoswid
@@ -34,7 +35,9 @@ class TestSwidEntity(unittest.TestCase):
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
-        self.assertEqual(str(entity), "uSwidEntity(test,example.com->MAINTAINER)")
+        self.assertEqual(
+            str(entity), 'uSwidEntity(regid="example.com",name="test",roles=MAINTAINER)'
+        )
         self.assertEqual(
             str(uSwidFormatCoswid()._save_entity(entity)),  # type: ignore
             "{<uSwidGlobalMap.ENTITY_NAME: 31>: 'test', "
@@ -60,7 +63,10 @@ class TestSwidEntity(unittest.TestCase):
                 attrib={"name": "foo", "regid": "bar", "role": "tagCreator maintainer"},
             ),
         )
-        self.assertEqual(str(entity), "uSwidEntity(foo,bar->TAG_CREATOR,MAINTAINER)")
+        self.assertEqual(
+            str(entity),
+            'uSwidEntity(regid="bar",name="foo",roles=TAG_CREATOR,MAINTAINER)',
+        )
         with self.assertRaises(NotSupportedError):
             uSwidFormatSwid()._load_entity(  # type: ignore
                 entity,
@@ -76,7 +82,10 @@ class TestSwidEntity(unittest.TestCase):
             {"name": "foo", "regid": "bar", "extra-roles": "TagCreator,Maintainer"},
             role_hint="Distributor",
         )
-        self.assertEqual(str(entity), "uSwidEntity(foo,bar->TAG_CREATOR,MAINTAINER)")
+        self.assertEqual(
+            str(entity),
+            'uSwidEntity(regid="bar",name="foo",roles=TAG_CREATOR,MAINTAINER)',
+        )
         with self.assertRaises(NotSupportedError):
             uSwidFormatIni()._load_entity(  # type: ignore
                 entity, {"name": "foo", "regid": "bar", "extra-roles": "baz"}
@@ -95,7 +104,7 @@ class TestSwidEntity(unittest.TestCase):
     def test_link(self):
         # enumerated type
         link = uSwidLink(href="http://test.com/", rel="see-also")
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
+        self.assertEqual(str(link), 'uSwidLink(rel="see-also",href="http://test.com/")')
         self.assertEqual(
             str(uSwidFormatCoswid()._save_link(link)),  # type: ignore
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
@@ -104,7 +113,7 @@ class TestSwidEntity(unittest.TestCase):
 
         # rel from IANA "Software Tag Link Relationship Values" registry
         link = uSwidLink(href="http://test.com/", rel="license")
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,license)")
+        self.assertEqual(str(link), 'uSwidLink(rel="license",href="http://test.com/")')
         self.assertEqual(
             str(uSwidFormatCoswid()._save_link(link)),  # type: ignore
             "{<uSwidGlobalMap.HREF: 38>: 'http://test.com/', "
@@ -120,7 +129,7 @@ class TestSwidEntity(unittest.TestCase):
                 attrib={"href": "http://test.com/", "rel": "seeAlso"},
             ),
         )
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
+        self.assertEqual(str(link), 'uSwidLink(rel="see-also",href="http://test.com/")')
 
         # INI import
         link = uSwidLink()
@@ -128,7 +137,7 @@ class TestSwidEntity(unittest.TestCase):
             link,
             {"href": "http://test.com/", "rel": "see-also"},
         )
-        self.assertEqual(str(link), "uSwidLink(http://test.com/,see-also)")
+        self.assertEqual(str(link), 'uSwidLink(rel="see-also",href="http://test.com/")')
 
         # SWID XML export
         root = ET.Element("SoftwareIdentity")
@@ -140,58 +149,79 @@ class TestSwidEntity(unittest.TestCase):
             b"</SoftwareIdentity>",
         )
 
-    def test_hash(self):
+    def test_payload(self):
+
+        self.maxDiff = None
+
         # enumerated type
-        ihash = uSwidHash(
-            alg_id=uSwidHashAlg.SHA256, value="067cb8292dc062eabbe05734ef7987eb1333b6b6"
+        payload = uSwidPayload(name="foo", size=123)
+        payload.add_hash(
+            uSwidHash(
+                alg_id=uSwidHashAlg.SHA256,
+                value="067cb8292dc062eabbe05734ef7987eb1333b6b6",
+            )
         )
         self.assertEqual(
-            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+            str(payload),
+            'uSwidPayload(name="foo",size=123)\n'
+            ' - uSwidHash(alg_id=SHA256,value="067cb8292dc062eabbe05734ef7987eb1333b6b6")',
         )
+        payload.hashes = []
         self.assertEqual(
-            str(uSwidFormatCoswid()._save_hash(ihash)),  # type: ignore
-            "(<uSwidHashAlg.SHA256: 1>, b'\\x06|\\xb8)-\\xc0b\\xea\\xbb\\xe0W4\\xefy\\x87\\xeb\\x133\\xb6\\xb6')",
+            str(uSwidFormatCoswid()._save_payload(payload)),  # type: ignore
+            "{<uSwidGlobalMap.FILE: 17>: {<uSwidGlobalMap.FS_NAME: 24>: 'foo', <uSwidGlobalMap.SIZE: 20>: 123}}",
         )
 
         # SWID XML import
-        ihash = uSwidHash()
-        uSwidFormatSwid()._load_hash(  # type: ignore
-            ihash,
+        payload = uSwidPayload()
+        uSwidFormatSwid()._load_payload(  # type: ignore
+            payload,
             ET.Element(
-                "Hash",
+                "File",
                 attrib={
-                    "value": "067cb8292dc062eabbe05734ef7987eb1333b6b6",
-                    "alg_id": "SHA256",
+                    "name": "foo",
+                    "size": "123",
+                    "{http://www.w3.org/2001/04/xmlenc#sha256}hash": "067cb8292dc062eabbe05734ef7987eb1333b6b6",
                 },
             ),
         )
         self.assertEqual(
-            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+            str(payload),
+            'uSwidPayload(name="foo",size=123)\n'
+            ' - uSwidHash(alg_id=SHA256,value="067cb8292dc062eabbe05734ef7987eb1333b6b6")',
         )
 
         # INI import
-        ihash = uSwidHash()
-        uSwidFormatIni()._load_hash(  # type: ignore
-            ihash,
-            {"value": "067cb8292dc062eabbe05734ef7987eb1333b6b6"},
-            "uSWID-Hash:SHA256",
+        payload = uSwidPayload()
+        uSwidFormatIni()._load_payload(  # type: ignore
+            payload,
+            {
+                "name": "foo",
+                "size": "123",
+                "hash": "8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c",
+            },
         )
         self.assertEqual(
-            str(ihash), "uSwidHash(SHA256,067cb8292dc062eabbe05734ef7987eb1333b6b6)"
+            str(payload),
+            'uSwidPayload(name="foo",size=123)\n'
+            ' - uSwidHash(alg_id=SHA256,value="8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c")',
         )
 
         # SWID XML export
         root = ET.Element("SoftwareIdentity")
-        uSwidFormatSwid()._save_hash(ihash, root)  # type: ignore
-        print(ET.tostring(root, encoding="utf-8"))
+        uSwidFormatSwid()._save_payload(payload, root)  # type: ignore
         self.assertEqual(
             ET.tostring(root, encoding="utf-8"),
             b"<SoftwareIdentity>"
-            b'<Hash alg_id="SHA256" value="067cb8292dc062eabbe05734ef7987eb1333b6b6"/>'
+            b'<File xmlns:SHA256="http://www.w3.org/2001/04/xmlenc#sha256" '
+            b'xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512" name="foo" size="123" '
+            b'SHA256:hash="8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c"/>'
             b"</SoftwareIdentity>",
         )
 
     def test_identity(self):
+
+        self.maxDiff = None
         identity = uSwidIdentity(
             tag_id="foobarbaz",
             tag_version=5,
@@ -199,15 +229,18 @@ class TestSwidEntity(unittest.TestCase):
             software_version="1.2.3",
         )
         identity.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
-        self.assertEqual(str(identity), "uSwidIdentity(foobarbaz,5,foo,1.2.3)")
+        self.assertEqual(
+            str(identity),
+            'uSwidIdentity(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3")',
+        )
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
         identity.add_entity(entity)
         self.assertEqual(
             str(identity),
-            "uSwidIdentity(foobarbaz,5,foo,1.2.3):\n"
-            " - uSwidEntity(test,example.com->MAINTAINER)",
+            'uSwidIdentity(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3"):\n'
+            ' - uSwidEntity(regid="example.com",name="test",roles=MAINTAINER)',
         )
 
         # SWID XML import
@@ -228,10 +261,11 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
         identity = uSwidFormatSwid().load(xml).get_default()  # type: ignore
         self.assertEqual(
             str(identity),
-            "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,DellBiosConnectNetwork,1.5.2):\n"
-            " - uSwidLink(http://hughsie.com,see-also)\n"
-            " - uSwidLink(www.gnu.org/licenses/gpl.txt,license)\n"
-            " - uSwidEntity(Dell Technologies,dell.com->SOFTWARE_CREATOR,TAG_CREATOR)",
+            'uSwidIdentity(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
+            'software_name="DellBiosConnectNetwork",software_version="1.5.2"):\n'
+            ' - uSwidLink(rel="see-also",href="http://hughsie.com")\n'
+            ' - uSwidLink(rel="license",href="www.gnu.org/licenses/gpl.txt")\n'
+            ' - uSwidEntity(regid="dell.com",name="Dell Technologies",roles=SOFTWARE_CREATOR,TAG_CREATOR)',
         )
         self.assertEqual(
             identity.summary,
@@ -266,10 +300,11 @@ rel = see-also
         self.assertIsNotNone(identity)
         self.assertEqual(
             str(identity),
-            "uSwidIdentity(acbd84ff-9898-4922-8ade-dd4bbe2e40ba,1,HughskiColorHug.efi,1.0.0):\n"
-            " - uSwidLink(https://hughski.com/,see-also)\n"
-            " - uSwidEntity(Richard Hughes,hughsie.com->TAG_CREATOR)\n"
-            " - uSwidEntity(Hughski Limited,hughski.com->AGGREGATOR)",
+            'uSwidIdentity(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
+            'software_name="HughskiColorHug.efi",software_version="1.0.0"):\n'
+            ' - uSwidLink(rel="see-also",href="https://hughski.com/")\n'
+            ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=TAG_CREATOR)\n'
+            ' - uSwidEntity(regid="hughski.com",name="Hughski Limited",roles=AGGREGATOR)',
         )
 
         # INI export

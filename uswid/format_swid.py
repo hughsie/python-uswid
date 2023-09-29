@@ -22,6 +22,7 @@ from .identity import (
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
 from .hash import uSwidHash, uSwidHashAlg
+from .payload import uSwidPayload
 
 _ENTITY_MAP_FROM_XML = {
     "tagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -67,13 +68,25 @@ class uSwidFormatSwid(uSwidFormatBase):
         if link.rel:
             node.set("rel", link.rel)
 
-    def _save_hash(self, ihash: uSwidHash, root: ET.Element) -> None:
+    def _save_payload(self, payload: uSwidPayload, root: ET.Element) -> None:
         """exports a uSwidHash SWID section"""
-
-        node = ET.SubElement(root, "Hash")
-        node.set("alg_id", ihash.alg_id.name)
-        if ihash.value:
-            node.set("value", ihash.value)
+        node = ET.SubElement(
+            root,
+            "File",
+            nsmap={
+                "SHA256": "http://www.w3.org/2001/04/xmlenc#sha256",
+                "SHA512": "http://www.w3.org/2001/04/xmlenc#sha512",
+            },
+        )
+        if payload.name:
+            node.set("name", payload.name)
+        if payload.size:
+            node.set("size", payload.size)
+        for ihash in payload.hashes:
+            if ihash.alg_id == uSwidHashAlg.SHA256:
+                node.set("{http://www.w3.org/2001/04/xmlenc#sha256}hash", ihash.value)
+            elif ihash.alg_id == uSwidHashAlg.SHA512:
+                node.set("{http://www.w3.org/2001/04/xmlenc#sha512}hash", ihash.value)
 
     def _save_entity(self, entity: uSwidEntity, root: ET.Element) -> None:
         """exports a uSwidEntity SWID section"""
@@ -127,8 +140,13 @@ class uSwidFormatSwid(uSwidFormatBase):
             self._save_entity(entity, root)
         for link in identity._links.values():
             self._save_link(link, root)
-        for ihash in identity.hashes:
-            self._save_hash(ihash, root)
+
+        # payloads
+        if identity.payloads:
+            node = ET.SubElement(root, "Payload", nsmap=NSMAP)
+            node2 = ET.SubElement(node, "Directory", nsmap=NSMAP)
+            for payload in identity.payloads:
+                self._save_payload(payload, node2)
 
         # optional metadata
         if (
@@ -166,10 +184,23 @@ class uSwidFormatSwid(uSwidFormatBase):
         rel_data = node.get("rel")
         link.rel = LINK_MAP.get(rel_data, rel_data)
 
-    def _load_hash(self, ihash: uSwidHash, node: ET.SubElement) -> None:
-        """imports a uSwidHash SWID section"""
-        ihash.value = node.get("value")
-        ihash.alg_id = uSwidHashAlg.from_string(node.get("alg_id"))
+    def _load_payload(self, payload: uSwidPayload, node: ET.SubElement) -> None:
+        """imports a uSwidPayload SWID section"""
+
+        payload.name = node.get("name")
+        payload.size = node.get("size")
+        try:
+            value = node.attrib["{http://www.w3.org/2001/04/xmlenc#sha256}hash"]
+            if value:
+                payload.add_hash(uSwidHash(alg_id=uSwidHashAlg.SHA256, value=value))
+        except KeyError:
+            pass
+        try:
+            value = node.attrib["{http://www.w3.org/2001/04/xmlenc#sha512}hash"]
+            if value:
+                payload.add_hash(uSwidHash(alg_id=uSwidHashAlg.SHA512, value=value))
+        except KeyError:
+            pass
 
     def _load_entity(
         self,
@@ -195,8 +226,20 @@ class uSwidFormatSwid(uSwidFormatBase):
 
         parser = ET.XMLParser()
         tree = ET.fromstring(blob, parser)
-        namespaces = {"ns": "http://standards.iso.org/iso/19770/-2/2015/schema.xsd"}
-        element = tree.xpath("/ns:SoftwareIdentity", namespaces=namespaces)[0]
+        namespaces = {
+            "ns": "http://standards.iso.org/iso/19770/-2/2015/schema.xsd",
+            "ds": "http://www.w3.org/2000/09/xmldsig#",
+            "SHA256": "http://www.w3.org/2001/04/xmlenc#sha256",
+            "SHA512": "http://www.w3.org/2001/04/xmlenc#sha512",
+        }
+
+        # strip off digital signature
+        if tree.xpath("/ds:Signature", namespaces=namespaces):
+            element = tree.xpath(
+                "/ds:Signature/ds:Object/ns:SoftwareIdentity", namespaces=namespaces
+            )[0]
+        else:
+            element = tree.xpath("/ns:SoftwareIdentity", namespaces=namespaces)[0]
 
         # identity
         identity.tag_id = element.get("tagId")
@@ -235,8 +278,10 @@ class uSwidFormatSwid(uSwidFormatBase):
             self._load_link(link, node)
             identity.add_link(link)
 
-        # hashes
-        for node in element.xpath("ns:Hash", namespaces=namespaces):
-            ihash = uSwidHash()
-            self._load_hash(ihash, hash)
-            identity.add_hash(ihash)
+        # payloads
+        for node in element.xpath(
+            "ns:Payload/ns:Directory/ns:File", namespaces=namespaces
+        ):
+            payload = uSwidPayload()
+            self._load_payload(payload, node)
+            identity.add_payload(payload)

@@ -56,7 +56,7 @@ XML document:
 
     [uSWID]
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
-    software-name = HughskiColorHug.efi
+    software-name = HughskiColorHug
     software-version = 1.2.3
     version-scheme = multipartnumeric
     product = ColorHug
@@ -124,16 +124,13 @@ using multiple files on `--load`) then you can specify the correct identity usin
 If we're talking about a "detached" binary, and want to make sure that we can verify
 the blob is valid, we can also add a file hash:
 
-    [uSWID-Hash]
-    value = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
+    [uSWID-Payload]
+    name = HughskiColorHug.efi
+    size = 20480
+    hash = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
 
-Additional hashes can also be provided:
-
-    [uSWID-Hash:SHA512]
-    value = 50db094fc160e758e5cc14f47688ce3d862ab2f3ced91b97e89ef7702293cbca…
-
-Adding Deps
------------
+Adding Links
+------------
 
 Dependancies like compilers or other security-relevant libraries can be added using:
 
