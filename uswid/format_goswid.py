@@ -22,6 +22,7 @@ from .identity import (
 from .entity import uSwidEntity
 from .link import uSwidLink
 from .hash import uSwidHash, uSwidHashAlg
+from .payload import uSwidPayload
 from .format_swid import _ENTITY_MAP_FROM_XML, _ENTITY_MAP_TO_XML
 
 
@@ -37,6 +38,8 @@ class uSwidFormatGoswid(uSwidFormatBase):
         except json.decoder.JSONDecodeError as e:
             raise NotSupportedError("invalid GoSWID: {}".format(e)) from e
         container = uSwidContainer()
+        if "corim_id" in data:
+            data = data["corim_tags"]
         for identity_json in data:
             identity = uSwidIdentity()
             self._load_identity_internal(identity, identity_json)
@@ -59,12 +62,16 @@ class uSwidFormatGoswid(uSwidFormatBase):
             node["rel"] = link.rel
         return node
 
-    def _save_hash(self, ihash: uSwidHash) -> Dict[str, str]:
+    def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
         """exports a uSwidLink goSWID section"""
 
         node: Dict[str, str] = {}
-        node["alg_id"] = ihash.alg_id.name
-        node["value"] = ihash.value
+        if payload.name:
+            node["fs-name"] = payload.name
+        if payload.size:
+            node["size"] = payload.size
+        if payload.hashes:
+            node["hash"] = [payload.hashes[0].value, payload.hashes[0].alg_id]
         return node
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -134,10 +141,10 @@ class uSwidFormatGoswid(uSwidFormatBase):
             root["software-meta"] = [node]
 
         # checksum
-        if identity.hashes:
-            root["hash"] = []
-            for link in identity.hashes:
-                root["hash"].append(self._save_hash(link))
+        if identity.payloads:
+            root["payload"] = []
+            for payload in identity.payloads:
+                root["payload"].append(self._save_payload(payload))
 
         # entities
         if identity.entities:
@@ -166,17 +173,16 @@ class uSwidFormatGoswid(uSwidFormatBase):
         link.href = node.get("href")
         link.rel = node.get("rel")
 
-    def _load_hash(self, ihash: uSwidHash, node: Dict[str, str]) -> None:
-        """imports a uSwidLink goSWID section"""
+    def _load_payload(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
+        """imports a uSwidPayload goSWID section"""
 
-        ihash.alg_id = uSwidHashAlg.from_string(node.get("alg_id"))
-        ihash.value = node.get("value")
-
-    def _load_hash(self, ihash: uSwidHash, node: Dict[str, str]) -> None:
-        """imports a uSwidLink goSWID section"""
-
-        ihash.alg_id = node.get("alg_id")
-        ihash.value = node.get("value")
+        payload.name = node.get("fs_name")
+        payload.size = node.get("size")
+        if "hash" in node:
+            ihash = uSwidHash()
+            ihash.alg_id = uSwidHashAlg(int(node["hash"][0]))
+            ihash.value = node["hash"][1]
+            payload.add_hash(ihash)
 
     def _load_entity(
         self,
@@ -184,6 +190,10 @@ class uSwidFormatGoswid(uSwidFormatBase):
         node: Dict[str, str],
     ) -> None:
         """imports a uSwidEntity goSWID section"""
+
+        # for compat with Intel FSP template
+        for key in list(node):
+            node[key.replace("_", "-")] = node.pop(key)
 
         entity.name = node.get("entity-name")
         entity.regid = node.get("reg-id")
@@ -203,6 +213,11 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def _load_identity_internal(
         self, identity: uSwidIdentity, data: Dict[str, Any]
     ) -> None:
+
+        # for compat with Intel FSP template
+        for key in list(data):
+            data[key.replace("_", "-")] = data.pop(key)
+
         # identity
         identity.tag_id = data.get("tag-id")
         tag_version = data.get("tag-version")
@@ -245,12 +260,19 @@ class uSwidFormatGoswid(uSwidFormatBase):
         except KeyError:
             pass
 
-        # hashes
+        # payloads
         try:
-            for node in data["hashes"]:
-                ihash = uSwidHash()
-                self._load_hash(ihash, node)
-                identity.add_hash(ihash)
+            for node in data["payloads"]:
+                payload = uSwidPayload()
+                self._load_payload(payload, node)
+                identity.add_payload(payload)
+        except KeyError:
+            pass
+        try:
+            for node in data["payload"]["directory"]["path_elements"]["file"]:
+                payload = uSwidPayload()
+                self._load_payload(payload, node)
+                identity.add_payload(payload)
         except KeyError:
             pass
 

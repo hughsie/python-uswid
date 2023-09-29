@@ -36,6 +36,5 @@ class uSwidEntity:
             self.roles.extend(roles)
 
     def __repr__(self) -> str:
-        return "uSwidEntity({},{}->{})".format(
-            self.name, self.regid, ",".join([role.name for role in self.roles])
-        )
+        role_str = ",".join([role.name for role in self.roles])
+        return f'uSwidEntity(regid="{self.regid}",name="{self.name}",roles={role_str})'

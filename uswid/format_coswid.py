@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, List, Tuple
 
 import io
 import uuid
@@ -21,6 +21,20 @@ from .identity import uSwidIdentity
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
+from .payload import uSwidPayload
+
+
+def _get_one_or_more(data: Dict[uSwidGlobalMap, Any], key: uSwidGlobalMap) -> List[Any]:
+    value = data.get(key, [])
+    if isinstance(value, dict):
+        return [value]
+    return value
+
+
+def _set_one_or_more(
+    data: Dict[uSwidGlobalMap, Any], key: uSwidGlobalMap, value: List[Any]
+) -> None:
+    data[key] = value if len(value) > 1 else value[0]
 
 
 class uSwidFormatCoswid(uSwidFormatBase):
@@ -71,6 +85,21 @@ class uSwidFormatCoswid(uSwidFormatBase):
         """exports a uSwidHash CoSWID section"""
         return (ihash.alg_id, bytes.fromhex(ihash.value))
 
+    def _save_payload(self, payload: uSwidPayload) -> Dict[uSwidGlobalMap, Any]:
+        """exports a uSwidPayload CoSWID section"""
+
+        data: Dict[uSwidGlobalMap, Any] = {}
+        if payload.name:
+            data[uSwidGlobalMap.FS_NAME] = payload.name
+        if payload.size:
+            data[uSwidGlobalMap.SIZE] = payload.size
+        if payload.hashes:
+            payload_hashes = []
+            for ihash in payload.hashes:
+                payload_hashes.append(self._save_hash(ihash))
+            _set_one_or_more(data, uSwidGlobalMap.HASH, payload_hashes)
+        return {uSwidGlobalMap.FILE: data}
+
     def _save_entity(self, entity: uSwidEntity) -> Dict[uSwidGlobalMap, Any]:
         """exports a uSwidEntity CoSWID section"""
 
@@ -78,10 +107,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         data[uSwidGlobalMap.ENTITY_NAME] = entity.name
         if entity.regid:
             data[uSwidGlobalMap.REG_ID] = entity.regid
-        if len(entity.roles) == 1:
-            data[uSwidGlobalMap.ROLE] = entity.roles[0]
-        else:
-            data[uSwidGlobalMap.ROLE] = entity.roles
+        _set_one_or_more(data, uSwidGlobalMap.ROLE, entity.roles)
         return data
 
     def _save_identity(self, identity: uSwidIdentity) -> bytes:
@@ -129,10 +155,13 @@ class uSwidFormatCoswid(uSwidFormatBase):
             metadata[uSwidGlobalMap.PERSISTENT_ID] = identity.persistent_id
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
 
-        # hashes
-        data[uSwidGlobalMap.HASH] = [
-            self._save_hash(ihash) for ihash in identity.hashes
-        ]
+        # payloads
+        if identity.payloads:
+            _set_one_or_more(
+                data,
+                uSwidGlobalMap.PAYLOAD,
+                [self._save_payload(payload) for payload in identity.payloads],
+            )
 
         # entities
         if not identity._entities:
@@ -149,12 +178,16 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 has_tag_creator = True
         if not has_tag_creator:
             raise NotSupportedError("all entries MUST have a tag-creator")
-        data[uSwidGlobalMap.ENTITY] = [
-            self._save_entity(entity) for entity in identity._entities.values()
-        ]
-        data[uSwidGlobalMap.LINK] = [
-            self._save_link(link) for link in identity._links.values()
-        ]
+        _set_one_or_more(
+            data,
+            uSwidGlobalMap.ENTITY,
+            [self._save_entity(entity) for entity in identity._entities.values()],
+        )
+        _set_one_or_more(
+            data,
+            uSwidGlobalMap.LINK,
+            [self._save_link(link) for link in identity._links.values()],
+        )
         return cbor2.dumps(data)
 
     def _load_link(self, link: uSwidLink, data: Dict[uSwidGlobalMap, Any]) -> None:
@@ -167,6 +200,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
         rel_data = data.get(uSwidGlobalMap.REL)
         if isinstance(rel_data, str):
             link.rel = rel_data
+        if isinstance(rel_data, int):
+            rel_data = uSwidLinkRel(rel_data)
         if isinstance(rel_data, uSwidLinkRel):
             LINK_MAP: Dict[uSwidLinkRel, str] = {
                 uSwidLinkRel.LICENSE: "license",
@@ -192,10 +227,32 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     )
                 ) from e
 
-    def _load_hash(self, ihash: uSwidHash, data: Dict[uSwidGlobalMap, Any]) -> None:
+    def _load_hash(self, ihash: uSwidHash, data: Any) -> None:
         """imports a uSwidHash CoSWID section"""
         ihash.alg_id = uSwidHashAlg(data[0])
-        ihash.value = bytes.hex(data[1])
+        if isinstance(data[1], bytes):
+            ihash.value = bytes.hex(data[1])
+        else:
+            ihash.value = data[1]
+
+    def _load_payload(
+        self,
+        payload: uSwidPayload,
+        data: Dict[uSwidGlobalMap, Any],
+    ) -> None:
+        """imports a uSwidPayload CoSWID section"""
+        for key, value in data.items():
+            if key == uSwidGlobalMap.FS_NAME:
+                payload.name = value
+            if key == uSwidGlobalMap.SIZE:
+                payload.size = value
+            if key == uSwidGlobalMap.HASH:
+                if not isinstance(value[0], list):
+                    value = [value]
+                for hash_data in value:
+                    ihash = uSwidHash()
+                    self._load_hash(ihash, hash_data)
+                    payload.add_hash(ihash)
 
     def _load_entity(
         self,
@@ -231,6 +288,12 @@ class uSwidFormatCoswid(uSwidFormatBase):
         except EOFError as e:
             raise NotSupportedError("invalid header") from e
 
+        # strip off digital signature
+        if isinstance(data, cbor2.CBORTag):
+            if data.tag != 98:
+                raise NotSupportedError("invalid digital signature")
+            data = cbor2.loads(data.value[2])
+
         # identity can be specified as a string or in binary
         tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
         if isinstance(tag_id_bytes, str):
@@ -247,10 +310,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         identity.version_scheme = data.get(uSwidGlobalMap.VERSION_SCHEME, None)
 
         # optional metadata
-        software_metas = data.get(uSwidGlobalMap.SOFTWARE_META, [])
-        if isinstance(software_metas, dict):
-            software_metas = [software_metas]
-        for sm in software_metas:
+        for sm in _get_one_or_more(data, uSwidGlobalMap.SOFTWARE_META):
             for key, value in sm.items():
                 if key == uSwidGlobalMap.GENERATOR:
                     identity.generator = value
@@ -267,17 +327,24 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 elif key == uSwidGlobalMap.PERSISTENT_ID:
                     identity.persistent_id = value
 
-        hashes = data.get(uSwidGlobalMap.HASH, [])
-        for hash_data in hashes:
-            ihash = uSwidHash()
-            self._load_hash(ihash, hash_data)
-            identity.add_hash(ihash)
+        # payload
+        file_datas = []
+        for payload_data in _get_one_or_more(data, uSwidGlobalMap.PAYLOAD):
+            file_datas.extend(_get_one_or_more(payload_data, uSwidGlobalMap.FILE))
+            for directory_data in _get_one_or_more(
+                payload_data, uSwidGlobalMap.DIRECTORY
+            ):
+                for path_data in _get_one_or_more(
+                    directory_data, uSwidGlobalMap.PATH_ELEMENTS
+                ):
+                    file_datas.extend(_get_one_or_more(path_data, uSwidGlobalMap.FILE))
+        for file_data in file_datas:
+            payload = uSwidPayload()
+            self._load_payload(payload, file_data)
+            identity.add_payload(payload)
 
         # entities
-        entities = data.get(uSwidGlobalMap.ENTITY, [])
-        if isinstance(entities, dict):
-            entities = [entities]
-        for entity_data in entities:
+        for entity_data in _get_one_or_more(data, uSwidGlobalMap.ENTITY):
             entity = uSwidEntity()
             self._load_entity(entity, entity_data)
             # skip invalid entries
@@ -286,7 +353,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
             identity.add_entity(entity)
 
         # links
-        for link_data in data.get(uSwidGlobalMap.LINK, []):
+        for link_data in _get_one_or_more(data, uSwidGlobalMap.LINK):
             link = uSwidLink()
             self._load_link(link, link_data)
             identity.add_link(link)

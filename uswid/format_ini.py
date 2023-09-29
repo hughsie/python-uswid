@@ -22,7 +22,8 @@ from .identity import (
 )
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
-from .hash import uSwidHash, uSwidHashAlg
+from .hash import uSwidHash
+from .payload import uSwidPayload
 
 _ENTITY_MAP_FROM_INI = {
     "TagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -69,12 +70,16 @@ class uSwidFormatIni(uSwidFormatBase):
             data["href"] = link.href
         return data
 
-    def _save_hash(self, ihash: uSwidHash) -> Dict[str, Any]:
+    def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
         """exports a uSwidLink INI section"""
 
         data: Dict[str, Any] = {}
-        if ihash.value:
-            data["value"] = ihash.value
+        if payload.name:
+            data["name"] = payload.name
+        if payload.size:
+            data["size"] = payload.size
+        if payload.hash:
+            data["hash"] = payload.hash[0].value
         return data
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -119,8 +124,6 @@ class uSwidFormatIni(uSwidFormatBase):
             main["edition"] = identity.edition
         if identity.colloquial_version:
             main["colloquial-version"] = identity.colloquial_version
-        if identity.hashes:
-            main["hash"] = identity.hashes
         if identity.persistent_id:
             main["persistent-id"] = identity.persistent_id
         config["uSWID"] = main
@@ -133,9 +136,9 @@ class uSwidFormatIni(uSwidFormatBase):
         if identity.links:
             config["uSWID-Link"] = self._save_link(identity.links[0])
 
-        # hash
-        for ihash in identity.hashes:
-            config[f"uSWID-Hash:{ihash.alg_id.name}"] = self._save_hash(ihash)
+        # payload
+        if identity.payloads:
+            config["uSWID-Payload"] = self._save_payload(identity.payloads[0])
 
         # as string
         with io.StringIO() as f:
@@ -158,26 +161,24 @@ class uSwidFormatIni(uSwidFormatBase):
         if not link.href:
             raise NotSupportedError("all entities MUST have a href")
 
-    def _load_hash(
+    def _load_payload(
         self,
-        ihash: uSwidHash,
+        payload: uSwidPayload,
         data: Union[configparser.SectionProxy, Dict[str, str]],
-        alg_hint: Optional[str] = None,
     ) -> None:
-        """imports a uSwidHash INI section"""
+        """imports a uSwidPayload INI section"""
 
-        if alg_hint:
-            try:
-                ihash.alg_id = uSwidHashAlg.from_string(alg_hint.split(":")[1])
-            except (KeyError, TypeError, IndexError):
-                pass
         for key, value in data.items():
-            if key == "value":
-                ihash.value = value
+            if key == "name":
+                payload.name = value
+            elif key == "size":
+                payload.size = value
+            elif key == "hash":
+                payload.add_hash(uSwidHash(value=value))
             else:
-                print("unknown key {} found in ini file!".format(key))
-        if not ihash.value:
-            raise NotSupportedError("all hashes MUST have a value")
+                print(f"unknown key {key} found in ini file!")
+        if not payload.hashes:
+            raise NotSupportedError("all payloads MUST have at least one hash")
 
     def _load_entity(
         self,
@@ -255,7 +256,7 @@ class uSwidFormatIni(uSwidFormatBase):
                 link = uSwidLink()
                 self._load_link(link, config[group])
                 identity.add_link(link)
-            if group.startswith("uSWID-Hash"):
-                ihash = uSwidHash()
-                self._load_hash(ihash, config[group], alg_hint=group)
-                identity.add_hash(ihash)
+            if group.startswith("uSWID-Payload"):
+                payload = uSwidPayload()
+                self._load_payload(payload, config[group])
+                identity.add_payload(payload)

@@ -14,7 +14,7 @@ from .errors import NotSupportedError
 from .enums import uSwidVersionScheme
 from .entity import uSwidEntity
 from .link import uSwidLink
-from .hash import uSwidHash
+from .payload import uSwidPayload
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -56,7 +56,7 @@ class uSwidIdentity:
         self.persistent_id: Optional[str] = None
         self.lang: Optional[str] = "en-US"
         self.generator = "uSWID"
-        self.hashes: List[uSwidHash] = []
+        self.payloads: List[uSwidPayload] = []
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
 
@@ -98,8 +98,8 @@ class uSwidIdentity:
             self.add_entity(entity)
         for link in identity_new.links:
             self.add_link(link)
-        for ihash in identity_new.hashes:
-            self.add_hash(ihash)
+        for payload in identity_new.payloads:
+            self.add_payload(payload)
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """only adds the latest entity"""
@@ -113,11 +113,11 @@ class uSwidIdentity:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
 
-    def add_hash(self, ihash: uSwidHash) -> None:
+    def add_payload(self, payload: uSwidPayload) -> None:
         """only adds the deduped link"""
-        if not ihash.value:
+        if not payload.hashes:
             raise NotSupportedError("the hash value MUST be provided")
-        self.hashes.append(ihash)
+        self.payloads.append(payload)
 
     @property
     def links(self) -> List[uSwidLink]:
@@ -130,8 +130,11 @@ class uSwidIdentity:
         return list(self._entities.values())
 
     def __repr__(self) -> str:
-        tmp = "uSwidIdentity({},{},{},{})".format(
-            self.tag_id, self.tag_version, self.software_name, self.software_version
+        tmp = (
+            f'uSwidIdentity(tag_id="{self.tag_id}",'
+            + f'tag_version="{self.tag_version}",'
+            + f'software_name="{self.software_name}",'
+            + f'software_version="{self.software_version}")'
         )
         if self._links or self._entities:
             tmp += ":"
@@ -143,8 +146,8 @@ class uSwidIdentity:
             tmp += "\n{}".format(
                 "\n".join([f" - {str(e)}" for e in self._entities.values()]),
             )
-        if self.hashes:
+        if self.payloads:
             tmp += "\n{}".format(
-                "\n".join([f" - {str(e)}" for e in self.hashes]),
+                "\n".join([f" - {str(e)}" for e in self.payloads]),
             )
         return tmp
