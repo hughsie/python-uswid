@@ -135,7 +135,7 @@ Additional hashes can also be provided:
 Adding Deps
 -----------
 
-Dependancies like compilers or other security-relevant libraries can be done using:
+Dependancies like compilers or other security-relevant libraries can be added using:
 
     uswid --load uswid.ini compiler.ini --save ./example.uswid
 
@@ -177,6 +177,12 @@ contruct the SWID automatically:
     [uSWID-Link:image_loading_lib]
     rel = requires
     href = swid:libjpeg
+
+..or we can tell the user where to find the installation package:
+
+    [uSWID-Link:src]
+    rel = installationmedia
+    href = https://github.com/intel/FSP/AmberLakeFspBinPkg
 
 RAW Blobs
 ---------
