@@ -92,7 +92,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         if payload.name:
             data[uSwidGlobalMap.FS_NAME] = payload.name
         if payload.size:
-            data[uSwidGlobalMap.SIZE] = payload.size
+            data[uSwidGlobalMap.SIZE] = int(payload.size)
         if payload.hashes:
             payload_hashes = []
             for ihash in payload.hashes:

@@ -15,6 +15,15 @@ from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .identity import uSwidIdentity
 from .entity import uSwidEntityRole
+from .hash import uSwidHashAlg
+
+
+def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
+    return {
+        uSwidHashAlg.SHA256: "SHA-256",
+        uSwidHashAlg.SHA384: "SHA-384",
+        uSwidHashAlg.SHA512: "SHA-512",
+    }.get(alg_id, "UNKNOWN")
 
 
 class uSwidFormatCycloneDX(uSwidFormatBase):
@@ -115,5 +124,13 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component["publisher"] = publisher
         if author:
             component["author"] = author
+        hashes: List[Any] = []
+        for payload in identity.payloads:
+            for ihash in payload.hashes:
+                hashes.append(
+                    {"alg": _convert_hash_alg_id(ihash.alg_id), "content": ihash.value}
+                )
+        if hashes:
+            component["hashes"] = hashes
 
         return component
