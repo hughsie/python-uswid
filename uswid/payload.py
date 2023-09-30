@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import hashlib
 
@@ -24,10 +24,18 @@ class uSwidPayload:
     ):
         self.name: Optional[str] = name
         self.size: Optional[int] = size
-        self.hashes: List[uSwidHash] = []
+        self._hashes: Dict[uSwidHashAlg, uSwidHash] = {}
 
     def add_hash(self, ihash: uSwidHash) -> None:
-        self.hashes.append(ihash)
+        self._hashes[ihash.alg_id or uSwidHashAlg.UNKNOWN] = ihash
+
+    def remove_hash(self, alg_id: uSwidHashAlg) -> None:
+        self._hashes.pop(alg_id)
+
+    @property
+    def hashes(self) -> List[uSwidHash]:
+        """returns all the added hashes"""
+        return list(self._hashes.values())
 
     def ensure_from_filename(self, fn: str) -> None:
         with open(fn, "rb") as f:

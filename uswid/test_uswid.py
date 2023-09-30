@@ -166,7 +166,7 @@ class TestSwidEntity(unittest.TestCase):
             'uSwidPayload(name="foo",size=123)\n'
             ' - uSwidHash(alg_id=SHA256,value="067cb8292dc062eabbe05734ef7987eb1333b6b6")',
         )
-        payload.hashes = []
+        payload.remove_hash(uSwidHashAlg.SHA256)
         self.assertEqual(
             str(uSwidFormatCoswid()._save_payload(payload)),  # type: ignore
             "{<uSwidGlobalMap.FILE: 17>: {<uSwidGlobalMap.FS_NAME: 24>: 'foo', <uSwidGlobalMap.SIZE: 20>: 123}}",
