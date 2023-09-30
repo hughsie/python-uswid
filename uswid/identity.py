@@ -116,7 +116,9 @@ class uSwidIdentity:
     def add_payload(self, payload: uSwidPayload) -> None:
         """only adds the deduped link"""
         if not payload.hashes:
-            raise NotSupportedError("the hash value MUST be provided")
+            raise NotSupportedError(
+                f"the hash value MUST be provided for {str(payload)}"
+            )
         self.payloads.append(payload)
 
     @property

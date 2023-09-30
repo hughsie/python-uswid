@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access,too-many-boolean-expressions
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import json
 
@@ -24,6 +24,14 @@ from .link import uSwidLink
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
 from .format_swid import _ENTITY_MAP_FROM_XML, _ENTITY_MAP_TO_XML
+
+
+def _get_one_or_more(data: Dict[str, Any], key: str) -> List[Any]:
+
+    value = data.get(key, [])
+    if isinstance(value, list):
+        return value
+    return [value]
 
 
 class uSwidFormatGoswid(uSwidFormatBase):
@@ -71,8 +79,8 @@ class uSwidFormatGoswid(uSwidFormatBase):
         if payload.size:
             node["size"] = payload.size
         if payload.hashes:
-            node["hash"] = [payload.hashes[0].value, payload.hashes[0].alg_id or 0]
-        return node
+            node["hash"] = [payload.hashes[0].alg_id or 0, payload.hashes[0].value]
+        return {"file": [node]}
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
         """exports a uSwidEntity goSWID section"""
@@ -173,15 +181,27 @@ class uSwidFormatGoswid(uSwidFormatBase):
         link.href = node.get("href")
         link.rel = node.get("rel")
 
-    def _load_payload(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
+    def _load_file(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
         """imports a uSwidPayload goSWID section"""
 
-        payload.name = node.get("fs_name")
-        payload.size = node.get("size")
+        # for compat with Intel FSP template
+        for key in list(node):
+            node[key.replace("_", "-")] = node.pop(key)
+
+        payload.name = node.get("fs-name")
+        try:
+            payload.size = int(node.get("size"))
+        except ValueError:
+            pass
         if "hash" in node:
             ihash = uSwidHash()
-            ihash.alg_id = uSwidHashAlg(int(node["hash"][0]))
-            ihash.value = node["hash"][1]
+            # Intel FSP order is reversed
+            try:
+                ihash.alg_id = uSwidHashAlg(int(node["hash"][0]))
+                ihash.value = node["hash"][1]
+            except ValueError:
+                ihash.value = node["hash"][0]
+                ihash.alg_id = uSwidHashAlg(int(node["hash"][1]))
             payload.add_hash(ihash)
 
     def _load_entity(
@@ -230,51 +250,43 @@ class uSwidFormatGoswid(uSwidFormatBase):
             identity.version_scheme = _VERSION_SCHEME_FROM_STRING[version_scheme]
 
         # optional metadata
-        if "software-meta" in data:
-            for meta in data["software-meta"]:
-                for attr_name, attrib_name in [
-                    ("summary", "summary"),
-                    ("revision", "revision"),
-                    ("product", "product"),
-                    ("edition", "edition"),
-                    ("colloquial-version", "colloquial_version"),
-                ]:
-                    if attr_name in meta:
-                        setattr(identity, attrib_name, meta[attr_name])
+        for meta in _get_one_or_more(data, "software-meta"):
+            for attr_name, attrib_name in [
+                ("summary", "summary"),
+                ("revision", "revision"),
+                ("product", "product"),
+                ("edition", "edition"),
+                ("colloquial-version", "colloquial_version"),
+            ]:
+                if attr_name in meta:
+                    setattr(identity, attrib_name, meta[attr_name])
 
         # entities
-        try:
-            for node in data["entity"]:
-                entity = uSwidEntity()
-                self._load_entity(entity, node)
-                identity.add_entity(entity)
-        except KeyError:
-            pass
+        for node in _get_one_or_more(data, "entity"):
+            entity = uSwidEntity()
+            self._load_entity(entity, node)
+            identity.add_entity(entity)
 
         # links
-        try:
-            for node in data["links"]:
-                link = uSwidLink()
-                self._load_link(link, node)
-                identity.add_link(link)
-        except KeyError:
-            pass
+        for node in _get_one_or_more(data, "links"):
+            link = uSwidLink()
+            self._load_link(link, node)
+            identity.add_link(link)
 
         # payloads
-        try:
-            for node in data["payloads"]:
+        for node in _get_one_or_more(data, "payload"):
+            for node_file in _get_one_or_more(node, "file"):
                 payload = uSwidPayload()
-                self._load_payload(payload, node)
+                self._load_file(payload, node_file)
                 identity.add_payload(payload)
-        except KeyError:
-            pass
-        try:
-            for node in data["payload"]["directory"]["path_elements"]["file"]:
-                payload = uSwidPayload()
-                self._load_payload(payload, node)
-                identity.add_payload(payload)
-        except KeyError:
-            pass
+            for node_directory in _get_one_or_more(node, "directory"):
+                for node_path_elements in _get_one_or_more(
+                    node_directory, "path_elements"
+                ):
+                    for node_file in _get_one_or_more(node_path_elements, "file"):
+                        payload = uSwidPayload()
+                        self._load_file(payload, node_file)
+                        identity.add_payload(payload)
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
         """imports a uSwidIdentity goSWID blob"""
