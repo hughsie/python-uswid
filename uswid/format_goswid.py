@@ -27,7 +27,6 @@ from .format_swid import _ENTITY_MAP_FROM_XML, _ENTITY_MAP_TO_XML
 
 
 def _get_one_or_more(data: Dict[str, Any], key: str) -> List[Any]:
-
     value = data.get(key, [])
     if isinstance(value, list):
         return value
@@ -233,7 +232,6 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def _load_identity_internal(
         self, identity: uSwidIdentity, data: Dict[str, Any]
     ) -> None:
-
         # for compat with Intel FSP template
         for key in list(data):
             data[key.replace("_", "-")] = data.pop(key)

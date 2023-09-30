@@ -150,7 +150,6 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_payload(self):
-
         self.maxDiff = None
 
         # enumerated type
@@ -220,7 +219,6 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_identity(self):
-
         self.maxDiff = None
         identity = uSwidIdentity(
             tag_id="foobarbaz",
