@@ -34,6 +34,8 @@ def _get_one_or_more(data: Dict[uSwidGlobalMap, Any], key: uSwidGlobalMap) -> Li
 def _set_one_or_more(
     data: Dict[uSwidGlobalMap, Any], key: uSwidGlobalMap, value: List[Any]
 ) -> None:
+    if not value:
+        return
     data[key] = value if len(value) > 1 else value[0]
 
 
