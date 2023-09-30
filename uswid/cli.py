@@ -125,7 +125,10 @@ def _save_efi_objcopy(
     if not os.path.exists(filepath):
         if not cc:
             raise NotSupportedError("compiler is required for missing section")
-        subprocess.run([cc, "-x", "c", "-c", "-o", filepath, "/dev/null"] + cflags.split(" "), check=True)
+        subprocess.run(
+            [cc, "-x", "c", "-c", "-o", filepath, "/dev/null"] + cflags.split(" "),
+            check=True,
+        )
 
     # save to file?
     try:
@@ -211,10 +214,18 @@ def _type_for_fmt(
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="uswid", description="Generate CoSWID metadata")
-    parser.add_argument("--version", action="version", version="%(prog)s " + importlib_metadata.version("uswid"))
+    parser = argparse.ArgumentParser(
+        prog="uswid", description="Generate CoSWID metadata"
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s " + importlib_metadata.version("uswid"),
+    )
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
-    parser.add_argument("--cflags", default="", help="C compiler flags to be used by CC")
+    parser.add_argument(
+        "--cflags", default="", help="C compiler flags to be used by CC"
+    )
     parser.add_argument("--binfile", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--rawfile", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--inifile", default=None, help=argparse.SUPPRESS)
@@ -378,7 +389,9 @@ def main():
                     print("cannot save PE when no default identity")
                     sys.exit(1)
                 if args.objcopy:
-                    _save_efi_objcopy(identity_pe, filepath, args.cc, args.cflags, args.objcopy)
+                    _save_efi_objcopy(
+                        identity_pe, filepath, args.cc, args.cflags, args.objcopy
+                    )
                 else:
                     _save_efi_pefile(identity_pe, filepath)
             elif fmt in [
