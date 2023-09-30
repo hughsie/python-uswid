@@ -177,6 +177,10 @@ class uSwidFormatIni(uSwidFormatBase):
                 payload.size = value
             elif key == "hash":
                 payload.add_hash(uSwidHash(value=value))
+            elif key == "path":
+                payload.name = os.path.basename(value)
+                if os.path.exists(value):
+                    payload.ensure_from_filename(value)
             else:
                 print(f"unknown key {key} found in ini file!")
 

@@ -133,6 +133,11 @@ the blob is valid, we can also add a file hash:
     size = 20480
     hash = 5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6
 
+Or we can populate all the payload fields automatically:
+
+    [uSWID-Payload]
+    path = build/src/ColorHug1/HughskiColorHug.efi
+
 Adding Links
 ------------
 
