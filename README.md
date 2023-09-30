@@ -33,6 +33,10 @@ This library and helper binary can be installed using `pip`. Simply do:
 This will download any required dependancies and also install the `uswid` tool
 into your bindir.
 
+To use the latest in-development code do:
+
+    pip install git+https://github.com/hughsie/python-uswid.git
+
 Use Cases
 ---------
 
