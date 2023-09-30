@@ -41,7 +41,7 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
         uSwidFormatBase.__init__(self)
         self.filepath: Optional[str] = filepath
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         identity = uSwidIdentity()
         self._load_identity(identity, blob)
         return uSwidContainer([identity])

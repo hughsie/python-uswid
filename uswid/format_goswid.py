@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access,too-many-boolean-expressions
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import json
 
@@ -32,7 +32,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def __init__(self) -> None:
         uSwidFormatBase.__init__(self)
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         try:
             data = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
@@ -71,7 +71,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         if payload.size:
             node["size"] = payload.size
         if payload.hashes:
-            node["hash"] = [payload.hashes[0].value, payload.hashes[0].alg_id]
+            node["hash"] = [payload.hashes[0].value, payload.hashes[0].alg_id or 0]
         return node
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:

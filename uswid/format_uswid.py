@@ -7,6 +7,8 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
+from typing import Optional
+
 import struct
 import zlib
 
@@ -25,7 +27,7 @@ class uSwidFormatUswid(uSwidFormatBase):
         uSwidFormatBase.__init__(self)
         self.compress: bool = compress
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         container = uSwidContainer()
 
         # find magic GUIDs marking external uSWID sections

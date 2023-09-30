@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Optional, Union
 
 import configparser
 import io
+import os
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
@@ -49,9 +50,9 @@ class uSwidFormatIni(uSwidFormatBase):
     def __init__(self) -> None:
         uSwidFormatBase.__init__(self)
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         identity = uSwidIdentity()
-        self._load_identity(identity, blob)
+        self._load_identity(identity, blob, path=path)
         return uSwidContainer([identity])
 
     def save(self, container: uSwidContainer) -> bytes:
@@ -165,6 +166,7 @@ class uSwidFormatIni(uSwidFormatBase):
         self,
         payload: uSwidPayload,
         data: Union[configparser.SectionProxy, Dict[str, str]],
+        path: Optional[str] = None,
     ) -> None:
         """imports a uSwidPayload INI section"""
 
@@ -177,6 +179,12 @@ class uSwidFormatIni(uSwidFormatBase):
                 payload.add_hash(uSwidHash(value=value))
             else:
                 print(f"unknown key {key} found in ini file!")
+
+        # can we load this and work it out
+        if path and payload.name:
+            fn = os.path.join(path, payload.name)
+            if os.path.exists(fn):
+                payload.ensure_from_filename(fn)
         if not payload.hashes:
             raise NotSupportedError("all payloads MUST have at least one hash")
 
@@ -217,7 +225,9 @@ class uSwidFormatIni(uSwidFormatBase):
                 "entity {} MUST have at least one role".format(entity.name)
             )
 
-    def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
+    def _load_identity(
+        self, identity: uSwidIdentity, blob: bytes, path: Optional[str]
+    ) -> None:
         config = configparser.ConfigParser()
         config.read_string(blob.decode())
         for group in config.sections():
@@ -258,5 +268,5 @@ class uSwidFormatIni(uSwidFormatBase):
                 identity.add_link(link)
             if group.startswith("uSWID-Payload"):
                 payload = uSwidPayload()
-                self._load_payload(payload, config[group])
+                self._load_payload(payload, config[group], path=path)
                 identity.add_payload(payload)

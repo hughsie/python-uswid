@@ -354,7 +354,7 @@ def main():
                     print("{} no type for format".format(fmt))
                     sys.exit(1)
                 with open(filepath, "rb") as f:
-                    for identity in base.load(f.read()):
+                    for identity in base.load(f.read(), path=os.path.dirname(filepath)):
                         identity_new = container.merge(identity)
                         if identity_new:
                             print(

@@ -9,7 +9,9 @@
 
 from typing import Optional, List
 
-from .hash import uSwidHash
+import hashlib
+
+from .hash import uSwidHash, uSwidHashAlg
 
 
 class uSwidPayload:
@@ -26,6 +28,14 @@ class uSwidPayload:
 
     def add_hash(self, ihash: uSwidHash) -> None:
         self.hashes.append(ihash)
+
+    def ensure_from_filename(self, fn: str) -> None:
+        with open(fn, "rb") as f:
+            buf = f.read()
+        self.size = len(buf)
+        m = hashlib.sha256()
+        m.update(buf)
+        self.add_hash(uSwidHash(alg_id=uSwidHashAlg.SHA256, value=m.hexdigest()))
 
     def __repr__(self) -> str:
         tmp = f'uSwidPayload(name="{self.name}",size={self.size})'

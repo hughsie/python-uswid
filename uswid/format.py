@@ -5,6 +5,8 @@
 #
 # SPDX-License-Identifier: LGPL-2.1+
 
+from typing import Optional
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,7 +17,7 @@ class uSwidFormatBase:
     def __init__(self) -> None:
         pass
 
-    def load(self, blob: bytes) -> "uSwidContainer":
+    def load(self, blob: bytes, path: Optional[str] = None) -> "uSwidContainer":
         raise NotImplementedError
 
     def save(self, container: "uSwidContainer") -> bytes:

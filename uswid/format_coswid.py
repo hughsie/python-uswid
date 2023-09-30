@@ -43,7 +43,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
     def __init__(self) -> None:
         uSwidFormatBase.__init__(self)
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         identity = uSwidIdentity()
         container = uSwidContainer([identity])
         self._load_identity(identity, blob)

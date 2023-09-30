@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access,too-many-boolean-expressions
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from lxml import etree as ET
 
@@ -48,7 +48,7 @@ class uSwidFormatSwid(uSwidFormatBase):
     def __init__(self) -> None:
         uSwidFormatBase.__init__(self)
 
-    def load(self, blob: bytes) -> uSwidContainer:
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         identity = uSwidIdentity()
         self._load_identity(identity, blob)
         return uSwidContainer([identity])
