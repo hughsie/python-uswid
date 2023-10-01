@@ -1,62 +1,97 @@
 python-uswid
-============
-
-Introduction
 ------------
 
-Software Identification (SWID) tags provide an extensible XML-based structure to
-identify and describe individual software components, patches, and installation
-bundles. SWID tag representations can be too large for devices with network and
-storage constraints.
+# Introduction
 
-CoSWID supports a similar set of semantics and features as SWID tags, as well
-as new semantics that allow us to describe additional types of information, all
-in a more memory efficient format.
+A Software Bill of Materials (SBoM) is a manifest of what is inside your software. It helps vendors
+and consumers keep track of software components for better software supply chain security.
 
-We wanted to write up some text recommending a particular tool to be integrated
-into the tianocore build process, but they all are not exactly awesome:
+When creating a SBoM there are lots of formats to choose from:
 
- * The [official tool from NIST](https://github.com/usnistgov/swid-tools) is a
-   huge Java codebase that hasn't been updated for some time and doesn't work
-   with any versions than Java 9 and that's been end-of-support since 2018.
+ * [SWID](https://csrc.nist.gov/Projects/Software-Identification-SWID/guidelines)
+ * [coSWID](https://datatracker.ietf.org/doc/rfc9393/)
+ * [CycloneDX](https://cyclonedx.org/)
+ * [SPDX](https://spdx.dev/)
+ * [goSWID](https://github.com/veraison/swid)
 
- * A [go implementation](https://github.com/veraison/swid) exists, but it
-   requires the BIOS engineer to write actual code.
+Using the uSWID tool allows you to **create**, **convert** and **merge** SBoM metadata to and from most
+of those formats, with the initial focus being functionality useful for firmware files.
 
-Installing
-----------
+Additionally, uSWID supports importing SBoM metadata from a few additional file formats:
 
-This library and helper binary can be installed using `pip`. Simply do:
+ * `ini` files -- designed to be easier for humans to write
+ * `pkgconfig` -- `.pc` files that are shipped with most open source libraries
+ * PE binaries -- coSWID metadata can be inserted in a `.sbom` section at link time
+ * unspecified firmware files -- using a 24 byte header to locate the coSWID CBOR SBoM entry
 
-    pip install uswid
+There are three elements of an SBoM that uswid supports. These are:
 
-This will download any required dependancies and also install the `uswid` tool
-into your bindir.
+ * Identities -- the *what*, describing the software subcomponents
+ * Entities -- the *who*, describing the company or person responsible for the identity in some way
+ * Payloads (optional) -- the *file* that we are referring to, for when the SBoM is not embedded
 
-To use the latest in-development code do:
+One of the core features of uswid is that you can import multiple files to build a single identity
+at construction time.
 
-    pip install git+https://github.com/hughsie/python-uswid.git
+For instance, you could combine the pkgconfig `.pc` file, a `.exe` binary and `.ini` override to
+build one SBoM component. In most cases SBoM metadata is merged, but it can also be replaced.
 
-Use Cases
----------
+Some of the formats in further detail:
 
-This tooling is provided so that OEMs, ODMs and IBVs can add uswid tags to
-existing EFI binaries, typically bundled up into UEFI firmware.
-The example program supports loading from either:
+## SWID
 
- * The `.sbom` section that already exists in the binary
- * A SWID XML document
- * A JSON version of the same XML schema
- * A ini-file override document
- * A pkg-config library definition
+Software Identification (SWID) tags provide an extensible XML-based structure to identify and
+describe individual software components, patches, and installation bundles.
+SWID tag representations are too large for firmware with storage constraints, but is useful when
+importing the data into other programs and frameworks.
 
-The data sources are loaded in this order, and all are optional. In general
-values overwrite each other, with the exception of entities, which are appended.
+## coSWID
 
-A common use-case might be to add the data to a vendor-supplied binary file,
-lets use the `HughskiColorHug.efi` as our example here. Let's create some
-example data, using the compact ini-file format rather than a full-blown SWID
-XML document:
+CoSWID supports a similar set of semantics and features as SWID tags, all in a more space CBOR
+efficient format.
+This format is suitable for embedding into binary files, although the client then needs to be aware
+the offset and length of the CBOR binary block of metadata.
+
+If we know how to parse the firmware and can lookup the offset the coSWID blob starts and ends
+(e.g. the PE COFF header says *data is stored at 0x123, length is 0x234*) then embedding coSWID as.
+CBOR data is appropriate.
+
+## coSWID with uSWID header
+
+If we are asked to process lots of different kinds of firmware, we do not always know how to parse
+the secret vendor-specific header, e.g.
+
+    VENDOR_HEADER
+    ARC32_IMAGE1
+    FREE_SPACE
+    coSWID
+    FREE_SPACE
+
+With this the SBoM builder tool does not know *where* the coSWID data starts in the blob, or
+*how many* coSWID sections there might be.
+If we include a small header with a 16 byte magic GUID then we can search the image to discover the
+offsets to read the coSWID blobs.
+
+The 24 byte uSWID header includes a 16 byte *magic* identifier that we can search for when scanning
+the image:
+
+    uint8_t[16]   magic, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
+    uint8_t       header version, typically 0x02
+    uint16_t      little-endian header length, typically 0x17
+    uint32_t      little-endian payload length
+    uint8_t       flags
+                    0x01: zlib compressed payload
+
+The uSWID header is automatically added when the file extension is `.uswid`, e.g.
+
+    uswid --load payload.efi --load oem.ini --save ./blob.uswid
+
+## INI File
+
+It's sometimes much easier to use the simple key=vaue INI format when creating component SBoMs, or
+overriding specific values compared to building a new SWID XML document:
+
+Let's create an example component SBoM, using the INI-file format:
 
     [uSWID]
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
@@ -70,63 +105,17 @@ XML document:
     revision = 2
     persistent-id = com.hughski.colorhug
 
-This can then be saved as `uswid.ini` and applied to the binary using:
-
-    uswid --load uswid.ini --save ./HughskiColorHug.efi
-
-The `tag-id` value has to be unique, but for UEFI firmware this is typically
-the ESRT GUID value. The `product`, `summary`, `colloquial-version`, `revision`
-and `edition` values are optional but at least the first two are highly
-recommended.
-
-Of course, we want to include in the uswid blob which vendor actually created
-the tag, and for this we can define an entity in `uswid.ini`:
-
-    [uSWID-Entity:TagCreator]
-    name = Hughski Limited
-    regid = hughski.com
-
-and we also want to say who the distributor of the project is, so we also add:
-
     [uSWID-Entity:Distributor]
     name = Richard Hughes
     regid = hughsie.com
     extra-roles = Licensor,Maintainer,SoftwareCreator
 
-Did you notice the `extra-roles` tag? That's useful when one entity performs
-multiple roles.
+The `tag-id` value has to be unique, but for UEFI firmware this is typically the ESRT GUID value.
+The `product`, `summary`, `colloquial-version`, `revision` and `edition` values are optional but at
+least the first two are highly recommended.
 
-You can also just append one entity to an existing CoSWID tag. This might be
-done by the ODM or OEM on firmware built by the IBV. Just create a `oem.ini`
-file with these contents:
-
-    [uSWID-Entity:Distributor]
-    name = OEM Vendor
-    regid = oem.homepage.com
-
-...and then use:
-
-    uswid --load ./HughskiColorHug.efi oem.ini --save ./HughskiColorHug.efi
-
-This will add the `Distributor` entity to the binary, or overwrite an existing
-entity with that role.
-
-Usefully, if you load a uswid blob from an existing binary, the tag version is
-incremented when you save it again. If you don't want that, set an explicit
-`tag-version` in the `[uSWID]` section.
-
-If there are multiple loaded identities (for instance, using a `uswid` file, or
-using multiple files on `--load`) then you can specify the correct identity using:
-
-    [uSWID]
-    tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
-
-    [uSWID-Entity:Distributor]
-    name = OEM Vendor
-    regid = oem.homepage.com
-
-If we're talking about a "detached" binary, and want to make sure that we can verify
-the blob is valid, we can also add a file hash:
+If we are not including the SBoM into the binary, and instead building a *detached* component SBoM,
+we need to make sure that we can verify the blob is valid. To do this we can also add a file hash:
 
     [uSWID-Payload]
     name = HughskiColorHug.efi
@@ -136,16 +125,30 @@ the blob is valid, we can also add a file hash:
 Or we can populate all the payload fields automatically:
 
     [uSWID-Payload]
-    path = build/src/ColorHug1/HughskiColorHug.efi
+    path = ../../build/src/ColorHug1/HughskiColorHug.efi
 
-Adding Links
-------------
+This can then be saved as `uswid.ini` and be built into **compressed** (and deduplicated) coSWID
+CBOR blob with a uSWID header:
+
+    uswid --load uswid.ini --save ./HughskiColorHug.uswid --compress
+
+You can also just append one entity to an existing CoSWID tag. This might be done by the ODM or OEM
+on firmware built by the IBV. Just create a `oem.ini` file with these contents:
+
+    [uSWID-Entity:Distributor]
+    name = OEM Vendor
+    regid = oem.homepage.com
+
+Usefully, if you load a uswid blob from an existing binary, the tag version is incremented when you
+save it again. If you don't want that, set an explicit `tag-version` in the `[uSWID]` section.
+
+# Adding Links
 
 Dependancies like compilers or other security-relevant libraries can be added using:
 
     uswid --load uswid.ini compiler.ini --save ./example.uswid
 
-Where we've added an extra link section in `uswid.ini`:
+Where we have added an extra link section in `uswid.ini`:
 
     [uSWID-Link:gcc]
     rel = see-also
@@ -173,111 +176,23 @@ Where `compiler.ini` looks something like:
     rel = requires
     href = swid:3aab57c3-5661-5731-800d-db5a7f0886c1
 
-NOTE: The GUID can be constructed from the tool or library name combined with
-the version, e.g using `appstream-util generate-guid gcc-12.1.1` or the
-[online tool hosted by the LVFS](https://fwupd.org/lvfs/guid).
+NOTE: The GUID can be constructed from the tool or library name combined with the version, e.g.
+using `appstream-util generate-guid gcc-12.1.1` or the [online tool hosted by the LVFS](https://fwupd.org/lvfs/guid).
 
-...or, if a component has been previously defined, you can use the name to
-contruct the SWID automatically:
+...or, if a component has been previously defined, you can use the name to contruct the SWID
+automatically:
 
     [uSWID-Link:image_loading_lib]
     rel = requires
     href = swid:libjpeg
 
-..or we can tell the user where to find the installation package:
+Alternatively, we can tell the user where to find the installation package:
 
     [uSWID-Link:src]
     rel = installationmedia
     href = https://github.com/intel/FSP/AmberLakeFspBinPkg
 
-RAW Blobs
----------
-
-uSWID can also export a raw blob that can be embedded in a unspecified data
-section. This allows coSWID metadata to be easily embedded in non-free tools.
-
-If we know how to parse the firmware and can lookup the offset the coSWID blob
-starts and ends (e.g. the PE COFF header says *data is stored at 0x123, length
-is 0x234*) then we don't need anything else to read the embedded coSWID data.
-The LVFS extracts the PE files from the UEFI capsule and know exactly where the
-coSWID can be found thanks to the COFF header, so we store raw coSWID in PE files.
-
-If we are asked to process lots of different kinds of firmware, we cannot always
-parse the secret vendor-specific header, e.g.
-
-    VENDOR_HEADER
-    ARC32_IMAGE1
-    ARC32_IMAGE2
-    FREE_SPACE
-    coSWID
-    FREE_SPACE
-
-With this the SBoM aggregator tool does not know *where* the coSWID data starts in
-the blob, or *how many* coSWID sections there might be.
-If we include a small header with a 16 byte magic GUID then we can search the image
-to discover the offsets to read the coSWID blobs, e.g.
-
-    VENDOR_HEADER
-    ARC32_IMAGE1
-    ARC32_IMAGE2
-    FREE_SPACE
-    uSWID_HEADER
-    coSWID
-    FREE_SPACE
-
-For space reasons, if we wanted to just include the "raw" coSWID blob in the file
-then we'd need to teach the LVFS how to process that specific kind of firmware blob.
-Which might actually be fine, but you'd be volunteering to do that work. :)
-
-    uswid --load oem.ini --save ./blob.uswid
-
-The `blob.uswid` file then includes a 16 byte *random* GUID prefixing a simple 7-byte
-little-endian header:
-
-    uint8_t[16]   magic string, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
-    uint8_t       header version, typically 0x02
-    uint16_t      header length, typically 0x17
-    uint32_t      payload length
-    uint8_t       flags
-                    0x01: zlib compressed payload
-
-This allows an aggregator tool to easily aggregate multiple coSWID sources from a
-composite image into a single SBoM.
-
-Multiple coSWIDs in one uSWID
------------------------------
-
-You can merge multiple uSWID files into one uSWID, and compress the result to
-dramatically reduce the amount of space used for multiple SWID blobs -- while
-still being compatible with any tools using uswid like the LVFS.
-
-To merge multiple uSWID files into a compressed single file, simply do:
-
-    uswid --load ucode.uswid acm.uswid --save ./combined.uswid --compress
-
-Reading and writing to PE files
--------------------------------
-
-By default, the uswid command line uses `pefile` to read and write the `.sbom`
-section in the COFF header. Although reading is well supported and tested,
-support for writing modified files has only been lightly tested.
-
-If `pefile` doesn't do a very good job of adding the SWID metadata to the PE
-file, you can use the older more-trusted method of using `objcopy`, either
-available by default on Linux or installable using WSL on Windows.
-
-To use the tried-and-trusted objcopy method this you can use:
-
-    uswid --load oem.ini --save ./blob.uswid --objcopy /usr/bin/objcopy
-
-Please let us know if writing PE files does not work for you using the default
-`pefile` method as we'll be deprecating the `objcopy` method longer term.
-
-License Information
--------------------
-
-If the binary content is licensed in a permissive or open-source way it
-should be identified as such.
+If the binary content is licensed in a permissive or open-source way it should be identified as such.
 To do this, you can either use the SWID XML format:
 
     <SoftwareIdentity …>
@@ -291,27 +206,35 @@ Or the `ini` override format:
     rel = license
     href = https://spdx.org/licenses/LGPL-2.1-or-later.html
 
-Testing
--------
+# Reading and writing to PE files
 
-You can use `objdump -s -j .sbom` to verify that the tag has been written
-correctly to the EFI binary.
+By default, the uswid command line uses `pefile` to read and write the `.sbom` section in the COFF
+header. Although reading is well supported and tested, support for writing modified files has only
+been lightly tested as most `.sbom` sections are added automatically at link time by the compiler.
 
-Contributing
-------------
+If `pefile` doesn't add the SWID metadata to the PE file correctly, you can use the alternate method of
+using `objcopy`, either available by default on Linux or installable using WSL on Windows. e.g.
 
-I wrote this tool for my use case (hence why it only supports a tiny subset of
-the CoSWID spec), but I'm accepting patches to add missing functionality or to
-make the code more robust.
+    uswid --load oem.ini --save ./blob.uswid --objcopy /usr/bin/objcopy
 
-# Release Process
+You can use `objdump -s -j .sbom` to verify that the tag has been written correctly to the binary.
 
-    export release_ver="0.4.2"
-    git commit -a -m "Release ${release_ver}"
-    git tag -s -f -m "Release ${release_ver}" "${release_ver}"
-    make pkg
-    ./env/bin/twine upload dist/uswid-${release_ver}*
-    # edit setup.py
-    git commit -a -m "trivial: post release version bump"
-    git push
-    git push --tags
+# Installing
+
+This library and helper binary can be installed using `pip`. Simply do:
+
+    pip install --user uswid
+
+This will download any required dependancies and also install the `uswid` tool into your bindir.
+
+To use the latest in-development code do:
+
+    pip install --user git+https://github.com/hughsie/python-uswid.git
+
+# Contributing
+
+I'm accepting merge requests to add missing functionality or to make the code more robust.
+
+# See Also
+
+ * [UEFI Buildsystem Example](https://github.com/hughsie/uswid-uefi-example)
