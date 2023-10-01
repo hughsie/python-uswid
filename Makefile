@@ -41,6 +41,14 @@ check: $(PYTEST) $(MYPY)
 blacken: $(BLACK)
 	find uswid -name '*.py' -exec $(BLACK) {} \;
 
+codespell: $(CODESPELL)
+	$(CODESPELL) --write-changes --builtin en-GB_to_en-US --skip \
+	.git,\
+	.mypy_cache,\
+	.coverage,\
+	*.pyc,\
+	env
+
 pkg: $(STUBGEN)
 	$(STUBGEN) --output . --package uswid
 	$(PYTHON) setup.py sdist bdist_wheel
