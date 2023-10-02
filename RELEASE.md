@@ -1,6 +1,6 @@
 # Release Process
 
-    export release_ver="0.4.2"
+    export release_ver="0.4.3"
     git commit -a -m "Release ${release_ver}"
     git tag -s -f -m "Release ${release_ver}" "${release_ver}"
     make pkg

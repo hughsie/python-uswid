@@ -9,7 +9,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 
 setup(
     name="uswid",
-    version="0.4.2",
+    version="0.4.3",
     license="LGPL-2.1-or-later",
     license_files=[
         "LICENSE",
