@@ -31,7 +31,10 @@ from .format_cyclonedx import uSwidFormatCycloneDX
 
 
 class TestSwidEntity(unittest.TestCase):
+    """Tescases for identities, entities, links and payloads"""
+
     def test_entity(self):
+        """Unit tests for uSwidEntity"""
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
@@ -102,6 +105,7 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_link(self):
+        """Unit tests for uSwidLink"""
         # enumerated type
         link = uSwidLink(href="http://test.com/", rel="see-also")
         self.assertEqual(str(link), 'uSwidLink(rel="see-also",href="http://test.com/")')
@@ -150,6 +154,7 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_payload(self):
+        """Unit tests for uSwidPayload"""
         self.maxDiff = None
 
         # enumerated type
@@ -219,6 +224,7 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_identity(self):
+        """Unit tests for uSwidIdentity"""
         self.maxDiff = None
         identity = uSwidIdentity(
             tag_id="foobarbaz",

@@ -12,6 +12,8 @@ from typing import List, Optional
 
 
 class uSwidEntityRole(IntEnum):
+    """Represents an enumerated role"""
+
     TAG_CREATOR = 1
     SOFTWARE_CREATOR = 2
     AGGREGATOR = 3
@@ -21,7 +23,7 @@ class uSwidEntityRole(IntEnum):
 
 
 class uSwidEntity:
-    """represents a SWID entity"""
+    """Represents a SWID entity"""
 
     def __init__(
         self,
@@ -30,8 +32,11 @@ class uSwidEntity:
         roles: Optional[List[uSwidEntityRole]] = None,
     ):
         self.name: Optional[str] = name
+        """Name"""
         self.regid: Optional[str] = regid
+        """Registration ID, e.g. com.intel"""
         self.roles: List[uSwidEntityRole] = []
+        """Role of the entity, e.g. ``uSwidEntityRole.MAINTAINER``"""
         if roles:
             self.roles.extend(roles)
 

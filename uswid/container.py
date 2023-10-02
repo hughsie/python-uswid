@@ -14,7 +14,7 @@ from .errors import NotSupportedError
 
 
 class uSwidContainer:
-    """represents a uSWID container"""
+    """Represents a uSWID container"""
 
     def __init__(self, identities: Optional[List[uSwidIdentity]] = None) -> None:
         self._identities: List[uSwidIdentity] = []
@@ -27,10 +27,11 @@ class uSwidContainer:
             yield identity
 
     def append(self, identity: uSwidIdentity) -> None:
+        """Add an identity to the container"""
         self._identities.append(identity)
 
     def merge(self, identity: uSwidIdentity) -> Optional[uSwidIdentity]:
-        """merges one identity into another, returning False if the tag_id does not exist"""
+        """Merges one identity into another, returning None if the ``tag_id`` does not exist"""
 
         # just patching the default (and only) identity
         if not identity.tag_id:
@@ -53,7 +54,7 @@ class uSwidContainer:
         return None
 
     def get_default(self) -> Optional[uSwidIdentity]:
-        """returns the existing identity, or creates one if none already exist"""
+        """Returns the existing identity, or creates one if none already exist"""
 
         if len(self._identities) > 1:
             return None
@@ -62,7 +63,7 @@ class uSwidContainer:
         return self._identities[0]
 
     def _get_by_id(self, tag_id: str) -> Optional[uSwidIdentity]:
-        """returns the identity that matches the tag ID"""
+        """Returns the identity that matches the tag ID"""
 
         for identity in self._identities:
             if identity.tag_id == tag_id:

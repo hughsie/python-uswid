@@ -9,6 +9,8 @@ from enum import IntEnum
 
 
 class uSwidGlobalMap(IntEnum):
+    """Represents an enumerated tag ID"""
+
     TAG_ID = 0
     SOFTWARE_NAME = 1
     ENTITY = 2
@@ -69,6 +71,8 @@ class uSwidGlobalMap(IntEnum):
 
 
 class uSwidVersionScheme(IntEnum):
+    """Represents an enumerated version scheme"""
+
     MULTIPARTNUMERIC = 1
     MULTIPARTNUMERIC_SUFFIX = 2
     ALPHANUMERIC = 3

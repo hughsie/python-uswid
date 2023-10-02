@@ -10,6 +10,7 @@ CODESPELL=$(VENV)/bin/codespell
 PIP=$(VENV)/bin/pip
 BLACK=$(VENV)/bin/black
 STUBGEN=$(VENV)/bin/stubgen
+SPHINX_BUILD=$(VENV)/bin/sphinx-build
 
 setup: requirements.txt
 	virtualenv ./env
@@ -20,6 +21,7 @@ setup: requirements.txt
 clean:
 	rm -rf ./build
 	rm -rf ./htmlcov
+	rm -rf ./docs/build
 
 $(PYTEST):
 	$(PIP) install pytest-cov pylint
@@ -32,6 +34,9 @@ $(STUBGEN):
 
 $(BLACK):
 	$(PIP) install black
+
+$(SPHINX_BUILD):
+	$(PIP) install sphinx sphinx_autodoc_typehints sphinx_rtd_theme
 
 check: $(PYTEST) $(MYPY)
 	$(MYPY) --check-untyped-defs uswid

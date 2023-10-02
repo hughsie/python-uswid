@@ -8,7 +8,7 @@ extension-pkg-whitelist=lxml
 [MESSAGES CONTROL]
 
 # Disable the message, report, category or checker with the given id(s)
-disable=invalid-name,len-as-condition,missing-docstring,too-many-return-statements,too-many-branches,import-outside-toplevel,too-many-public-methods,abstract-method,unsubscriptable-object,too-many-instance-attributes,consider-using-enumerate,cyclic-import,consider-using-f-string
+disable=invalid-name,len-as-condition,too-many-return-statements,too-many-branches,import-outside-toplevel,too-many-public-methods,abstract-method,unsubscriptable-object,too-many-instance-attributes,consider-using-enumerate,cyclic-import,consider-using-f-string,missing-module-docstring
 
 [REPORTS]
 
