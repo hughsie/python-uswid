@@ -13,6 +13,8 @@ from typing import Optional
 
 
 class uSwidHashAlg(IntEnum):
+    """Represents an enumerated type of hash"""
+
     UNKNOWN = 0
     SHA256 = 1
     SHA384 = 7
@@ -20,6 +22,7 @@ class uSwidHashAlg(IntEnum):
 
     @classmethod
     def from_string(cls, alg_id: str) -> "uSwidHashAlg":
+        """Creates a uSwidHashAlg from a string identifier"""
         return cls(
             {
                 "SHA256": uSwidHashAlg.SHA256,
@@ -30,7 +33,7 @@ class uSwidHashAlg(IntEnum):
 
 
 class uSwidHash:
-    """represents a SWID link"""
+    """Represents a SWID link"""
 
     def __init__(
         self,
@@ -38,14 +41,18 @@ class uSwidHash:
         value: Optional[str] = None,
     ):
         self.alg_id: Optional[uSwidHashAlg] = alg_id
+        """Algorigth ID, e.g. ``uSwidHashAlg.SHA256``"""
         self.value: Optional[str] = value
+        """Checksum value"""
 
     @property
     def value(self) -> Optional[str]:
+        """Returns the value"""
         return self._value
 
     @value.setter
     def value(self, value: Optional[str]) -> None:
+        """Sets the value, guessing the alg_id from the length if unset"""
         if self.alg_id is None and value:
             if len(value) == 64:
                 self.alg_id = uSwidHashAlg.SHA256

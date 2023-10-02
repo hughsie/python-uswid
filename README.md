@@ -215,6 +215,10 @@ To use the latest in-development code:
 
     pip install --user git+https://github.com/hughsie/python-uswid.git
 
+## Using uswid as an API
+
+uSWID can also be used programmatically via the Python API, please consult the [API documentation](https://uswid.readthedocs.io/en/latest/) for more details.
+
 # Contributing
 
 I'm accepting merge requests to add missing functionality or to make the code more robust.

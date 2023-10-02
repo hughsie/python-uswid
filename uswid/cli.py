@@ -46,7 +46,7 @@ from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 
 
-def adjust_SectionSize(sz, align):
+def _adjust_SectionSize(sz, align):
     if sz % align:
         sz = ((sz + align) // align) * align
     return sz
@@ -161,6 +161,8 @@ def _save_efi_objcopy(
 
 
 class SwidFormat(IntEnum):
+    """Detected file format"""
+
     UNKNOWN = 0
     INI = 1
     XML = 2
@@ -214,6 +216,7 @@ def _type_for_fmt(
 
 
 def main():
+    """Main entrypoint"""
     parser = argparse.ArgumentParser(
         prog="uswid", description="Generate CoSWID metadata"
     )

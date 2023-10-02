@@ -33,7 +33,7 @@ _VERSION_SCHEME_FROM_STRING = {
 
 
 class uSwidIdentity:
-    """represents a SWID identity"""
+    """Represents a SWID identity"""
 
     def __init__(
         self,
@@ -44,34 +44,49 @@ class uSwidIdentity:
     ):
         self._auto_increment_tag_version = False
         self.tag_id: Optional[str] = tag_id
+        """Tag ID"""
         self.tag_version: int = tag_version
+        """Tag version"""
         self._software_name: Optional[str] = software_name
         self.software_version: Optional[str] = software_version
+        """Software version"""
         self.version_scheme: Optional[uSwidVersionScheme] = None
+        """Version scheme"""
         self.summary: Optional[str] = None
+        """One line summary"""
         self.product: Optional[str] = None
+        """Product"""
         self.colloquial_version: Optional[str] = None
+        """Colloquial version, usually the source hash"""
         self.revision: Optional[str] = None
+        """Revision"""
         self.edition: Optional[str] = None
+        """Edition, usually the tree hash"""
         self.persistent_id: Optional[str] = None
+        """Persistent AppStream ID"""
         self.lang: Optional[str] = "en-US"
+        """Language code"""
         self.generator = "uSWID"
+        """Generator, normally ``uSWID``"""
         self.payloads: List[uSwidPayload] = []
+        """List of payloads"""
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
 
     @property
     def software_name(self) -> Optional[str]:
+        """Returns the software name"""
         return self._software_name
 
     @software_name.setter
     def software_name(self, software_name: Optional[str]) -> None:
+        """Sets the software name, setting the ``tag_id`` automatically if unset"""
         if not self.tag_id and software_name:
             self.tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, software_name))
         self._software_name = software_name
 
     def merge(self, identity_new: "uSwidIdentity") -> None:
-        """adds new things from the new identity into the current one"""
+        """Add new things from the new identity into the current one"""
         if identity_new.tag_version:
             self.tag_version = identity_new.tag_version
         if identity_new.software_name:
@@ -102,19 +117,19 @@ class uSwidIdentity:
             self.add_payload(payload)
 
     def add_entity(self, entity: uSwidEntity) -> None:
-        """only adds the latest entity"""
+        """Add the latest entity"""
         if not entity.name:
             raise NotSupportedError("the entity name MUST be provided")
         self._entities[entity.name] = entity
 
     def add_link(self, link: uSwidLink) -> None:
-        """only adds the deduped link"""
+        """Add the deduplicated link"""
         if not link.href:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
 
     def add_payload(self, payload: uSwidPayload) -> None:
-        """only adds the deduped link"""
+        """Add the payload"""
         if not payload.hashes:
             raise NotSupportedError(
                 f"the hash value MUST be provided for {str(payload)}"
@@ -123,12 +138,12 @@ class uSwidIdentity:
 
     @property
     def links(self) -> List[uSwidLink]:
-        """returns all the added links"""
+        """Returns all the added links"""
         return list(self._links.values())
 
     @property
     def entities(self) -> List[uSwidEntity]:
-        """returns all the added entities"""
+        """Returns all the added entities"""
         return list(self._entities.values())
 
     def __repr__(self) -> str:

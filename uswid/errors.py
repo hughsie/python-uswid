@@ -7,4 +7,4 @@
 
 
 class NotSupportedError(NotImplementedError):
-    pass
+    """Error for when an operation is not supported by the format"""

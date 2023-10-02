@@ -14,11 +14,15 @@ if TYPE_CHECKING:
 
 
 class uSwidFormatBase:
+    """Baseclass for formats to subclass"""
+
     def __init__(self) -> None:
         pass
 
     def load(self, blob: bytes, path: Optional[str] = None) -> "uSwidContainer":
+        """Load a blob of data"""
         raise NotImplementedError
 
     def save(self, container: "uSwidContainer") -> bytes:
+        """Save into a blob of data"""
         raise NotImplementedError

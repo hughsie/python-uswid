@@ -15,7 +15,7 @@ from .hash import uSwidHash, uSwidHashAlg
 
 
 class uSwidPayload:
-    """represents a SWID Payload"""
+    """Represents a SWID Payload"""
 
     def __init__(
         self,
@@ -23,21 +23,26 @@ class uSwidPayload:
         size: Optional[int] = None,
     ):
         self.name: Optional[str] = name
+        """File system name"""
         self.size: Optional[int] = size
+        """Size in bytes"""
         self._hashes: Dict[uSwidHashAlg, uSwidHash] = {}
 
     def add_hash(self, ihash: uSwidHash) -> None:
+        """Add a hash value, deduplicated by the algorithm ID"""
         self._hashes[ihash.alg_id or uSwidHashAlg.UNKNOWN] = ihash
 
     def remove_hash(self, alg_id: uSwidHashAlg) -> None:
+        """Remove a hach value by the algorithm ID"""
         self._hashes.pop(alg_id)
 
     @property
     def hashes(self) -> List[uSwidHash]:
-        """returns all the added hashes"""
+        """Returns all the added hashes"""
         return list(self._hashes.values())
 
     def ensure_from_filename(self, fn: str) -> None:
+        """Set the size and SHA256 hash from a local filename"""
         with open(fn, "rb") as f:
             buf = f.read()
         self.size = len(buf)
