@@ -46,7 +46,7 @@ SWID tag representations are too large for firmware with storage constraints, bu
 
 ## coSWID
 
-CoSWID supports a similar set of semantics and features as SWID tags, all in a more space CBOR efficient format.
+CoSWID supports a similar set of semantics and features as SWID tags, all in a more space efficient format known as [CBOR](https://cbor.io/).
 This format is suitable for embedding into binary files, although the client then needs to be aware of the offset and length of the CBOR binary block of metadata.
 
 If we know how to parse the firmware and can lookup the offset the coSWID blob starts and ends (e.g. the PE COFF header says *data is stored at 0x123, length is 0x234*) then embedding coSWID as CBOR data is appropriate.
