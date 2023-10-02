@@ -3,7 +3,8 @@ python-uswid
 
 # Introduction
 
-A Software Bill of Materials (SBoM) is a manifest of what is inside your software. It helps vendors and consumers keep track of software components for better software supply chain security.
+A Software Bill of Materials (SBoM) is a manifest of what components are included inside your software.
+It helps vendors and consumers keep track of software components for better software supply chain security.
 
 When building or creating a SBoM there are lots of formats to choose from:
 
@@ -122,6 +123,10 @@ You can also just append one entity to an existing CoSWID tag. This might be don
     name = OEM Vendor
     regid = oem.homepage.com
 
+Which can be appended using:
+
+    uswid --load HughskiColorHug.uswid --load oem.ini --save ./HughskiColorHug.uswid --compress
+
 Usefully, if you load a uswid blob from an existing binary, the tag version is incremented when it is saved it again.
 If that behaviour is wrong, set an explicit `tag-version` in the `[uSWID]` section.
 
@@ -194,9 +199,9 @@ Although reading is well supported and tested, support for writing modified file
 
 If `pefile` doesn't add the SWID metadata to the PE file correctly, you can use the alternate method of using `objcopy`, either available by default on Linux or installable using WSL on Windows. e.g.
 
-    uswid --load oem.ini --save ./blob.uswid --objcopy /usr/bin/objcopy
+    uswid --load sbom.ini --save ./payload.efi --objcopy /usr/bin/objcopy
 
-You can use `objdump -s -j .sbom` to verify that the tag has been written correctly to the binary.
+You can use `objdump -s -j .sbom payload.efi` to verify that the tag has been written correctly to the binary.
 
 # Installing
 
