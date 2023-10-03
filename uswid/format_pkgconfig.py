@@ -38,6 +38,7 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
     """INI file"""
 
     def __init__(self, filepath: Optional[str] = None) -> None:
+        """Initializes uSwidFormatPkgconfig"""
         uSwidFormatBase.__init__(self)
         self.filepath: Optional[str] = filepath
 
@@ -47,7 +48,7 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
         return uSwidContainer([identity])
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """imports a pkg-conifg file as overrides to the uSwidIdentity data"""
+        """Imports a pkg-conifg file as overrides to the uSwidIdentity data"""
 
         # filename base is the ID
         if self.filepath:

@@ -14,10 +14,21 @@ if TYPE_CHECKING:
 
 
 class uSwidFormatBase:
-    """Baseclass for formats to subclass"""
+    """Baseclass for formats to subclass.
+
+    Available formats are:
+
+    * ``uSwidFormatCoswid``
+    * ``uSwidFormatCycloneDX`` (``.save`` only)
+    * ``uSwidFormatGoswid``
+    * ``uSwidFormatIni``
+    * ``uSwidFormatPkgconfig`` (``.load`` only)
+    * ``uSwidFormatSwid``
+    * ``uSwidFormatUswid``
+    """
 
     def __init__(self) -> None:
-        pass
+        """Initializes uSwidFormatBase"""
 
     def load(self, blob: bytes, path: Optional[str] = None) -> "uSwidContainer":
         """Load a blob of data"""

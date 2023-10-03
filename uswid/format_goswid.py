@@ -37,6 +37,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
     """goSWID file"""
 
     def __init__(self) -> None:
+        """Initializes uSwidFormatGoswid"""
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
@@ -60,7 +61,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         return json.dumps(root, indent=2).encode()
 
     def _save_link(self, link: uSwidLink) -> Dict[str, str]:
-        """exports a uSwidLink goSWID section"""
+        """Exports a uSwidLink goSWID section"""
 
         node: Dict[str, str] = {}
         if link.href:
@@ -70,7 +71,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         return node
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
-        """exports a uSwidLink goSWID section"""
+        """Exports a uSwidLink goSWID section"""
 
         node: Dict[str, str] = {}
         if payload.name:
@@ -82,7 +83,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         return {"file": [node]}
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
-        """exports a uSwidEntity goSWID section"""
+        """Exports a uSwidEntity goSWID section"""
 
         node: Dict[str, Any] = {}
         if entity.name:
@@ -169,19 +170,19 @@ class uSwidFormatGoswid(uSwidFormatBase):
         return root
 
     def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """exports a uSwidIdentity goSWID blob"""
+        """Exports a uSwidIdentity goSWID blob"""
         return json.dumps(self._save_identity_internal(identity), indent=2).encode(
             "utf-8"
         )
 
     def _load_link(self, link: uSwidLink, node: Dict[str, str]) -> None:
-        """imports a uSwidLink goSWID section"""
+        """Imports a uSwidLink goSWID section"""
 
         link.href = node.get("href")
         link.rel = node.get("rel")
 
     def _load_file(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
-        """imports a uSwidPayload goSWID section"""
+        """Imports a uSwidPayload goSWID section"""
 
         # for compat with Intel FSP template
         for key in list(node):
@@ -208,7 +209,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         entity: uSwidEntity,
         node: Dict[str, str],
     ) -> None:
-        """imports a uSwidEntity goSWID section"""
+        """Imports a uSwidEntity goSWID section"""
 
         # for compat with Intel FSP template
         for key in list(node):
@@ -287,7 +288,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
                         identity.add_payload(payload)
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """imports a uSwidIdentity goSWID blob"""
+        """Imports a uSwidIdentity goSWID blob"""
 
         try:
             data: Dict[str, Any] = json.loads(blob)

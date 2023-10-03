@@ -40,6 +40,7 @@ class uSwidHash:
         alg_id: Optional[uSwidHashAlg] = None,
         value: Optional[str] = None,
     ):
+        """Initializes uSwidHash"""
         self.alg_id: Optional[uSwidHashAlg] = alg_id
         """Algorigth ID, e.g. ``uSwidHashAlg.SHA256``"""
         self.value: Optional[str] = value

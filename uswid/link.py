@@ -39,6 +39,7 @@ class uSwidLink:
         href: Optional[str] = None,
         rel: Optional[str] = None,
     ):
+        """Initializes uSwidLink"""
         self._href: Optional[str] = href
         self._rel: Optional[str] = rel
 

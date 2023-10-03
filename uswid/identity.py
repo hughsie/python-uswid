@@ -42,6 +42,7 @@ class uSwidIdentity:
         software_name: Optional[str] = None,
         software_version: Optional[str] = None,
     ):
+        """Initializes uSwidIdentity"""
         self._auto_increment_tag_version = False
         self.tag_id: Optional[str] = tag_id
         """Tag ID"""

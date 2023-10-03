@@ -30,6 +30,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
     """CycloneDX file"""
 
     def __init__(self) -> None:
+        """Initializes uSwidFormatCycloneDX"""
         uSwidFormatBase.__init__(self)
 
     def save(self, container: uSwidContainer) -> bytes:

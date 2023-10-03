@@ -24,6 +24,7 @@ class uSwidFormatUswid(uSwidFormatBase):
     """uSWID file"""
 
     def __init__(self, compress: bool = True) -> None:
+        """Initializes uSwidFormatUswid"""
         uSwidFormatBase.__init__(self)
         self.compress: bool = compress
 

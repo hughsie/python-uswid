@@ -31,6 +31,7 @@ class uSwidEntity:
         regid: Optional[str] = None,
         roles: Optional[List[uSwidEntityRole]] = None,
     ):
+        """Initializes uSwidEntity"""
         self.name: Optional[str] = name
         """Name"""
         self.regid: Optional[str] = regid

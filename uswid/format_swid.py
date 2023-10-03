@@ -46,6 +46,7 @@ class uSwidFormatSwid(uSwidFormatBase):
     """SWID file"""
 
     def __init__(self) -> None:
+        """Initializes uSwidFormatSwid"""
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
@@ -60,7 +61,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         return self._save_identity(identity)
 
     def _save_link(self, link: uSwidLink, root: ET.Element) -> None:
-        """exports a uSwidLink SWID section"""
+        """Exports a uSwidLink SWID section"""
 
         node = ET.SubElement(root, "Link")
         if link.href:
@@ -69,7 +70,7 @@ class uSwidFormatSwid(uSwidFormatBase):
             node.set("rel", link.rel)
 
     def _save_payload(self, payload: uSwidPayload, root: ET.Element) -> None:
-        """exports a uSwidHash SWID section"""
+        """Exports a uSwidHash SWID section"""
         node = ET.SubElement(
             root,
             "File",
@@ -89,7 +90,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 node.set("{http://www.w3.org/2001/04/xmlenc#sha512}hash", ihash.value)
 
     def _save_entity(self, entity: uSwidEntity, root: ET.Element) -> None:
-        """exports a uSwidEntity SWID section"""
+        """Exports a uSwidEntity SWID section"""
 
         node = ET.SubElement(root, "Entity")
         if entity.name:
@@ -110,7 +111,7 @@ class uSwidFormatSwid(uSwidFormatBase):
             node.set("role", " ".join(roles))
 
     def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """exports a uSwidIdentity SWID blob"""
+        """Exports a uSwidIdentity SWID blob"""
 
         # identity
         NSMAP = {
@@ -175,7 +176,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         )
 
     def _load_link(self, link: uSwidLink, node: ET.SubElement) -> None:
-        """imports a uSwidLink SWID section"""
+        """Imports a uSwidLink SWID section"""
 
         LINK_MAP: Dict[str, str] = {
             "seeAlso": "see-also",
@@ -185,7 +186,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         link.rel = LINK_MAP.get(rel_data, rel_data)
 
     def _load_payload(self, payload: uSwidPayload, node: ET.SubElement) -> None:
-        """imports a uSwidPayload SWID section"""
+        """Imports a uSwidPayload SWID section"""
 
         payload.name = node.get("name")
         payload.size = node.get("size")
@@ -207,7 +208,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         entity: uSwidEntity,
         node: ET.SubElement,
     ) -> None:
-        """imports a uSwidEntity SWID section"""
+        """Imports a uSwidEntity SWID section"""
 
         entity.name = node.get("name")
         entity.regid = node.get("regid", None)
@@ -222,7 +223,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 ) from e
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """imports a uSwidIdentity SWID blob"""
+        """Imports a uSwidIdentity SWID blob"""
 
         parser = ET.XMLParser()
         tree = ET.fromstring(blob, parser)

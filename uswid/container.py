@@ -17,6 +17,7 @@ class uSwidContainer:
     """Represents a uSWID container"""
 
     def __init__(self, identities: Optional[List[uSwidIdentity]] = None) -> None:
+        """Initializes uSwidContainer"""
         self._identities: List[uSwidIdentity] = []
         if identities:
             for identity in identities:

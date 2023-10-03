@@ -48,6 +48,7 @@ class uSwidFormatIni(uSwidFormatBase):
     """INI file"""
 
     def __init__(self) -> None:
+        """Initializes uSwidFormatIni"""
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
@@ -62,7 +63,7 @@ class uSwidFormatIni(uSwidFormatBase):
         return self._save_identity(identity)
 
     def _save_link(self, link: uSwidLink) -> Dict[str, Any]:
-        """exports a uSwidLink INI section"""
+        """Exports a uSwidLink INI section"""
 
         data: Dict[str, Any] = {}
         if link.rel:
@@ -72,7 +73,7 @@ class uSwidFormatIni(uSwidFormatBase):
         return data
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
-        """exports a uSwidLink INI section"""
+        """Exports a uSwidLink INI section"""
 
         data: Dict[str, Any] = {}
         if payload.name:
@@ -84,7 +85,7 @@ class uSwidFormatIni(uSwidFormatBase):
         return data
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
-        """exports a uSwidEntity INI section"""
+        """Exports a uSwidEntity INI section"""
 
         data: Dict[str, Any] = {}
         if entity.name:
@@ -150,7 +151,7 @@ class uSwidFormatIni(uSwidFormatBase):
     def _load_link(
         self, link: uSwidLink, data: Union[configparser.SectionProxy, Dict[str, str]]
     ) -> None:
-        """imports a uSwidLink INI section"""
+        """Imports a uSwidLink INI section"""
 
         for key, value in data.items():
             if key == "href":
@@ -168,7 +169,7 @@ class uSwidFormatIni(uSwidFormatBase):
         data: Union[configparser.SectionProxy, Dict[str, str]],
         path: Optional[str] = None,
     ) -> None:
-        """imports a uSwidPayload INI section"""
+        """Imports a uSwidPayload INI section"""
 
         for key, value in data.items():
             if key == "name":
@@ -198,7 +199,7 @@ class uSwidFormatIni(uSwidFormatBase):
         data: Union[configparser.SectionProxy, Dict[str, str]],
         role_hint: Optional[str] = None,
     ) -> None:
-        """imports a uSwidEntity INI section"""
+        """Imports a uSwidEntity INI section"""
 
         if role_hint:
             try:

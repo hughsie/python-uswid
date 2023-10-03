@@ -22,6 +22,7 @@ class uSwidPayload:
         name: Optional[str] = None,
         size: Optional[int] = None,
     ):
+        """Initializes uSwidPayload"""
         self.name: Optional[str] = name
         """File system name"""
         self.size: Optional[int] = size

@@ -43,6 +43,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
     """CoSWID file"""
 
     def __init__(self) -> None:
+        """Initializes uSwidFormatCoswid"""
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
@@ -58,7 +59,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         return self._save_identity(identity)
 
     def _save_link(self, link: uSwidLink) -> Dict[uSwidGlobalMap, Any]:
-        """exports a uSwidLink CoSWID section"""
+        """Exports a uSwidLink CoSWID section"""
 
         data: Dict[uSwidGlobalMap, Any] = {}
         data[uSwidGlobalMap.HREF] = link.href
@@ -84,11 +85,11 @@ class uSwidFormatCoswid(uSwidFormatBase):
         return data
 
     def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
-        """exports a uSwidHash CoSWID section"""
+        """Exports a uSwidHash CoSWID section"""
         return (ihash.alg_id, bytes.fromhex(ihash.value))
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[uSwidGlobalMap, Any]:
-        """exports a uSwidPayload CoSWID section"""
+        """Exports a uSwidPayload CoSWID section"""
 
         data: Dict[uSwidGlobalMap, Any] = {}
         if payload.name:
@@ -103,7 +104,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         return {uSwidGlobalMap.FILE: data}
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[uSwidGlobalMap, Any]:
-        """exports a uSwidEntity CoSWID section"""
+        """Exports a uSwidEntity CoSWID section"""
 
         data: Dict[uSwidGlobalMap, Any] = {}
         data[uSwidGlobalMap.ENTITY_NAME] = entity.name
@@ -113,7 +114,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         return data
 
     def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """exports a uSwidIdentity CoSWID blob"""
+        """Exports a uSwidIdentity CoSWID blob"""
 
         # general identity section
         data: Dict[uSwidGlobalMap, Any] = {}
@@ -193,7 +194,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         return cbor2.dumps(data)
 
     def _load_link(self, link: uSwidLink, data: Dict[uSwidGlobalMap, Any]) -> None:
-        """imports a uSwidLink CoSWID section"""
+        """Imports a uSwidLink CoSWID section"""
 
         # always a string
         link.href = data.get(uSwidGlobalMap.HREF)
@@ -230,7 +231,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 ) from e
 
     def _load_hash(self, ihash: uSwidHash, data: Any) -> None:
-        """imports a uSwidHash CoSWID section"""
+        """Imports a uSwidHash CoSWID section"""
         ihash.alg_id = uSwidHashAlg(data[0])
         if isinstance(data[1], bytes):
             ihash.value = bytes.hex(data[1])
@@ -242,7 +243,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         payload: uSwidPayload,
         data: Dict[uSwidGlobalMap, Any],
     ) -> None:
-        """imports a uSwidPayload CoSWID section"""
+        """Imports a uSwidPayload CoSWID section"""
         for key, value in data.items():
             if key == uSwidGlobalMap.FS_NAME:
                 payload.name = value
@@ -261,7 +262,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         entity: uSwidEntity,
         data: Dict[uSwidGlobalMap, Any],
     ) -> None:
-        """imports a uSwidEntity CoSWID section"""
+        """Imports a uSwidEntity CoSWID section"""
 
         entity.name = data.get(uSwidGlobalMap.ENTITY_NAME)
         entity.regid = data.get(uSwidGlobalMap.REG_ID, None)
@@ -278,7 +279,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
     def _load_identity(
         self, identity: uSwidIdentity, blob: bytes, offset: Optional[int] = 0
     ) -> int:
-        """imports a uSwidIdentity CoSWID blob"""
+        """Imports a uSwidIdentity CoSWID blob"""
 
         if not blob:
             return 0
