@@ -82,7 +82,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         if payload.name:
             node.set("name", payload.name)
         if payload.size:
-            node.set("size", payload.size)
+            node.set("size", str(payload.size))
         for ihash in payload.hashes:
             if ihash.alg_id == uSwidHashAlg.SHA256:
                 node.set("{http://www.w3.org/2001/04/xmlenc#sha256}hash", ihash.value)
@@ -189,7 +189,10 @@ class uSwidFormatSwid(uSwidFormatBase):
         """Imports a uSwidPayload SWID section"""
 
         payload.name = node.get("name")
-        payload.size = node.get("size")
+        try:
+            payload.size = int(node.get("size"))
+        except TypeError:
+            pass
         try:
             value = node.attrib["{http://www.w3.org/2001/04/xmlenc#sha256}hash"]
             if value:
