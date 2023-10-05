@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, Dict
 
 from .identity import uSwidIdentity
 from .errors import NotSupportedError
@@ -26,6 +26,17 @@ class uSwidContainer:
     def __iter__(self) -> Generator:
         for identity in self._identities:
             yield identity
+
+    def depsolve(self) -> None:
+        """Sets Link.identity using internally-resolvable SWID entries"""
+
+        data: Dict[str, uSwidIdentity] = {}
+        for identity in self._identities:
+            data[identity.tag_id] = identity
+        for identity in self._identities:
+            for link in identity.links:
+                if link.href.startswith("swid:"):
+                    link.identity = data.get(link.href[5:])
 
     def append(self, identity: uSwidIdentity) -> None:
         """Add an identity to the container"""

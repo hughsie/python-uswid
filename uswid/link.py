@@ -10,7 +10,10 @@
 from enum import IntEnum
 import uuid
 
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .identity import uSwidIdentity
 
 
 class uSwidLinkRel(IntEnum):
@@ -42,6 +45,8 @@ class uSwidLink:
         """Initializes uSwidLink"""
         self._href: Optional[str] = href
         self._rel: Optional[str] = rel
+        self.identity: Optional[uSwidIdentity] = None
+        """Identity, if the SWID reference in internally resolvable"""
 
     @property
     def rel(self) -> Optional[str]:

@@ -372,6 +372,10 @@ def main():
         except NotSupportedError as e:
             print(e)
             sys.exit(1)
+
+    # depsolve any internal SWID links
+    container.depsolve()
+
     # debug
     if load_filepaths and args.verbose:
         print("Loaded:")
