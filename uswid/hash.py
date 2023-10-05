@@ -47,6 +47,15 @@ class uSwidHash:
         """Checksum value"""
 
     @property
+    def alg_id_for_display(self) -> Optional[str]:
+        """Returns the value"""
+        return {
+            uSwidHashAlg.SHA256: "SHA-256",
+            uSwidHashAlg.SHA384: "SHA-384",
+            uSwidHashAlg.SHA512: "SHA-512",
+        }.get(self.alg_id)
+
+    @property
     def value(self) -> Optional[str]:
         """Returns the value"""
         return self._value
