@@ -41,6 +41,7 @@ class uSwidIdentity:
         tag_version: int = 0,
         software_name: Optional[str] = None,
         software_version: Optional[str] = None,
+        generator: Optional[str] = "uSWID",
     ):
         """Initializes uSwidIdentity"""
         self._auto_increment_tag_version = False
@@ -67,7 +68,7 @@ class uSwidIdentity:
         """Persistent AppStream ID"""
         self.lang: Optional[str] = "en-US"
         """Language code"""
-        self.generator = "uSWID"
+        self.generator = generator
         """Generator, normally ``uSWID``"""
         self.payloads: List[uSwidPayload] = []
         """List of payloads"""
@@ -78,6 +79,15 @@ class uSwidIdentity:
     def software_name(self) -> Optional[str]:
         """Returns the software name"""
         return self._software_name
+
+    @property
+    def generator_href(self) -> Optional[str]:
+        """Returns the generator URL, if known"""
+        return {
+            "goswid": "https://github.com/9elements/goswid",
+            "LVFS": "https://fwupd.org/",
+            "uSWID": "https://github.com/hughsie/python-uswid",
+        }.get(self.generator)
 
     @software_name.setter
     def software_name(self, software_name: Optional[str]) -> None:
