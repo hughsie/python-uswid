@@ -45,8 +45,9 @@ class uSwidIdentity:
     ):
         """Initializes uSwidIdentity"""
         self._auto_increment_tag_version = False
-        self.tag_id: Optional[str] = tag_id
-        """Tag ID"""
+        self._tag_id: Optional[str] = None
+        if tag_id:
+            self.tag_id = tag_id
         self.tag_version: int = tag_version
         """Tag version"""
         self._software_name: Optional[str] = software_name
@@ -88,6 +89,22 @@ class uSwidIdentity:
             "LVFS": "https://fwupd.org/",
             "uSWID": "https://github.com/hughsie/python-uswid",
         }.get(self.generator)
+
+    @property
+    def tag_id(self) -> Optional[str]:
+        """Returns the tag ID"""
+        return self._tag_id
+
+    @tag_id.setter
+    def tag_id(self, tag_id: Optional[str]) -> None:
+        """Sets the tag ID, converting to a generated GUID if required if @tag_id starts with ``swid:``"""
+        if tag_id and tag_id.startswith("swid:"):
+            try:
+                self._tag_id = str(uuid.UUID(tag_id[5:]))
+            except ValueError:
+                self._tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, tag_id[5:]))
+        else:
+            self._tag_id = tag_id
 
     @software_name.setter
     def software_name(self, software_name: Optional[str]) -> None:
