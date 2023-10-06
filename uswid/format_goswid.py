@@ -10,6 +10,7 @@
 from typing import Dict, Any, Optional, List
 
 import json
+from datetime import datetime
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
@@ -23,6 +24,7 @@ from .entity import uSwidEntity
 from .link import uSwidLink
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
+from .evidence import uSwidEvidence
 from .format_swid import _ENTITY_MAP_FROM_XML, _ENTITY_MAP_TO_XML
 
 
@@ -81,6 +83,16 @@ class uSwidFormatGoswid(uSwidFormatBase):
         if payload.hashes:
             node["hash"] = [payload.hashes[0].alg_id or 0, payload.hashes[0].value]
         return {"file": [node]}
+
+    def _save_evidence(self, evidence: uSwidEvidence) -> Dict[str, Any]:
+        """Exports a uSwidLink goSWID section"""
+
+        node: Dict[str, str] = {}
+        if evidence.date:
+            node["date"] = evidence.date.isoformat()
+        if evidence.device_id:
+            node["device_id"] = evidence.device_id
+        return node
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
         """Exports a uSwidEntity goSWID section"""
@@ -154,6 +166,12 @@ class uSwidFormatGoswid(uSwidFormatBase):
             for payload in identity.payloads:
                 root["payload"].append(self._save_payload(payload))
 
+        # evidences
+        if identity.evidences:
+            root["evidence"] = []
+            for evidence in identity.evidences:
+                root["evidence"].append(self._save_evidence(evidence))
+
         # entities
         if identity.entities:
             root["entity"] = []
@@ -180,6 +198,14 @@ class uSwidFormatGoswid(uSwidFormatBase):
 
         link.href = node.get("href")
         link.rel = node.get("rel")
+
+    def _load_evidence(self, evidence: uSwidEvidence, node: Dict[str, str]) -> None:
+        """Imports a uSwidEvidence goSWID section"""
+
+        iso_date = node.get("date")
+        if iso_date:
+            evidence.date = datetime.fromisoformat(iso_date)
+        evidence.device_id = node.get("device_id")
 
     def _load_file(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
         """Imports a uSwidPayload goSWID section"""
@@ -286,6 +312,12 @@ class uSwidFormatGoswid(uSwidFormatBase):
                         payload = uSwidPayload()
                         self._load_file(payload, node_file)
                         identity.add_payload(payload)
+
+        # evidences
+        for node in _get_one_or_more(data, "evidence"):
+            evidence = uSwidEvidence()
+            self._load_evidence(evidence, node)
+            identity.add_evidence(evidence)
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
         """Imports a uSwidIdentity goSWID blob"""

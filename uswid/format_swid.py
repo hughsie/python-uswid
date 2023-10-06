@@ -9,6 +9,7 @@
 
 from typing import Dict, List, Optional
 
+from datetime import datetime
 from lxml import etree as ET
 
 from .container import uSwidContainer
@@ -23,6 +24,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
+from .evidence import uSwidEvidence
 
 _ENTITY_MAP_FROM_XML = {
     "tagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -89,6 +91,17 @@ class uSwidFormatSwid(uSwidFormatBase):
             elif ihash.alg_id == uSwidHashAlg.SHA512:
                 node.set("{http://www.w3.org/2001/04/xmlenc#sha512}hash", ihash.value)
 
+    def _save_evidence(self, evidence: uSwidEvidence, root: ET.Element) -> None:
+        """Exports a uSwidEvidence SWID section"""
+        node = ET.SubElement(
+            root,
+            "Evidence",
+        )
+        if evidence.date:
+            node.set("date", evidence.date.isoformat())
+        if evidence.device_id:
+            node.set("device_id", evidence.device_id)
+
     def _save_entity(self, entity: uSwidEntity, root: ET.Element) -> None:
         """Exports a uSwidEntity SWID section"""
 
@@ -149,6 +162,11 @@ class uSwidFormatSwid(uSwidFormatBase):
             for payload in identity.payloads:
                 self._save_payload(payload, node2)
 
+        # evidences
+        if identity.evidences:
+            for evidence in identity.evidences:
+                self._save_evidence(evidence, root)
+
         # optional metadata
         if (
             identity.summary
@@ -204,6 +222,17 @@ class uSwidFormatSwid(uSwidFormatBase):
             if value:
                 payload.add_hash(uSwidHash(alg_id=uSwidHashAlg.SHA512, value=value))
         except KeyError:
+            pass
+
+    def _load_evidence(self, evidence: uSwidEvidence, node: ET.SubElement) -> None:
+        """Imports a uSwidEvidence SWID section"""
+
+        iso_date = node.get("date")
+        if iso_date:
+            evidence.date = datetime.fromisoformat(iso_date)
+        try:
+            evidence.device_id = node.get("device_id")
+        except TypeError:
             pass
 
     def _load_entity(
@@ -289,3 +318,9 @@ class uSwidFormatSwid(uSwidFormatBase):
             payload = uSwidPayload()
             self._load_payload(payload, node)
             identity.add_payload(payload)
+
+        # evidences
+        for node in element.xpath("ns:Evidence", namespaces=namespaces):
+            evidence = uSwidEvidence()
+            self._load_evidence(evidence, node)
+            identity.add_evidence(evidence)

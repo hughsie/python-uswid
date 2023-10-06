@@ -7,7 +7,8 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
 **UNRELEASED**
 
-- Add RTD generated docs
+ - Add RTD generated docs
+ - Add support for SWID evidence to support the CISA SBOM Tooling guide
 
 **0.4.3** (2023-10-02)
 

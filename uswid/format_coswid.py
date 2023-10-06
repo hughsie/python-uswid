@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, List, Tuple
 
 import io
 import uuid
+from datetime import datetime
+
 import cbor2
 
 from .enums import uSwidGlobalMap
@@ -22,6 +24,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
+from .evidence import uSwidEvidence
 
 
 def _get_one_or_more(data: Dict[uSwidGlobalMap, Any], key: uSwidGlobalMap) -> List[Any]:
@@ -103,6 +106,16 @@ class uSwidFormatCoswid(uSwidFormatBase):
             _set_one_or_more(data, uSwidGlobalMap.HASH, payload_hashes)
         return {uSwidGlobalMap.FILE: data}
 
+    def _save_evidence(self, evidence: uSwidEvidence) -> Dict[uSwidGlobalMap, Any]:
+        """Exports a uSwidEvidence CoSWID section"""
+
+        data: Dict[uSwidGlobalMap, Any] = {}
+        if evidence.date:
+            data[uSwidGlobalMap.DATE] = evidence.date.timestamp()
+        if evidence.device_id:
+            data[uSwidGlobalMap.DEVICE_ID] = evidence.device_id
+        return data
+
     def _save_entity(self, entity: uSwidEntity) -> Dict[uSwidGlobalMap, Any]:
         """Exports a uSwidEntity CoSWID section"""
 
@@ -164,6 +177,14 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 data,
                 uSwidGlobalMap.PAYLOAD,
                 [self._save_payload(payload) for payload in identity.payloads],
+            )
+
+        # evidences
+        if identity.evidences:
+            _set_one_or_more(
+                data,
+                uSwidGlobalMap.EVIDENCE,
+                [self._save_evidence(evidence) for evidence in identity.evidences],
             )
 
         # entities
@@ -257,6 +278,18 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     self._load_hash(ihash, hash_data)
                     payload.add_hash(ihash)
 
+    def _load_evidence(
+        self,
+        evidence: uSwidEvidence,
+        data: Dict[uSwidGlobalMap, Any],
+    ) -> None:
+        """Imports a uSwidEvidence CoSWID section"""
+        for key, value in data.items():
+            if key == uSwidGlobalMap.DATE:
+                evidence.date = datetime.utcfromtimestamp(value)
+            if key == uSwidGlobalMap.DEVICE_ID:
+                evidence.device_id = value
+
     def _load_entity(
         self,
         entity: uSwidEntity,
@@ -345,6 +378,12 @@ class uSwidFormatCoswid(uSwidFormatBase):
             payload = uSwidPayload()
             self._load_payload(payload, file_data)
             identity.add_payload(payload)
+
+        # evidence
+        for evidence_data in _get_one_or_more(data, uSwidGlobalMap.EVIDENCE):
+            evidence = uSwidEvidence()
+            self._load_evidence(evidence, evidence_data)
+            identity.add_evidence(evidence)
 
         # entities
         for entity_data in _get_one_or_more(data, uSwidGlobalMap.ENTITY):

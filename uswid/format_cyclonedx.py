@@ -134,4 +134,15 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         if hashes:
             component["hashes"] = hashes
 
+        # annotations
+        annotations = []
+        for evidence in identity.evidences:
+            annotations = {"subjects": [identity.tag_id], "annotator": "component"}
+            if evidence.date:
+                annotations["timestamp"] = evidence.date.isoformat()
+            if evidence.device_id:
+                annotations["text"] = evidence.device_id
+        if annotations:
+            component["annotations"] = annotations
+
         return component

@@ -15,6 +15,7 @@ from .enums import uSwidVersionScheme
 from .entity import uSwidEntity
 from .link import uSwidLink
 from .payload import uSwidPayload
+from .evidence import uSwidEvidence
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -73,6 +74,8 @@ class uSwidIdentity:
         """Generator, normally ``uSWID``"""
         self.payloads: List[uSwidPayload] = []
         """List of payloads"""
+        self.evidences: List[uSwidEvidence] = []
+        """List of evidences"""
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
 
@@ -143,6 +146,8 @@ class uSwidIdentity:
             self.add_link(link)
         for payload in identity_new.payloads:
             self.add_payload(payload)
+        for evidence in identity_new.evidences:
+            self.add_evidence(evidence)
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """Add the latest entity"""
@@ -163,6 +168,10 @@ class uSwidIdentity:
                 f"the hash value MUST be provided for {str(payload)}"
             )
         self.payloads.append(payload)
+
+    def add_evidence(self, evidence: uSwidEvidence) -> None:
+        """Add the evidence"""
+        self.evidences.append(evidence)
 
     @property
     def links(self) -> List[uSwidLink]:
@@ -194,5 +203,9 @@ class uSwidIdentity:
         if self.payloads:
             tmp += "\n{}".format(
                 "\n".join([f" - {str(e)}" for e in self.payloads]),
+            )
+        if self.evidences:
+            tmp += "\n{}".format(
+                "\n".join([f" - {str(e)}" for e in self.evidences]),
             )
         return tmp

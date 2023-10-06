@@ -12,6 +12,7 @@ from typing import Dict, List, Any, Optional, Union
 import configparser
 import io
 import os
+from datetime import datetime
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
@@ -25,6 +26,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink
 from .hash import uSwidHash
 from .payload import uSwidPayload
+from .evidence import uSwidEvidence
 
 _ENTITY_MAP_FROM_INI = {
     "TagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -82,6 +84,16 @@ class uSwidFormatIni(uSwidFormatBase):
             data["size"] = payload.size
         if payload.hash:
             data["hash"] = payload.hash[0].value
+        return data
+
+    def _save_evidence(self, evidence: uSwidEvidence) -> Dict[str, Any]:
+        """Exports a uSwidLink INI section"""
+
+        data: Dict[str, Any] = {}
+        if evidence.date:
+            data["date"] = evidence.date.isoformat()
+        if evidence.device_id:
+            data["device_id"] = evidence.device_id
         return data
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -142,6 +154,10 @@ class uSwidFormatIni(uSwidFormatBase):
         if identity.payloads:
             config["uSWID-Payload"] = self._save_payload(identity.payloads[0])
 
+        # evidence
+        if identity.evidences:
+            config["uSWID-Evidence"] = self._save_evidence(identity.evidences[0])
+
         # as string
         with io.StringIO() as f:
             config.write(f)
@@ -192,6 +208,21 @@ class uSwidFormatIni(uSwidFormatBase):
                 payload.ensure_from_filename(fn)
         if not payload.hashes:
             raise NotSupportedError("all payloads MUST have at least one hash")
+
+    def _load_evidence(
+        self,
+        evidence: uSwidEvidence,
+        data: Union[configparser.SectionProxy, Dict[str, str]],
+    ) -> None:
+        """Imports a uSwidEvidence INI section"""
+
+        for key, value in data.items():
+            if key == "date":
+                evidence.date = datetime.fromisoformat(value)
+            elif key == "device_id":
+                evidence.device_id = value
+            else:
+                print(f"unknown key {key} found in ini file!")
 
     def _load_entity(
         self,
@@ -275,3 +306,7 @@ class uSwidFormatIni(uSwidFormatBase):
                 payload = uSwidPayload()
                 self._load_payload(payload, config[group], path=path)
                 identity.add_payload(payload)
+            if group.startswith("uSWID-Evidence"):
+                evidence = uSwidEvidence()
+                self._load_evidence(evidence, config[group])
+                identity.add_evidence(evidence)
