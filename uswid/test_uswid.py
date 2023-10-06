@@ -31,7 +31,7 @@ from .format_cyclonedx import uSwidFormatCycloneDX
 
 
 class TestSwidEntity(unittest.TestCase):
-    """Tescases for identities, entities, links and payloads"""
+    """Tescases for identities, entities, links, evidence and payloads"""
 
     def test_entity(self):
         """Unit tests for uSwidEntity"""

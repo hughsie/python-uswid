@@ -60,6 +60,7 @@ setup(
             "format_uswid.pyi",
             "hash.pyi",
             "payload.pyi",
+            "evidence.pyi",
             "identity.pyi",
             "link.pyi",
             "__init__.pyi",

@@ -18,5 +18,6 @@ Table of contents
    Link <link>
    Payload <payload>
    Hash <hash>
+   Evidence <evidence>
 
 * :ref:`API reference <modindex>`

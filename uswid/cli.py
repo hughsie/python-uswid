@@ -9,10 +9,12 @@
 
 from enum import IntEnum
 from random import choices, randrange
+from datetime import datetime
 from typing import Optional, Any, List
 import argparse
 import tempfile
 import subprocess
+import socket
 
 import os
 import sys
@@ -34,6 +36,7 @@ from uswid import (
     uSwidContainer,
     uSwidEntity,
     uSwidEntityRole,
+    uSwidEvidence,
     uSwidIdentity,
     uSwidVersionScheme,
 )
@@ -375,6 +378,11 @@ def main():
 
     # depsolve any internal SWID links
     container.depsolve()
+
+    # add any missing evidence
+    for identity in container:
+        if not identity.evidences:
+            identity.add_evidence(uSwidEvidence(datetime.now(), socket.getfqdn()))
 
     # debug
     if load_filepaths and args.verbose:
