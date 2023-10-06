@@ -5,10 +5,12 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
-**UNRELEASED**
+**0.4.4** (2023-10-06)
 
- - Add RTD generated docs
- - Add support for SWID evidence to support the CISA SBOM Tooling guide
+ - Add RTD generated docs (Richard Hughes)
+ - Add support for SWID evidence to support the CISA SBOM Tooling guide (Richard Hughes)
+ - Ensure that payload.size is always an integer (Richard Hughes)
+ - Optionally provide the identity on each swid:-prefixed link (Richard Hughes)
 
 **0.4.3** (2023-10-02)
 
