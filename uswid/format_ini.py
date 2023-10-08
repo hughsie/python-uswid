@@ -93,7 +93,7 @@ class uSwidFormatIni(uSwidFormatBase):
         if evidence.date:
             data["date"] = evidence.date.isoformat()
         if evidence.device_id:
-            data["device_id"] = evidence.device_id
+            data["device-id"] = evidence.device_id
         return data
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -219,7 +219,7 @@ class uSwidFormatIni(uSwidFormatBase):
         for key, value in data.items():
             if key == "date":
                 evidence.date = datetime.fromisoformat(value)
-            elif key == "device_id":
+            elif key == "device-id":
                 evidence.device_id = value
             else:
                 print(f"unknown key {key} found in ini file!")
