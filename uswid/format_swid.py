@@ -100,7 +100,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         if evidence.date:
             node.set("date", evidence.date.isoformat())
         if evidence.device_id:
-            node.set("device_id", evidence.device_id)
+            node.set("deviceId", evidence.device_id)
 
     def _save_entity(self, entity: uSwidEntity, root: ET.Element) -> None:
         """Exports a uSwidEntity SWID section"""
@@ -231,7 +231,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         if iso_date:
             evidence.date = datetime.fromisoformat(iso_date)
         try:
-            evidence.device_id = node.get("device_id")
+            evidence.device_id = node.get("deviceId")
         except TypeError:
             pass
 
