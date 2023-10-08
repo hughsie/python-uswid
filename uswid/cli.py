@@ -381,8 +381,10 @@ def main():
 
     # add any missing evidence
     for identity in container:
-        if not identity.evidences:
-            identity.add_evidence(uSwidEvidence(datetime.now(), socket.getfqdn()))
+        for evidence in identity.evidences:
+            if not evidence.date and not evidence.device_id:
+                evidence.date = datetime.now()
+                evidence.device_id = socket.getfqdn()
 
     # debug
     if load_filepaths and args.verbose:
