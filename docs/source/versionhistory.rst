@@ -5,6 +5,10 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.4.5** (2023-10-09)
+
+ - Accept device-id when parsing INI evidenceand deviceId for SWID (Richard Hughes)
+
 **0.4.4** (2023-10-06)
 
  - Add RTD generated docs (Richard Hughes)
