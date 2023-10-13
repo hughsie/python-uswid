@@ -84,6 +84,13 @@ class uSwidIdentity:
         """Returns the software name"""
         return self._software_name
 
+    @software_name.setter
+    def software_name(self, software_name: Optional[str]) -> None:
+        """Sets the software name, setting the ``tag_id`` automatically if unset"""
+        if not self.tag_id and software_name:
+            self.tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, software_name))
+        self._software_name = software_name
+
     @property
     def generator_href(self) -> Optional[str]:
         """Returns the generator URL, if known"""
@@ -108,13 +115,6 @@ class uSwidIdentity:
                 self._tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, tag_id[5:]))
         else:
             self._tag_id = tag_id
-
-    @software_name.setter
-    def software_name(self, software_name: Optional[str]) -> None:
-        """Sets the software name, setting the ``tag_id`` automatically if unset"""
-        if not self.tag_id and software_name:
-            self.tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, software_name))
-        self._software_name = software_name
 
     def merge(self, identity_new: "uSwidIdentity") -> None:
         """Add new things from the new identity into the current one"""
