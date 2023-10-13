@@ -79,7 +79,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         if payload.name:
             node["fs-name"] = payload.name
         if payload.size:
-            node["size"] = payload.size
+            node["size"] = str(payload.size)
         if payload.hashes:
             node["hash"] = [payload.hashes[0].alg_id or 0, payload.hashes[0].value]
         return {"file": [node]}

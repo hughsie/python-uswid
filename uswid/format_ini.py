@@ -191,7 +191,7 @@ class uSwidFormatIni(uSwidFormatBase):
             if key == "name":
                 payload.name = value
             elif key == "size":
-                payload.size = value
+                payload.size = int(value)
             elif key == "hash":
                 payload.add_hash(uSwidHash(value=value))
             elif key == "path":
