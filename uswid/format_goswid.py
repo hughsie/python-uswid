@@ -216,8 +216,8 @@ class uSwidFormatGoswid(uSwidFormatBase):
 
         payload.name = node.get("fs-name")
         try:
-            payload.size = int(node.get("size"))
-        except ValueError:
+            payload.size = int(node["size"])
+        except (ValueError, KeyError):
             pass
         if "hash" in node:
             ihash = uSwidHash()

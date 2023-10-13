@@ -89,7 +89,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
     def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
         """Exports a uSwidHash CoSWID section"""
-        return (ihash.alg_id, bytes.fromhex(ihash.value))
+        return (ihash.alg_id or 0, bytes.fromhex(ihash.value or ""))
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[uSwidGlobalMap, Any]:
         """Exports a uSwidPayload CoSWID section"""

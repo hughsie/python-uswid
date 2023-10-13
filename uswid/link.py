@@ -71,7 +71,7 @@ class uSwidLink:
     @href.setter
     def href(self, href: Optional[str]) -> None:
         """Sets href, converting it to a UUID as required"""
-        if href.startswith("swid:"):
+        if href and href.startswith("swid:"):
             maybe_uuid: str = href.split(":")[1]
             try:
                 _ = uuid.UUID(maybe_uuid)
