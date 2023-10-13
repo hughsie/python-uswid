@@ -28,6 +28,7 @@ from .format_ini import uSwidFormatIni
 from .format_coswid import uSwidFormatCoswid
 from .format_swid import uSwidFormatSwid
 from .format_cyclonedx import uSwidFormatCycloneDX
+from .format_spdx import uSwidFormatSpdx
 
 
 class TestSwidEntity(unittest.TestCase):
@@ -343,6 +344,11 @@ rel = see-also
         assert "uSWID" in tmp
         assert "org.hughski.colorhug" in tmp
         assert "22905301d08e69473393d94c3e787e4bf0453268" in tmp
+
+        # SPDX export
+        tmp = uSwidFormatSpdx().save(uSwidContainer([identity])).decode()
+        assert "SPDX" in tmp
+        assert "uSWID" in tmp
 
 
 if __name__ == "__main__":

@@ -5,6 +5,10 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.4.6** (2023-XX-XX)
+
+ - Add SPDX export format.
+
 **0.4.5** (2023-10-09)
 
  - Accept device-id when parsing INI evidenceand deviceId for SWID (Richard Hughes)
