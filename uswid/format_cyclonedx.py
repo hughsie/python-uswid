@@ -128,6 +128,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         hashes: List[Any] = []
         for payload in identity.payloads:
             for ihash in payload.hashes:
+                if not ihash.alg_id:
+                    continue
                 hashes.append(
                     {"alg": _convert_hash_alg_id(ihash.alg_id), "content": ihash.value}
                 )

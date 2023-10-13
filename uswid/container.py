@@ -32,10 +32,11 @@ class uSwidContainer:
 
         data: Dict[str, uSwidIdentity] = {}
         for identity in self._identities:
-            data[identity.tag_id] = identity
+            if identity.tag_id:
+                data[identity.tag_id] = identity
         for identity in self._identities:
             for link in identity.links:
-                if link.href.startswith("swid:"):
+                if link.href and link.href.startswith("swid:"):
                     link.identity = data.get(link.href[5:])
 
     def append(self, identity: uSwidIdentity) -> None:

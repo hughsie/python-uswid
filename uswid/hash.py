@@ -49,6 +49,8 @@ class uSwidHash:
     @property
     def alg_id_for_display(self) -> Optional[str]:
         """Returns the value"""
+        if not self.alg_id:
+            return None
         return {
             uSwidHashAlg.SHA256: "SHA-256",
             uSwidHashAlg.SHA384: "SHA-384",

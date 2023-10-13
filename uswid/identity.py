@@ -94,6 +94,8 @@ class uSwidIdentity:
     @property
     def generator_href(self) -> Optional[str]:
         """Returns the generator URL, if known"""
+        if not self.generator:
+            return None
         return {
             "goswid": "https://github.com/9elements/goswid",
             "LVFS": "https://fwupd.org/",
