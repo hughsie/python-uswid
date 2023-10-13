@@ -47,6 +47,7 @@ from uswid.format_pkgconfig import uSwidFormatPkgconfig
 from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
+from uswid.format_spdx import uSwidFormatSpdx
 
 
 def _adjust_SectionSize(sz, align):
@@ -175,11 +176,14 @@ class SwidFormat(IntEnum):
     PKG_CONFIG = 6
     COSWID = 7
     CYCLONE_DX = 8
+    SPDX = 9
 
 
 def _detect_format(filepath: str) -> SwidFormat:
     if os.path.basename(filepath).endswith("bom.json"):
         return SwidFormat.CYCLONE_DX
+    if os.path.basename(filepath).endswith("spdx.json"):
+        return SwidFormat.SPDX
     ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
     if ext in ["exe", "efi", "o"]:
         return SwidFormat.PE
@@ -211,6 +215,8 @@ def _type_for_fmt(
         return uSwidFormatSwid()
     if fmt == SwidFormat.CYCLONE_DX:
         return uSwidFormatCycloneDX()
+    if fmt == SwidFormat.SPDX:
+        return uSwidFormatSpdx()
     if fmt == SwidFormat.PKG_CONFIG:
         return uSwidFormatPkgconfig(filepath=filepath)
     if fmt == SwidFormat.USWID:
@@ -418,6 +424,7 @@ def main():
                 SwidFormat.XML,
                 SwidFormat.USWID,
                 SwidFormat.CYCLONE_DX,
+                SwidFormat.SPDX,
             ]:
                 base = _type_for_fmt(fmt, args)
                 if not base:

@@ -56,6 +56,7 @@ setup(
             "format_goswid.pyi",
             "format_ini.pyi",
             "format.pyi",
+            "format_spdx.pyi",
             "format_swid.pyi",
             "format_uswid.pyi",
             "hash.pyi",
