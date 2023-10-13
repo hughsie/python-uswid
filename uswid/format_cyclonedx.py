@@ -137,13 +137,14 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component["hashes"] = hashes
 
         # annotations
-        annotations = []
+        annotations: List[Dict[str, Any]] = []
         for evidence in identity.evidences:
-            annotations = {"subjects": [identity.tag_id], "annotator": "component"}
+            annotation = {"subjects": [identity.tag_id], "annotator": "component"}
             if evidence.date:
-                annotations["timestamp"] = evidence.date.isoformat()
+                annotation["timestamp"] = evidence.date.isoformat()
             if evidence.device_id:
-                annotations["text"] = evidence.device_id
+                annotation["text"] = evidence.device_id
+            annotations.append(annotation)
         if annotations:
             component["annotations"] = annotations
 
