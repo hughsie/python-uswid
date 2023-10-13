@@ -82,8 +82,8 @@ class uSwidFormatIni(uSwidFormatBase):
             data["name"] = payload.name
         if payload.size:
             data["size"] = payload.size
-        if payload.hash:
-            data["hash"] = payload.hash[0].value
+        if payload.hashes:
+            data["hash"] = payload.hashes[0].value
         return data
 
     def _save_evidence(self, evidence: uSwidEvidence) -> Dict[str, Any]:

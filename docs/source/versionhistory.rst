@@ -8,6 +8,7 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 **0.4.6** (2023-XX-XX)
 
  - Add SPDX export format.
+ - Fix the INI payload export to include the hashes.
 
 **0.4.5** (2023-10-09)
 
