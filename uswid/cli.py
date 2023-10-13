@@ -36,7 +36,6 @@ from uswid import (
     uSwidContainer,
     uSwidEntity,
     uSwidEntityRole,
-    uSwidEvidence,
     uSwidIdentity,
     uSwidVersionScheme,
 )

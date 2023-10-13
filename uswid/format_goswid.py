@@ -75,7 +75,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
         """Exports a uSwidLink goSWID section"""
 
-        node: Dict[str, str] = {}
+        node: Dict[str, Any] = {}
         if payload.name:
             node["fs-name"] = payload.name
         if payload.size:
