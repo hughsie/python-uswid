@@ -9,6 +9,7 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
  - Add SPDX export format.
  - Fix the INI payload export to include the hashes.
+ - Enforce the payload size is integer in more places.
 
 **0.4.5** (2023-10-09)
 
