@@ -5,9 +5,9 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
-**0.4.6** (2023-XX-XX)
+**0.4.6** (2023-10-15)
 
- - Add SPDX export format.
+ - Add SPDX export format (Richard Hughes)
  - Fix the INI payload export to include the hashes (Richard Hughes)
  - Enforce the payload size is integer in more places (Richard Hughes)
  - Correctly export the goSWID annotations (Richard Hughes)

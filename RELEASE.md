@@ -2,7 +2,8 @@
 
 1. Write NEWS entries in the same format as usual.
 
-git shortlog 0.4.5.. | grep -i -v trivial | grep -v Merge > NEWS.new
+    git shortlog 0.4.5.. | grep -i -v trivial | grep -v Merge > NEWS.new
+    # add entries to ./docs/source/versionhistory.rst
 
 Commit changes to git:
 
