@@ -19,5 +19,9 @@ Table of contents
    Payload <payload>
    Hash <hash>
    Evidence <evidence>
+   VEX Document <vex_document>
+   VEX Product <vex_product>
+   VEX Statement <vex_statement>
+   PURL <purl>
 
 * :ref:`API reference <modindex>`

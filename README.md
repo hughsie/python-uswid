@@ -235,6 +235,23 @@ Each generated component includes:
  * A semantic version of size 3-8 chars
  * An entity from a random selection of 10 entities
 
+# VEX
+
+The `uswid` binary can load VEX data from [OpenVEX](https://github.com/openvex) and [CSAF-2.0](https://docs.oasis-open.org/csaf/csaf/v2.0/csaf-v2.0.html) files, and will generate a report for the end-user.
+
+For example:
+
+    uswid --load examples/intel-ucode.ini examples/intel-ucode.vex --verbose
+    Loaded:
+    uSwidIdentity(tag_id="bcbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="0",software_name="MCU 06-03-02",software_version="20230808"):
+     - uSwidEntity(regid="com.intel",name="Intel Corporation",roles=TAG_CREATOR,SOFTWARE_CREATOR)
+     - uSwidPayload(name="intel-ucode-06-03-02",size=12)
+     - uSwidHash(alg_id=SHA256,value="a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447")
+     - uSwidEvidence(date="2023-09-15 12:34:56",device_id=None)
+     - uSwidVexStatement(vulnerability_name="CVE-2022-40982",status="uSwidVexStatementStatus.NOT_AFFECTED",justification="uSwidVexStatementJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH",impact_statement="These processors do not use GDS and are not vulnerable to this CVE."):
+       - uSwidVexProduct(tag_ids="[uSwidPurl("pkg:swid/bcbd84ff-9898-4922-8ade-dd4bbe2e40ba")]"):
+         - uSwidHash(alg_id=SHA256,value="a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447")
+
 # Installing
 
 This library and helper binary can be installed using `pip`:

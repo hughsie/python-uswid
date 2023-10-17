@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="firmware">
+  <id>com.dell.uefixxxxafc2.firmware</id>
+  <name>XPS 13 9530</name>
+  <summary>Firmware for the Dell XPS 13 9530</summary>
+  <description>
+    <p>Updating the system firmware improves performance.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">ffffafc2-93ea-46b3-bb43-d0e9494bf1c4</firmware>
+  </provides>
+  <url type="homepage">http://support.dell.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <categories>
+    <category>X-System</category>
+  </categories>
+  <custom>
+    <value key="LVFS::VersionFormat">quad</value>
+    <value key="LVFS::VersionFormat">dell-bios</value>
+    <value key="LVFS::UpdateProtocol">org.uefi.capsule</value>
+  </custom>
+  <releases>
+    <release version="0x10700" date="2023-08-14" urgency="critical">
+      <checksum filename="dell-xps13.bin" target="content"/>
+      <description>
+        <p>This stable release fixes the following issues:</p>
+        <ul>
+          <li>Fixed the issue where the system can boot on the bootable key when the BIOS admin password is set.</li>
+          <li>Fixed the issue where you cannot resume the system from Modern Standby when the system is connected to a dock.</li>
+        </ul>
+      </description>
+      <issues>
+        <issue type="dell">DSA-2023-152</issue>
+      </issues>
+    </release>
+  </releases>
+</component>
