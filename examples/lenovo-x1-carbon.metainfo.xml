@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="firmware">
+  <id>com.lenovo.ThinkPadN3AETXXX.firmware</id>
+  <name>ThinkPad X1 Carbon 10th</name>
+  <summary>System Firmware for Lenovo ThinkPad X1 Carbon 10th</summary>
+  <description>
+    <p>Lenovo Thinkpad X1 Carbon 10th / X1 Yoga 7th System Firmware</p>
+  </description>
+  <provides>
+    <firmware type="flashed">ffffff45-4685-4019-b7e3-dba67b96ef7d</firmware>
+  </provides>
+  <url type="homepage">http://www.lenovo.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <categories>
+    <category>X-System</category>
+  </categories>
+  <custom>
+    <value key="LVFS::VersionFormat">triplet</value>
+    <value key="LVFS::UpdateProtocol">org.uefi.capsule</value>
+  </custom>
+  <releases>
+    <release version="0.1.42" date="2023-09-22" urgency="high" tag="N3AET77W">
+      <checksum filename="lenovo-x1-carbon.bin" target="content"/>
+      <description>
+        <p>This is not a suitable description.</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="1.1.3">org.freedesktop.fwupd</id>
+  </requires>
+</component>

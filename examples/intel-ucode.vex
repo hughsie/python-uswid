@@ -1,0 +1,28 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://intel.com/docs/public/vex-gds-for-bcbd84ff-9898-4922-8ade-dd4bbe2e40ba",
+  "author": "psirt@intel.com",
+  "role": "PSIRT Team",
+  "timestamp": "2023-01-16T19:07:16.853479631-06:00",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2022-40982",
+        "name": "CVE-2022-40982",
+        "description": "GDS (Downfall)"
+      },
+      "products": [
+        {
+          "@id": "pkg:swid/bcbd84ff-9898-4922-8ade-dd4bbe2e40ba",
+          "hashes":{
+            "sha-256": "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+          }
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "These processors do not use GDS and are not vulnerable to this CVE."
+    }
+  ]
+}

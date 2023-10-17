@@ -1,0 +1,19 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://hughsie.com/public/vex-cve-2018-3659",
+  "author": "Richard Hughes",
+  "role": "Security Researcher",
+  "timestamp": "2023-01-08T18:02:03-06:00",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2018-3659"
+      },
+      "products": [
+        {"@id": "pkg:dca533ab-2c1f-4327-9b2b-09ac19533404@15.35.2039"}
+      ],
+      "status": "affected"
+    }
+  ]
+}

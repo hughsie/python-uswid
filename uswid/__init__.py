@@ -29,3 +29,10 @@ from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 from uswid.format_spdx import uSwidFormatSpdx
+from uswid.vex_document import uSwidVexDocument
+from uswid.vex_product import uSwidVexProduct
+from uswid.vex_statement import (
+    uSwidVexStatement,
+    uSwidVexStatementJustification,
+    uSwidVexStatementStatus,
+)

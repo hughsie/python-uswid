@@ -28,7 +28,7 @@ class uSwidHashAlg(IntEnum):
                 "SHA256": uSwidHashAlg.SHA256,
                 "SHA384": uSwidHashAlg.SHA384,
                 "SHA512": uSwidHashAlg.SHA512,
-            }[alg_id]
+            }[alg_id.replace("-", "").upper()]
         )
 
 

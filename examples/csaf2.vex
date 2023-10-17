@@ -1,0 +1,103 @@
+{
+  "document": {
+    "most fields skipped for brevity": "",
+    "tracking": {
+      "id": "cisco-sa-20180328-smi2",
+      "status": "final",
+      "version": "3.0.0",
+      "revision_history": [
+        { "other versions skipped for brevity":""},
+        {
+          "number":"3.0.0",
+          "date":"2018-04-17T15:08:41Z",
+          "summary": "Updated IOS Software Checker with products found to be vulnerable."
+        }
+      ],
+      "initial_release_date": "2018-03-28T16:00:00Z",
+      "current_release_date": "2018-03-28T16:00:00Z",
+      "generator": {
+        "engine": {
+          "name": "TVCE"
+        }
+      }
+    }
+  },
+  "product_tree": {
+    "name": "Cisco",
+    "category": "vendor",
+    "branches": [
+      {
+        "name": "IOS",
+        "category": "product_name",
+        "branches": [
+          {
+            "name": "12.2EY",
+            "category": "product_version",
+            "branches": [
+              {
+                "name": "12.2(55)EY",
+                "category": "service_pack",
+                "product": {
+                  "product_id": "CVRFPID-103559",
+                  "name": "Cisco IOS 12.2EY 12.2(55)EY"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "title": "Cisco IOS and IOS XE Software Smart Install Remote Code Execution Vulnerability",
+      "id": {
+        "system_name": "Cisco Bug ID",
+        "text": "CSCvg76186"
+      },
+      "notes": [
+        {
+          "title": "Summary",
+          "category": "summary",
+          "text": "A vulnerability in the Smart Install feature of Cisco IOS Software and Cisco IOS XE Software could allow an unauthenticated, remote attacker to trigger a reload of an affected device, resulting in a denial of service (DoS) condition, or to execute arbitrary code on an affected device.\n\n\n\nThe vulnerability is due to improper validation of packet data. An attacker could exploit this vulnerability by sending a crafted Smart Install message to an affected device on TCP port 4786. A successful exploit could allow the attacker to cause a buffer overflow on the affected device, which could have the following impacts:\n\n\n    Triggering a reload of the device\n    Allowing the attacker to execute arbitrary code on the device\n    Causing an indefinite loop on the affected device that triggers a watchdog crash"
+        },
+        {
+          "title": "Cisco Bug IDs",
+          "category": "other",
+          "text": "CSCvg76186"
+        }
+      ],
+      "cve": "CVE-2018-0171",
+      "product_status": {
+        "known_affected": [
+          "CVRFPID-103559"
+        ]
+      },
+      "scores": [
+        {
+          "products": [
+            "CVRFPID-103559"
+          ],
+          "cvss_v3": {
+            "version": "3.0",
+            "baseScore": 9.8,
+            "baseSeverity": "CRITICAL",
+            "vectorString": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+          }
+        }
+      ],
+      "remediations": [
+        {
+          "details": "There are no workarounds that address this vulnerability for customers who require the use of Cisco Smart Install. For customers not requiring Cisco Smart Install, the feature can be disabled with the no vstack command. In software releases that are associated with Cisco Bug ID CSCvd36820 [\"https://bst.cloudapps.cisco.com/bugsearch/bug/CSCvd36820\"], Cisco Smart Install will auto-disable if not in use.\n\nAdministrators are encouraged to consult the informational security advisory on Cisco Smart Install Protocol Misuse [\"https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20170214-smi\"] and the Smart Install Configuration Guide [\"http://www.cisco.com/c/en/us/td/docs/switches/lan/smart_install/configuration/guide/smart_install/concepts.html#23355\"].",
+          "category": "workaround"
+        }
+      ],
+      "references": [
+        {
+          "url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20180328-smi2",
+          "summary": "Cisco IOS and IOS XE Software Smart Install Remote Code Execution Vulnerability"
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,9 @@ from typing import List, Optional, Generator, Dict
 from .identity import uSwidIdentity
 from .errors import NotSupportedError
 
+from .vex_document import uSwidVexDocument
+from .vex_statement import uSwidVexStatement
+
 
 class uSwidContainer:
     """Represents a uSWID container"""
@@ -19,6 +22,7 @@ class uSwidContainer:
     def __init__(self, identities: Optional[List[uSwidIdentity]] = None) -> None:
         """Initializes uSwidContainer"""
         self._identities: List[uSwidIdentity] = []
+        self.vex_documents: List[uSwidVexDocument] = []
         if identities:
             for identity in identities:
                 self.append(identity)
@@ -42,9 +46,39 @@ class uSwidContainer:
                 if link.href and link.href.startswith("swid:"):
                     link.identity = data.get(link.href[5:])
 
+        # add VEX statements to identities
+        vex_by_hash: Dict[str:uSwidVexStatement] = {}
+        vex_by_tag_version: Dict[str:uSwidVexStatement] = {}
+        for vex_document in self.vex_documents:
+            for vex_statement in vex_document.statements:
+                for vex_product in vex_statement.products:
+                    for vex_hash in vex_product.hashes:
+                        vex_by_hash[vex_hash.value] = vex_statement
+                    for vex_purl in vex_product.tag_ids:
+                        vex_by_tag_version[
+                            f"{vex_purl.name}:{vex_purl.version}"
+                        ] = vex_statement
+        for identity in self._identities:
+            try:
+                identity.add_vex_statement(
+                    vex_by_tag_version[f"{identity.tag_id}:{identity.software_version}"]
+                )
+            except KeyError:
+                pass
+            for payload in identity.payloads:
+                for ihash in payload.hashes:
+                    try:
+                        identity.add_vex_statement(vex_by_hash[ihash.value])
+                    except KeyError:
+                        pass
+
     def append(self, identity: uSwidIdentity) -> None:
         """Add an identity to the container"""
         self._identities.append(identity)
+
+    def add_vex_document(self, vex_document: uSwidVexDocument) -> None:
+        """Add a VEX document"""
+        self.vex_documents.append(vex_document)
 
     def merge(self, identity: uSwidIdentity) -> Optional[uSwidIdentity]:
         """Merges one identity into another, returning None if the ``tag_id`` does not exist"""

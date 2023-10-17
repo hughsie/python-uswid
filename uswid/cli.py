@@ -16,6 +16,7 @@ import argparse
 import tempfile
 import subprocess
 import socket
+import json
 
 import os
 import sys
@@ -50,6 +51,7 @@ from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 from uswid.format_spdx import uSwidFormatSpdx
+from uswid.vex_document import uSwidVexDocument
 
 
 def _adjust_SectionSize(sz, align):
@@ -179,6 +181,7 @@ class SwidFormat(IntEnum):
     COSWID = 7
     CYCLONE_DX = 8
     SPDX = 9
+    VEX = 10
 
 
 def _detect_format(filepath: str) -> SwidFormat:
@@ -201,6 +204,8 @@ def _detect_format(filepath: str) -> SwidFormat:
         return SwidFormat.JSON
     if ext == "pc":
         return SwidFormat.PKG_CONFIG
+    if ext == "vex":
+        return SwidFormat.VEX
     return SwidFormat.UNKNOWN
 
 
@@ -375,6 +380,11 @@ def main():
                                 filepath, identity_new.tag_id
                             )
                         )
+            elif fmt == SwidFormat.VEX:
+                with open(filepath, "rb") as f:
+                    container.add_vex_document(
+                        uSwidVexDocument(json.loads(f.read().decode()))
+                    )
             elif fmt in [
                 SwidFormat.INI,
                 SwidFormat.JSON,

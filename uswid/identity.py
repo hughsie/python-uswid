@@ -18,6 +18,7 @@ from .link import uSwidLink, uSwidLinkRel
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
 from .problem import uSwidProblem
+from .vex_statement import uSwidVexStatement
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -101,6 +102,7 @@ class uSwidIdentity:
         """List of evidences"""
         self._entities: Dict[str, uSwidEntity] = {}
         self._links: Dict[str, uSwidLink] = {}
+        self.vex_statements: List[uSwidVexStatement] = []
 
     @property
     def software_name(self) -> Optional[str]:
@@ -252,6 +254,12 @@ class uSwidIdentity:
             problems += evidence.problems()
         return problems
 
+    def add_vex_statement(self, vex_statement: uSwidVexStatement) -> None:
+        """Adds a relevant VEX statement tp the identity"""
+        if vex_statement in self.vex_statements:
+            return
+        self.vex_statements.append(vex_statement)
+
     def merge(self, identity_new: "uSwidIdentity") -> None:
         """Add new things from the new identity into the current one"""
         if identity_new.tag_version:
@@ -343,5 +351,9 @@ class uSwidIdentity:
         if self.evidences:
             tmp += "\n{}".format(
                 "\n".join([f" - {str(e)}" for e in self.evidences]),
+            )
+        if self.vex_statements:
+            tmp += "\n{}".format(
+                "\n".join([f" - {str(e)}" for e in self.vex_statements]),
             )
         return tmp

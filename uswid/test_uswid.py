@@ -30,6 +30,8 @@ from .format_swid import uSwidFormatSwid
 from .format_cyclonedx import uSwidFormatCycloneDX
 from .format_spdx import uSwidFormatSpdx
 
+from .purl import uSwidPurl
+
 
 class TestSwidEntity(unittest.TestCase):
     """Tescases for identities, entities, links, evidence and payloads"""
@@ -349,6 +351,40 @@ rel = see-also
         tmp = uSwidFormatSpdx().save(uSwidContainer([identity])).decode()
         assert "SPDX" in tmp
         assert "uSWID" in tmp
+
+    def test_parse(self):
+        """Unit tests for parsing PURL text"""
+        purl = uSwidPurl("pkg:protocol/namespace/name@version?qualifiers#subpath")
+        self.assertEqual(purl.scheme, "pkg")
+        self.assertEqual(purl.protocol, "protocol")
+        self.assertEqual(purl.namespace, "namespace")
+        self.assertEqual(purl.name, "name")
+        self.assertEqual(purl.version, "version")
+        self.assertEqual(purl.qualifiers, "qualifiers")
+        self.assertEqual(purl.subpath, "subpath")
+
+        purl = uSwidPurl("pkg:protocol/name")
+        self.assertEqual(purl.scheme, "pkg")
+        self.assertEqual(purl.protocol, "protocol")
+        self.assertEqual(purl.name, "name")
+
+        purl = uSwidPurl("pkg:protocol/name@version")
+        self.assertEqual(purl.scheme, "pkg")
+        self.assertEqual(purl.protocol, "protocol")
+        self.assertEqual(purl.namespace, None)
+        self.assertEqual(purl.name, "name")
+        self.assertEqual(purl.version, "version")
+        self.assertEqual(purl.qualifiers, None)
+        self.assertEqual(purl.subpath, None)
+
+        purl = uSwidPurl("pkg:bcbd84ff-9898-4922-8ade-dd4bbe2e40ba@20230808")
+        self.assertEqual(purl.scheme, "pkg")
+        self.assertEqual(purl.protocol, None)
+        self.assertEqual(purl.namespace, None)
+        self.assertEqual(purl.name, "bcbd84ff-9898-4922-8ade-dd4bbe2e40ba")
+        self.assertEqual(purl.version, "20230808")
+        self.assertEqual(purl.qualifiers, None)
+        self.assertEqual(purl.subpath, None)
 
 
 if __name__ == "__main__":
