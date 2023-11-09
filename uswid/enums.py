@@ -82,4 +82,34 @@ class uSwidVersionScheme(IntEnum):
 
 USWID_HEADER_MAGIC = b"\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
 
+# deprecated
 USWID_HEADER_FLAG_COMPRESSED = 0x01
+
+
+class uSwidHeaderFlags(IntEnum):
+    """The header flags type"""
+
+    NONE = 0x00
+    COMPRESSED = 0x01
+
+
+class uSwidPayloadCompression(IntEnum):
+    """The payload compression type"""
+
+    NONE = 0
+    ZLIB = 1
+    LZMA = 2
+
+    def __str__(self):
+        return self.name.lower()
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """Used only for argparse"""
+        try:
+            return uSwidPayloadCompression[s.upper()]
+        except KeyError:
+            return s

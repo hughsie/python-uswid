@@ -12,7 +12,13 @@ from uswid.payload import uSwidPayload
 from uswid.evidence import uSwidEvidence
 from uswid.identity import uSwidIdentity
 from uswid.entity import uSwidEntity, uSwidEntityRole
-from uswid.enums import uSwidGlobalMap, uSwidVersionScheme, USWID_HEADER_MAGIC
+from uswid.enums import (
+    uSwidGlobalMap,
+    uSwidVersionScheme,
+    uSwidHeaderFlags,
+    uSwidPayloadCompression,
+    USWID_HEADER_MAGIC,
+)
 from uswid.errors import NotSupportedError
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_goswid import uSwidFormatGoswid

@@ -5,6 +5,10 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.4.7** (???)
+
+ - Add support for LZMA payload compression (Richard Hughes)
+
 **0.4.6** (2023-10-15)
 
  - Add SPDX export format (Richard Hughes)
