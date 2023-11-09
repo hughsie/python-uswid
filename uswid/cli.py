@@ -38,6 +38,7 @@ from uswid import (
     uSwidEntityRole,
     uSwidIdentity,
     uSwidVersionScheme,
+    uSwidPayloadCompression,
 )
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_ini import uSwidFormatIni
@@ -219,7 +220,7 @@ def _type_for_fmt(
     if fmt == SwidFormat.PKG_CONFIG:
         return uSwidFormatPkgconfig(filepath=filepath)
     if fmt == SwidFormat.USWID:
-        return uSwidFormatUswid(compress=args.compress)  # type: ignore
+        return uSwidFormatUswid(compression=args.compression)  # type: ignore
     return None
 
 
@@ -260,6 +261,14 @@ def main():
         dest="compress",
         default=False,
         action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--compression",
+        type=uSwidPayloadCompression.argparse,
+        choices=list(uSwidPayloadCompression),
+        dest="compression",
+        default=uSwidPayloadCompression.NONE,
         help="Compress uSWID containers",
     )
     parser.add_argument(
@@ -281,6 +290,11 @@ def main():
     if not load_filepaths:
         load_filepaths = []
     save_filepaths = args.save if args.save else []
+
+    # handle deprecated --compress
+    if args.compress:
+        print("WARNING: --compress is deprecated, please use --compression instead")
+        args.compression = uSwidPayloadCompression.ZLIB
 
     # deprecated arguments
     if args.binfile:

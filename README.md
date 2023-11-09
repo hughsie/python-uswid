@@ -62,15 +62,19 @@ If we are asked to process lots of different kinds of firmware, we do not always
 With this the SBoM builder tool does not know *where* the coSWID data starts in the blob, or *how many* coSWID sections there might be.
 If we include a small header with a 16 byte *magic* identifier then we can search the image to discover the offsets to read the coSWID blobs.
 
-The 24 byte uSWID header in full:
+The 25 byte uSWID header in full:
 
     uint8_t[16]   magic, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
-    uint8_t       header version, typically 0x02
-    uint16_t      little-endian header length, typically 0x17
+    uint8_t       header version, typically 0x03
+    uint16_t      little-endian header length, typically 0x19
     uint32_t      little-endian payload length
     uint8_t       flags
                     0x00: no flags set
-                    0x01: zlib compressed payload
+                    0x01: compressed payload
+    uint8_t       payload compression type
+                    0x00: none
+                    0x01: zlib
+                    0x02: lzma
 
 The uSWID header is automatically added when the file extension is `.uswid`, e.g.
 

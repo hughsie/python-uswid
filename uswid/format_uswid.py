@@ -11,8 +11,9 @@ from typing import Optional
 
 import struct
 import zlib
+import lzma
 
-from .enums import USWID_HEADER_MAGIC, USWID_HEADER_FLAG_COMPRESSED
+from .enums import USWID_HEADER_MAGIC, uSwidHeaderFlags, uSwidPayloadCompression
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
@@ -23,10 +24,21 @@ from .format_coswid import uSwidFormatCoswid
 class uSwidFormatUswid(uSwidFormatBase):
     """uSWID file"""
 
-    def __init__(self, compress: bool = True) -> None:
+    def __init__(
+        self,
+        compress: bool = True,
+        compression: uSwidPayloadCompression = uSwidPayloadCompression.NONE,
+    ) -> None:
         """Initializes uSwidFormatUswid"""
         uSwidFormatBase.__init__(self)
-        self.compress: bool = compress
+        self.compression: uSwidPayloadCompression = compression
+        if self.compression == uSwidPayloadCompression.NONE and compress:
+            self.compression = uSwidPayloadCompression.ZLIB
+
+    @property
+    def compress(self) -> bool:
+        """Provided for backward compatibility only"""
+        return self.compression != uSwidPayloadCompression.NONE
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         container = uSwidContainer()
@@ -50,8 +62,24 @@ class uSwidFormatUswid(uSwidFormatBase):
         for identity in container:
             blob += uSwidFormatCoswid()._save_identity(identity)
 
+        # v3 header specifies the compression type
+        if self.compression == uSwidPayloadCompression.LZMA:
+            payload = lzma.compress(blob, preset=9)
+            return (
+                struct.pack(
+                    "<16sBHIBB",
+                    USWID_HEADER_MAGIC,
+                    3,  # version
+                    25,  # hdrsz
+                    len(payload),
+                    uSwidHeaderFlags.COMPRESSED,
+                    uSwidPayloadCompression.LZMA,
+                )
+                + payload
+            )
+
         # v2 header specifies the flags
-        if self.compress:
+        if self.compression == uSwidPayloadCompression.ZLIB:
             payload = zlib.compress(blob)
             return (
                 struct.pack(
@@ -60,7 +88,7 @@ class uSwidFormatUswid(uSwidFormatBase):
                     2,  # version
                     24,  # hdrsz
                     len(payload),
-                    USWID_HEADER_FLAG_COMPRESSED,  # flags
+                    uSwidHeaderFlags.COMPRESSED,  # flags
                 )
                 + payload
             )
@@ -68,11 +96,12 @@ class uSwidFormatUswid(uSwidFormatBase):
         # old format
         return (
             struct.pack(
-                "<16sBHI",
+                "<16sBHIB",
                 USWID_HEADER_MAGIC,
-                1,  # version
-                23,  # hdrsz
+                2,  # version
+                24,  # hdrsz
                 len(blob),
+                uSwidHeaderFlags.NONE,
             )
             + blob
         )
@@ -90,13 +119,32 @@ class uSwidFormatUswid(uSwidFormatBase):
 
         # load flags and possibly decompress payload
         offset += struct.calcsize(_USWID_HEADER_FMT)
-        if hdrver >= 2:
-            (flags,) = struct.unpack_from("<B", blob, len(USWID_HEADER_MAGIC) + offset)
-            if flags & USWID_HEADER_FLAG_COMPRESSED:
-                payload = zlib.decompress(payload)
-                self.compress = True
+        if hdrver >= 3:
+            (
+                flags,
+                compression,
+            ) = struct.unpack_from("<BB", blob, len(USWID_HEADER_MAGIC) + offset)
+            if flags & uSwidHeaderFlags.COMPRESSED:
+                if compression in uSwidPayloadCompression:
+                    self.compression = compression
+                else:
+                    raise NotSupportedError(
+                        f"file has unknown compression type {compression}"
+                    )
             else:
-                self.compress = False
+                self.compression = uSwidPayloadCompression.NONE
+        elif hdrver == 2:
+            (flags,) = struct.unpack_from("<B", blob, len(USWID_HEADER_MAGIC) + offset)
+            if flags & uSwidHeaderFlags.COMPRESSED:
+                self.compression = uSwidPayloadCompression.ZLIB
+            else:
+                self.compression = uSwidPayloadCompression.NONE
+
+        # decompress
+        if self.compression == uSwidPayloadCompression.ZLIB:
+            payload = zlib.decompress(payload)
+        elif self.compression == uSwidPayloadCompression.LZMA:
+            payload = lzma.decompress(payload)
 
         # read each CBOR blob
         payload_offset = 0
