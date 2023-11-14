@@ -9,13 +9,15 @@
 
 from typing import Dict, Optional, List
 import uuid
+import fnmatch
 
 from .errors import NotSupportedError
 from .enums import uSwidVersionScheme
-from .entity import uSwidEntity
-from .link import uSwidLink
+from .entity import uSwidEntity, uSwidEntityRole
+from .link import uSwidLink, uSwidLinkRel
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
+from .problem import uSwidProblem
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -31,6 +33,27 @@ _VERSION_SCHEME_FROM_STRING = {
     "decimal": uSwidVersionScheme.DECIMAL,
     "semver": uSwidVersionScheme.SEMVER,
 }
+
+
+def _fix_appstream_id(appstream_id: str) -> str:
+
+    if not appstream_id:
+        return None
+
+    # remove protocol prefix
+    if appstream_id.startswith("http://") or appstream_id.startswith("https://"):
+        appstream_id = appstream_id.split("/")[2]
+
+        # remove www
+        if appstream_id.startswith("www."):
+            appstream_id = appstream_id[4:]
+
+        # make reverse DNS-style
+        dns_prefix: str = appstream_id.split(".")[0]
+        if dns_prefix in ["com", "org", "tw", "uk", "eu"]:
+            appstream_id = ".".join(reversed(appstream_id.split(".")))
+
+    return appstream_id
 
 
 class uSwidIdentity:
@@ -117,6 +140,90 @@ class uSwidIdentity:
                 self._tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, tag_id[5:]))
         else:
             self._tag_id = tag_id
+
+    def problems(self) -> List[uSwidProblem]:
+        """Checks the identity for common problems"""
+
+        problems: List[uSwidProblem] = []
+
+        if self._tag_id:
+            if fnmatch.fnmatch(self.tag_id, "????????_????_????_????_????????????"):
+                problems += [
+                    uSwidProblem(
+                        "identity",
+                        f"Tag GUID {self.tag_id} should use dashes",
+                        since="0.4.7",
+                    )
+                ]
+        if not self.software_name:
+            problems += [uSwidProblem("identity", "No software name", since="0.4.7")]
+        if not self.software_version:
+            problems += [uSwidProblem("identity", "No software version", since="0.4.7")]
+        if not self.version_scheme:
+            problems += [uSwidProblem("identity", "No version scheme", since="0.4.7")]
+
+        # should be reverse-DNS name
+        if self.persistent_id and self.persistent_id != _fix_appstream_id(
+            self.persistent_id
+        ):
+            problems += [
+                uSwidProblem(
+                    "identity",
+                    "Invalid persistent_id, should be reverse-DNS "
+                    f"name {_fix_appstream_id(self.persistent_id)}",
+                    since="0.4.7",
+                )
+            ]
+
+        # entity
+        entity_by_role: Dict[uSwidEntityRole:uSwidEntity] = {}
+        for entity in self.entities:
+            for role in entity.roles:
+                entity_by_role[role] = entity
+            problems += entity.problems()
+        if uSwidEntityRole.TAG_CREATOR not in entity_by_role:
+            problems += [
+                uSwidProblem("entity", "No entity marked as TagCreator", since="0.4.7")
+            ]
+        if uSwidEntityRole.SOFTWARE_CREATOR not in entity_by_role:
+            problems += [
+                uSwidProblem(
+                    "entity", "No entity marked as SoftwareCreator", since="0.4.7"
+                )
+            ]
+
+        # link
+        link_by_rel: Dict[uSwidLinkRel:uSwidLink] = {}
+        for link in self.links:
+            link_by_rel[link.rel] = link
+            problems += link.problems()
+        if uSwidLinkRel.LICENSE not in link_by_rel:
+            problems += [uSwidProblem("link", "Has no LICENSE", since="0.4.7")]
+        if self.colloquial_version and uSwidLinkRel.COMPILER not in link_by_rel:
+            problems += [uSwidProblem("link", "Has no COMPILER", since="0.4.7")]
+        if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
+            problems += [
+                uSwidProblem(
+                    "identity",
+                    "Has no colloquial_version (source code file hash)",
+                    since="0.4.7",
+                )
+            ]
+        if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
+            problems += [
+                uSwidProblem(
+                    "identity", "Has no edition (source code tree hash)", since="0.4.7"
+                )
+            ]
+
+        # payload
+        for payload in self.payloads:
+            problems += payload.problems()
+
+        # evidence
+        for evidence in self.evidences:
+            problems += evidence.problems()
+        return problems
 
     def merge(self, identity_new: "uSwidIdentity") -> None:
         """Add new things from the new identity into the current one"""

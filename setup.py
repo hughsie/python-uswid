@@ -64,6 +64,7 @@ setup(
             "evidence.pyi",
             "identity.pyi",
             "link.pyi",
+            "problem.pyi",
             "__init__.pyi",
         ]
     },

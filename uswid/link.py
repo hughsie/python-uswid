@@ -10,7 +10,9 @@
 from enum import IntEnum
 import uuid
 
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
+
+from .problem import uSwidProblem
 
 if TYPE_CHECKING:
     from .identity import uSwidIdentity
@@ -85,6 +87,16 @@ class uSwidLink:
         if not self.href:
             return None
         return self.href.split("/")[-1].replace(".html", "")
+
+    def problems(self) -> List[uSwidProblem]:
+        """Checks the link for common problems"""
+
+        problems: List[uSwidProblem] = []
+        if not self.href:
+            problems += uSwidProblem("link", "No href", since="0.4.7")
+        if not self.rel:
+            problems += uSwidProblem("link", "No rel", since="0.4.7")
+        return problems
 
     def __repr__(self) -> str:
         return f'uSwidLink(rel="{self.rel or "none"}",href="{self.href}")'

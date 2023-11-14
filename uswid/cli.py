@@ -8,6 +8,7 @@
 # pylint: disable=wrong-import-position
 
 from enum import IntEnum
+from collections import defaultdict
 from random import choices, randrange
 from datetime import datetime
 from typing import Optional, Any, List
@@ -37,6 +38,7 @@ from uswid import (
     uSwidEntity,
     uSwidEntityRole,
     uSwidIdentity,
+    uSwidProblem,
     uSwidVersionScheme,
     uSwidPayloadCompression,
 )
@@ -279,6 +281,13 @@ def main():
         help="Generate plausible SWID entries",
     )
     parser.add_argument(
+        "--validate",
+        dest="validate",
+        default=False,
+        action="store_true",
+        help="Validate SWID entries",
+    )
+    parser.add_argument(
         "--verbose",
         dest="verbose",
         default=False,
@@ -398,6 +407,32 @@ def main():
     # depsolve any internal SWID links
     container.depsolve()
 
+    # validate
+    rc: int = 0
+    if args.validate:
+        problems_dict: dict[Optional[uSwidIdentity], List[uSwidProblem]] = defaultdict(
+            list
+        )
+        if len(container) == 0:
+            problems_dict[None] += uSwidProblem(
+                "all", "There are no defined identities", since="0.4.7"
+            )
+        for identity in container:
+            problems_dict[identity].extend(identity.problems())
+        if problems_dict:
+            rc = 2
+            print("Validation problems:")
+            for identity, problems in problems_dict.items():
+                for problem in problems:
+                    if identity:
+                        key = identity.tag_id
+                    else:
+                        key = "*"
+                    print(
+                        f"{key.ljust(40)} {problem.kind.rjust(10)}: "
+                        f"{problem.description} (uSWID >= v{problem.since})"
+                    )
+
     # add any missing evidence
     for identity in container:
         for evidence in identity.evidences:
@@ -454,7 +489,7 @@ def main():
             sys.exit(1)
 
     # success
-    sys.exit(0)
+    sys.exit(rc)
 
 
 if __name__ == "__main__":

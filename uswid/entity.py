@@ -10,6 +10,8 @@
 from enum import IntEnum
 from typing import List, Optional
 
+from .problem import uSwidProblem
+
 
 class uSwidEntityRole(IntEnum):
     """Represents an enumerated role"""
@@ -20,6 +22,26 @@ class uSwidEntityRole(IntEnum):
     DISTRIBUTOR = 4
     LICENSOR = 5
     MAINTAINER = 6
+
+
+def _fix_vendor_id(dns: str) -> str:
+
+    if not dns:
+        return None
+
+    # remove protocol prefix
+    if dns.startswith("http://") or dns.startswith("https://"):
+        dns = dns.split("/")[2]
+
+    # remove www
+    if dns.startswith("www."):
+        dns = dns[4:]
+
+    # make sure not reverse DNS-style
+    dns_prefix: str = dns.split(".")[0]
+    if dns_prefix in ["com", "org", "tw", "uk", "eu"]:
+        dns = ".".join(reversed(dns.split(".")))
+    return dns
 
 
 class uSwidEntity:
@@ -40,6 +62,29 @@ class uSwidEntity:
         """Role of the entity, e.g. ``uSwidEntityRole.MAINTAINER``"""
         if roles:
             self.roles.extend(roles)
+
+    def problems(self) -> List[uSwidProblem]:
+        """Checks the entity for common problems"""
+
+        problems: List[uSwidProblem] = []
+        if not self.name:
+            problems += [uSwidProblem("entity", "No name", since="0.4.7")]
+        if not self.regid:
+            problems += [uSwidProblem("entity", "No regid", since="0.4.7")]
+
+        # should be DNS name
+        elif self.regid != _fix_vendor_id(self.regid):
+            problems += [
+                uSwidProblem(
+                    "entity",
+                    f"Invalid regid {self.regid}, "
+                    f"should be DNS name {_fix_vendor_id(self.regid)}",
+                    since="0.4.7",
+                )
+            ]
+        if not self.roles:
+            problems += [uSwidProblem("entity", "No roles", since="0.4.7")]
+        return problems
 
     def __repr__(self) -> str:
         role_str = ",".join([role.name for role in self.roles])
