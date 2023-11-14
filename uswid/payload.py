@@ -12,6 +12,7 @@ from typing import Optional, List, Dict
 import hashlib
 
 from .hash import uSwidHash, uSwidHashAlg
+from .problem import uSwidProblem
 
 
 class uSwidPayload:
@@ -50,6 +51,24 @@ class uSwidPayload:
         m = hashlib.sha256()
         m.update(buf)
         self.add_hash(uSwidHash(alg_id=uSwidHashAlg.SHA256, value=m.hexdigest()))
+
+    def problems(self) -> List[uSwidProblem]:
+        """Checks the payload for common problems"""
+
+        problems: List[uSwidProblem] = []
+        if not self.size:
+            problems += [
+                uSwidProblem("payload", f"No size in {self.name}", since="0.4.7")
+            ]
+        if not self.hashes:
+            problems += [
+                uSwidProblem("payload", f"No hashes in {self.name}", since="0.4.7")
+            ]
+        if uSwidHashAlg.SHA256 not in self.hashes:
+            problems += [
+                uSwidProblem("payload", f"No SHA256 hash in {self.name}", since="0.4.7")
+            ]
+        return problems
 
     def __repr__(self) -> str:
         tmp = f'uSwidPayload(name="{self.name}",size={self.size})'

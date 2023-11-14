@@ -27,6 +27,9 @@ class uSwidContainer:
         for identity in self._identities:
             yield identity
 
+    def __len__(self) -> int:
+        return len(self._identities)
+
     def depsolve(self) -> None:
         """Sets Link.identity using internally-resolvable SWID entries"""
 
