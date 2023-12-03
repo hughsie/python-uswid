@@ -5,9 +5,10 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
-**0.4.7** (???)
+**0.4.7** (2023-12-03)
 
  - Add support for LZMA payload compression (Richard Hughes)
+ - Add --validate with some initial rules (Richard Hughes)
 
 **0.4.6** (2023-10-15)
 
