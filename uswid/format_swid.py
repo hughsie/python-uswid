@@ -57,10 +57,12 @@ class uSwidFormatSwid(uSwidFormatBase):
         return uSwidContainer([identity])
 
     def save(self, container: uSwidContainer) -> bytes:
-        identity = container.get_default()
-        if not identity:
-            raise NotSupportedError("cannot save when no default identity")
-        return self._save_identity(identity)
+        acc: bytes = b""
+        xml_declaration: bool = True
+        for identity in container:
+            acc += self._save_identity(identity, xml_declaration)
+            xml_declaration = False
+        return acc
 
     def _save_link(self, link: uSwidLink, root: ET.Element) -> None:
         """Exports a uSwidLink SWID section"""
@@ -123,7 +125,9 @@ class uSwidFormatSwid(uSwidFormatBase):
         if roles:
             node.set("role", " ".join(roles))
 
-    def _save_identity(self, identity: uSwidIdentity) -> bytes:
+    def _save_identity(
+        self, identity: uSwidIdentity, xml_declaration: bool = True
+    ) -> bytes:
         """Exports a uSwidIdentity SWID blob"""
 
         # identity
@@ -190,7 +194,7 @@ class uSwidFormatSwid(uSwidFormatBase):
 
         # success
         return ET.tostring(
-            root, encoding="utf-8", xml_declaration=True, pretty_print=True
+            root, encoding="utf-8", xml_declaration=xml_declaration, pretty_print=True
         )
 
     def _load_link(self, link: uSwidLink, node: ET.SubElement) -> None:
