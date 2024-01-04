@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 
 import io
 import uuid
@@ -40,6 +40,22 @@ def _set_one_or_more(
     if not value:
         return
     data[key] = value if len(value) > 1 else value[0]
+
+
+def _to_perhaps_hex_bytes(value: str) -> Union[bytes, str]:
+
+    try:
+        return bytes.fromhex(value)
+    except ValueError:
+        return value
+
+
+def _from_perhaps_hex_bytes(value: Union[bytes, str]) -> str:
+
+    try:
+        return value.hex()
+    except AttributeError:
+        return value
 
 
 class uSwidFormatCoswid(uSwidFormatBase):
@@ -164,9 +180,11 @@ class uSwidFormatCoswid(uSwidFormatBase):
         if identity.product:
             metadata[uSwidGlobalMap.PRODUCT] = identity.product
         if identity.edition:
-            metadata[uSwidGlobalMap.EDITION] = identity.edition
+            metadata[uSwidGlobalMap.EDITION] = _to_perhaps_hex_bytes(identity.edition)
         if identity.colloquial_version:
-            metadata[uSwidGlobalMap.COLLOQUIAL_VERSION] = identity.colloquial_version
+            metadata[uSwidGlobalMap.COLLOQUIAL_VERSION] = _to_perhaps_hex_bytes(
+                identity.colloquial_version
+            )
         if identity.persistent_id:
             metadata[uSwidGlobalMap.PERSISTENT_ID] = identity.persistent_id
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
@@ -357,9 +375,9 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 elif key == uSwidGlobalMap.PRODUCT:
                     identity.product = value
                 elif key == uSwidGlobalMap.EDITION:
-                    identity.edition = value
+                    identity.edition = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
-                    identity.colloquial_version = value
+                    identity.colloquial_version = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.PERSISTENT_ID:
                     identity.persistent_id = value
 
