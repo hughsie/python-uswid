@@ -39,7 +39,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
         root["SPDXID"] = "SPDXRef-DOCUMENT"
         root["spdxVersion"] = "SPDX-2.3"
         root["dataLicense"] = "CC0-1.0"
-        root["documentNamespace"] = "urn:uuid:{}".format(str(uuid.uuid4()))
+        root["documentNamespace"] = f"urn:uuid:{str(uuid.uuid4())}"
         # root["name"] = "uSWID SBoM")
         root["name"] = "NOASSERTION"
 

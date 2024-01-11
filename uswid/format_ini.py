@@ -175,7 +175,7 @@ class uSwidFormatIni(uSwidFormatBase):
             elif key == "rel":
                 link.rel = value
             else:
-                print("unknown key {} found in ini file!".format(key))
+                print(f"unknown key {key} found in ini file!")
         if not link.href:
             raise NotSupportedError("all entities MUST have a href")
 
@@ -253,13 +253,11 @@ class uSwidFormatIni(uSwidFormatBase):
                             )
                         ) from e
             else:
-                print("unknown key {} found in ini file!".format(key))
+                print(f"unknown key {key} found in ini file!")
         if not entity.name:
             raise NotSupportedError("all entities MUST have a name")
         if not entity.roles:
-            raise NotSupportedError(
-                "entity {} MUST have at least one role".format(entity.name)
-            )
+            raise NotSupportedError(f"entity {entity.name} MUST have at least one role")
 
     def _load_identity(
         self, identity: uSwidIdentity, blob: bytes, path: Optional[str]
@@ -293,7 +291,7 @@ class uSwidFormatIni(uSwidFormatBase):
                     elif key == "persistent-id":
                         identity.persistent_id = value
                     else:
-                        print("unknown key {} found in ini file!".format(key))
+                        print(f"unknown key {key} found in ini file!")
             if group.startswith("uSWID-Entity:"):
                 entity = uSwidEntity()
                 self._load_entity(entity, config[group], role_hint=group)

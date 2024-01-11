@@ -87,4 +87,4 @@ class uSwidContainer:
         return None
 
     def __repr__(self) -> str:
-        return "uSwidContainer({})".format(self._identities)
+        return f"uSwidContainer({self._identities})"

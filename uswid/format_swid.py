@@ -118,9 +118,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 roles.append(_ENTITY_MAP_TO_XML[role])
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(
-                        role, ",".join(_ENTITY_MAP_TO_XML.values())
-                    )
+                    f"{role} not supported from {','.join(_ENTITY_MAP_TO_XML.values())}"
                 ) from e
         if roles:
             node.set("role", " ".join(roles))
@@ -253,9 +251,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 entity.roles.append(_ENTITY_MAP_FROM_XML[role_str])
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(
-                        role_str, ",".join(_ENTITY_MAP_FROM_XML)
-                    )
+                    f"{role_str} not supported from {','.join(_ENTITY_MAP_FROM_XML)}"
                 ) from e
 
     def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
