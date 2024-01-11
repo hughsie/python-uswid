@@ -50,7 +50,7 @@ class uSwidFormatUswid(uSwidFormatBase):
             offset = blob.find(USWID_HEADER_MAGIC, offset)
             if offset == -1:
                 break
-            print("Found USWID header at offset: {}".format(offset))
+            print(f"Found USWID header at offset: {offset}")
             offset += self._load_bytes(container, blob, offset)
             cnt += 1
         if cnt == 0:

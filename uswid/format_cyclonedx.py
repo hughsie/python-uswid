@@ -38,7 +38,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         root: Dict[str, Any] = {}
         root["bomFormat"] = "CycloneDX"
         root["specVersion"] = "1.4"
-        root["serialNumber"] = "urn:uuid:{}".format(str(uuid.uuid4()))
+        root["serialNumber"] = f"urn:uuid:{str(uuid.uuid4())}"
         root["version"] = 1
 
         # metadata

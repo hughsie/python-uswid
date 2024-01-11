@@ -46,7 +46,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         try:
             data = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
-            raise NotSupportedError("invalid GoSWID: {}".format(e)) from e
+            raise NotSupportedError(f"invalid GoSWID: {e}") from e
         container = uSwidContainer()
         if "corim_id" in data:
             data = data["corim_tags"]
@@ -108,9 +108,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 roles.append(_ENTITY_MAP_TO_XML[role])
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(
-                        role, ",".join(_ENTITY_MAP_TO_XML.values())
-                    )
+                    f"{role} not supported from {','.join(_ENTITY_MAP_TO_XML.values())}"
                 ) from e
         # use string if only one role
         if len(roles) == 1:
@@ -251,9 +249,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 entity.roles.append(_ENTITY_MAP_FROM_XML[role_str])
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(
-                        role_str, ",".join(_ENTITY_MAP_FROM_XML)
-                    )
+                    f"{role_str} not supported from {','.join(_ENTITY_MAP_FROM_XML)}"
                 ) from e
 
     def _load_identity_internal(
@@ -325,5 +321,5 @@ class uSwidFormatGoswid(uSwidFormatBase):
         try:
             data: Dict[str, Any] = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
-            raise NotSupportedError("invalid goSWID: {}".format(e)) from e
+            raise NotSupportedError(f"invalid goSWID: {e}") from e
         self._load_identity_internal(identity, data)

@@ -78,7 +78,7 @@ def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
     """read EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
-        print("executable {} not found".format(objcopy))
+        print(f"executable {objcopy} not found")
         sys.exit(1)
     with tempfile.NamedTemporaryFile(
         mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
@@ -126,7 +126,7 @@ def _save_efi_objcopy(
     """modify EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
     if not objcopy_full:
-        print("executable {} not found".format(objcopy))
+        print(f"executable {objcopy} not found")
         sys.exit(1)
     if not os.path.exists(filepath):
         if not cc:
@@ -155,7 +155,7 @@ def _save_efi_objcopy(
                     objcopy_full,
                     "--remove-section=.sbom",
                     "--add-section",
-                    ".sbom={}".format(src.name),
+                    f".sbom={src.name}",
                     "--set-section-flags",
                     ".sbom=contents,alloc,load,readonly,data",
                     filepath,
@@ -360,7 +360,7 @@ def main():
         try:
             fmt = _detect_format(filepath)
             if fmt == SwidFormat.UNKNOWN:
-                print("{} has unknown extension, using uSWID".format(filepath))
+                print(f"{filepath} has unknown extension, using uSWID")
                 fmt = SwidFormat.USWID
             if fmt == SwidFormat.PE:
                 if args.objcopy:
@@ -385,7 +385,7 @@ def main():
             ]:
                 base = _type_for_fmt(fmt, args, filepath=filepath)
                 if not base:
-                    print("{} no type for format".format(fmt))
+                    print(f"{fmt} no type for format")
                     sys.exit(1)
                 with open(filepath, "rb") as f:
                     for identity in base.load(f.read(), path=os.path.dirname(filepath)):
@@ -398,7 +398,7 @@ def main():
                             )
 
         except FileNotFoundError:
-            print("{} does not exist".format(filepath))
+            print(f"{filepath} does not exist")
             sys.exit(1)
         except NotSupportedError as e:
             print(e)
@@ -476,13 +476,13 @@ def main():
             ]:
                 base = _type_for_fmt(fmt, args)
                 if not base:
-                    print("{} no type for format".format(fmt))
+                    print(f"{fmt} no type for format")
                     sys.exit(1)
                 blob = base.save(container)
                 with open(filepath, "wb") as f:
                     f.write(blob)
             else:
-                print("{} extension is not supported".format(filepath))
+                print(f"{filepath} extension is not supported")
                 sys.exit(1)
         except NotSupportedError as e:
             print(e)

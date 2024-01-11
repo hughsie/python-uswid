@@ -212,7 +212,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         for entity in identity._entities.values():
             if not entity.roles:
                 raise NotSupportedError(
-                    "all entities MUST have at least one role: {}".format(str(entity))
+                    f"all entities MUST have at least one role: {str(entity)}"
                 )
             if not entity.name:
                 raise NotSupportedError("all entities MUST have a name")
@@ -264,9 +264,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 link.rel = LINK_MAP[rel_data]
             except KeyError as e:
                 raise NotSupportedError(
-                    "{} not supported from {}".format(
-                        rel_data, ",".join(LINK_MAP.values())
-                    )
+                    f"{rel_data} not supported from {','.join(LINK_MAP.values())}"
                 ) from e
 
     def _load_hash(self, ihash: uSwidHash, data: Any) -> None:
@@ -324,7 +322,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
             try:
                 entity.roles.append(uSwidEntityRole(int(role)))
             except KeyError:
-                print("ignoring invalid role of {}".format(role))
+                print(f"ignoring invalid role of {role}")
                 continue
 
     def _load_identity(
