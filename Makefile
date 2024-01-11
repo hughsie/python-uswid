@@ -11,6 +11,7 @@ PIP=$(VENV)/bin/pip
 BLACK=$(VENV)/bin/black
 STUBGEN=$(VENV)/bin/stubgen
 SPHINX_BUILD=$(VENV)/bin/sphinx-build
+RUFF=$(VENV)/bin/ruff
 
 setup: requirements.txt
 	virtualenv ./env
@@ -53,6 +54,9 @@ codespell: $(CODESPELL)
 	.coverage,\
 	*.pyc,\
 	env
+
+ruff: $(RUFF)
+	$(RUFF) check uswid examples
 
 pkg: $(STUBGEN)
 	$(STUBGEN) --output . --package uswid
