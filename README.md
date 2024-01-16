@@ -218,6 +218,23 @@ If `pefile` doesn't add the SWID metadata to the PE file correctly, you can use 
 
 You can use `objdump -s -j .sbom payload.efi` to verify that the tag has been written correctly to the binary.
 
+# Generating Test Data
+
+The `uswid` CLI can generate a complete "worst case" platform SBoM, with 1000 plausible (but random) components. This is generates a ~140kB file, or ~60kB when compressed with LZMA.
+
+You can use the uswid command line to generate a plausible UEFI platform SBoM:
+
+    uswid --generate --save test.uswid --compression lzma
+
+Each generated component includes:
+
+ * A unique tag-id GUID
+ * A unique software-name of size 4-30 chars
+ * A colloquial-version from a random selection of 10 SHA-1 hashes
+ * An edition from a random SHA-1 hash
+ * A semantic version of size 3-8 chars
+ * An entity from a random selection of 10 entities
+
 # Installing
 
 This library and helper binary can be installed using `pip`:
