@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 # pylint: disable=wrong-import-position,protected-access
 

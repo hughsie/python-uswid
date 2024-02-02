@@ -1,5 +1,5 @@
 # Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: BSD-2-Clause-Patent
 
 VENV=./env
 PYTHON=$(VENV)/bin/python

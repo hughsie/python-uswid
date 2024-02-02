@@ -10,7 +10,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 setup(
     name="uswid",
     version="0.4.8",
-    license="LGPL-2.1-or-later",
+    license="BSD-2-Clause-Patent",
     license_files=[
         "LICENSE",
     ],
@@ -39,7 +39,7 @@ setup(
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "License :: OSI Approved :: BSD License",
         "Programming Language :: Python :: 3",
         "Topic :: Utilities",
         "Topic :: System :: Archiving",
