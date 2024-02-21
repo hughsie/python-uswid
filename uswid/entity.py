@@ -69,8 +69,12 @@ class uSwidEntity:
         problems: List[uSwidProblem] = []
         if not self.name:
             problems += [uSwidProblem("entity", "No name", since="0.4.7")]
+        elif self.name.find("REDACTED") != -1:
+            problems += [uSwidProblem("entity", "Redacted name", since="0.4.8")]
         if not self.regid:
             problems += [uSwidProblem("entity", "No regid", since="0.4.7")]
+        elif self.regid.find("REDACTED") != -1:
+            problems += [uSwidProblem("entity", "Redacted regid", since="0.4.8")]
 
         # should be DNS name
         elif self.regid != _fix_vendor_id(self.regid):

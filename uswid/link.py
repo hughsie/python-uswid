@@ -94,6 +94,8 @@ class uSwidLink:
         problems: List[uSwidProblem] = []
         if not self.href:
             problems += uSwidProblem("link", "No href", since="0.4.7")
+        elif self.href.find("REDACTED") != -1:
+            problems += [uSwidProblem("link", "Redacted href", since="0.4.8")]
         if not self.rel:
             problems += uSwidProblem("link", "No rel", since="0.4.7")
         return problems

@@ -157,10 +157,37 @@ class uSwidIdentity:
                 ]
         if not self.software_name:
             problems += [uSwidProblem("identity", "No software name", since="0.4.7")]
+        elif self.software_name.find("REDACTED") != -1:
+            problems += [
+                uSwidProblem("identity", "Redacted software name", since="0.4.8")
+            ]
         if not self.software_version:
             problems += [uSwidProblem("identity", "No software version", since="0.4.7")]
+        elif self.software_version.find("REDACTED") != -1:
+            problems += [
+                uSwidProblem("identity", "Redacted software version", since="0.4.8")
+            ]
         if not self.version_scheme:
             problems += [uSwidProblem("identity", "No version scheme", since="0.4.7")]
+
+        if self.summary and self.summary.find("REDACTED") != -1:
+            problems += [uSwidProblem("identity", "Redacted summary", since="0.4.8")]
+        if self.product and self.product.find("REDACTED") != -1:
+            problems += [uSwidProblem("identity", "Redacted product", since="0.4.8")]
+        if self.colloquial_version and self.colloquial_version.find("REDACTED") != -1:
+            problems += [
+                uSwidProblem("identity", "Redacted colloquial version", since="0.4.8")
+            ]
+        if self.revision and self.revision.find("REDACTED") != -1:
+            problems += [uSwidProblem("identity", "Redacted revision", since="0.4.8")]
+        if self.edition and self.edition.find("REDACTED") != -1:
+            problems += [uSwidProblem("identity", "Redacted edition", since="0.4.8")]
+        if self.persistent_id and self.persistent_id.find("REDACTED") != -1:
+            problems += [
+                uSwidProblem("identity", "Redacted persistent id", since="0.4.8")
+            ]
+        if self.generator and self.generator.find("REDACTED") != -1:
+            problems += [uSwidProblem("identity", "Redacted generator", since="0.4.8")]
 
         # should be reverse-DNS name
         if self.persistent_id and self.persistent_id != _fix_appstream_id(

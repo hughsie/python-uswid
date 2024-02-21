@@ -56,6 +56,8 @@ class uSwidPayload:
         """Checks the payload for common problems"""
 
         problems: List[uSwidProblem] = []
+        if self.name and self.name.find("REDACTED") != -1:
+            problems += [uSwidProblem("payload", "Redacted name", since="0.4.8")]
         if not self.size:
             problems += [
                 uSwidProblem("payload", f"No size in {self.name}", since="0.4.7")
