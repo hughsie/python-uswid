@@ -20,7 +20,7 @@ from .errors import NotSupportedError
 from .link import uSwidLink
 from .entity import uSwidEntity, uSwidEntityRole
 from .enums import uSwidVersionScheme
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
 
@@ -34,7 +34,7 @@ from .purl import uSwidPurl
 
 
 class TestSwidEntity(unittest.TestCase):
-    """Tescases for identities, entities, links, evidence and payloads"""
+    """Tescases for components, entities, links, evidence and payloads"""
 
     def test_entity(self):
         """Unit tests for uSwidEntity"""
@@ -226,27 +226,27 @@ class TestSwidEntity(unittest.TestCase):
             b"</SoftwareIdentity>",
         )
 
-    def test_identity(self):
-        """Unit tests for uSwidIdentity"""
+    def test_component(self):
+        """Unit tests for uSwidComponent"""
         self.maxDiff = None
-        identity = uSwidIdentity(
+        component = uSwidComponent(
             tag_id="foobarbaz",
             tag_version=5,
             software_name="foo",
             software_version="1.2.3",
         )
-        identity.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
+        component.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
         self.assertEqual(
-            str(identity),
-            'uSwidIdentity(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3")',
+            str(component),
+            'uSwidComponent(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3")',
         )
         entity = uSwidEntity(
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
-        identity.add_entity(entity)
+        component.add_entity(entity)
         self.assertEqual(
-            str(identity),
-            'uSwidIdentity(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3"):\n'
+            str(component),
+            'uSwidComponent(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3"):\n'
             ' - uSwidEntity(regid="example.com",name="test",roles=MAINTAINER)',
         )
 
@@ -265,22 +265,22 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
 <Meta product="Fedora" colloquialVersion="29" persistentId="org.hughski.colorhug"
   summary="Linux distribution developed by the community-supported Fedora Project" />
 </SoftwareIdentity>"""
-        identity = uSwidFormatSwid().load(xml).get_default()  # type: ignore
+        component = uSwidFormatSwid().load(xml).get_default()  # type: ignore
         self.assertEqual(
-            str(identity),
-            'uSwidIdentity(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
+            str(component),
+            'uSwidComponent(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
             'software_name="DellBiosConnectNetwork",software_version="1.5.2"):\n'
             ' - uSwidLink(rel="see-also",href="http://hughsie.com")\n'
             ' - uSwidLink(rel="license",href="www.gnu.org/licenses/gpl.txt")\n'
             ' - uSwidEntity(regid="dell.com",name="Dell Technologies",roles=SOFTWARE_CREATOR,TAG_CREATOR)',
         )
         self.assertEqual(
-            identity.summary,
+            component.summary,
             "Linux distribution developed by the community-supported Fedora Project",
         )
-        self.assertEqual(identity.product, "Fedora")
-        self.assertEqual(identity.colloquial_version, "29")
-        self.assertEqual(identity.persistent_id, "org.hughski.colorhug")
+        self.assertEqual(component.product, "Fedora")
+        self.assertEqual(component.colloquial_version, "29")
+        self.assertEqual(component.persistent_id, "org.hughski.colorhug")
 
         # INI import
         ini = """[uSWID]
@@ -303,11 +303,11 @@ extra-roles = Aggregator
 href = https://hughski.com/
 rel = see-also
 """
-        identity = uSwidFormatIni().load(ini.encode()).get_default()  # type: ignore
-        self.assertIsNotNone(identity)
+        component = uSwidFormatIni().load(ini.encode()).get_default()  # type: ignore
+        self.assertIsNotNone(component)
         self.assertEqual(
-            str(identity),
-            'uSwidIdentity(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
+            str(component),
+            'uSwidComponent(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
             'software_name="HughskiColorHug.efi",software_version="1.0.0"):\n'
             ' - uSwidLink(rel="see-also",href="https://hughski.com/")\n'
             ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=TAG_CREATOR)\n'
@@ -315,15 +315,15 @@ rel = see-also
         )
 
         # INI export
-        tmp = uSwidFormatIni().save(uSwidContainer([identity])).decode()
+        tmp = uSwidFormatIni().save(uSwidContainer([component])).decode()
         assert "uSWID" in tmp
         assert "uSWID-Entity" in tmp
         assert "uSWID-Link" in tmp
 
         # SWID XML export
-        identity.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
+        component.colloquial_version = "22905301d08e69473393d94c3e787e4bf0453268"
         self.assertEqual(
-            uSwidFormatSwid().save(uSwidContainer([identity])),
+            uSwidFormatSwid().save(uSwidContainer([component])),
             b"<?xml version='1.0' encoding='utf-8'?>\n"
             b"<SoftwareIdentity "
             b'xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd" '
@@ -341,14 +341,14 @@ rel = see-also
         )
 
         # CycloneDX export
-        tmp = uSwidFormatCycloneDX().save(uSwidContainer([identity])).decode()
+        tmp = uSwidFormatCycloneDX().save(uSwidContainer([component])).decode()
         assert "CycloneDX" in tmp
         assert "uSWID" in tmp
         assert "org.hughski.colorhug" in tmp
         assert "22905301d08e69473393d94c3e787e4bf0453268" in tmp
 
         # SPDX export
-        tmp = uSwidFormatSpdx().save(uSwidContainer([identity])).decode()
+        tmp = uSwidFormatSpdx().save(uSwidContainer([component])).decode()
         assert "SPDX" in tmp
         assert "uSWID" in tmp
 

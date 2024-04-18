@@ -26,11 +26,11 @@ Additionally, uSWID supports importing SBoM metadata from a few additional file 
 There are three elements of an SBoM that uswid supports. These are:
 
 - Identities -- the *what*, describing the software subcomponents
-- Entities -- the *who*, describing the company or person responsible for the identity in some way
+- Entities -- the *who*, describing the company or person responsible for the component in some way
 - Payloads (optional) -- the *file* that we are referring to, for when the SBoM is not embedded
 - Evidence (optional) -- the *proof*, typically the date and time the SBoM was built
 
-One of the core features of uswid is that you can import multiple files to build a single identity at construction time.
+One of the core features of uswid is that you can import multiple files to build a single component at construction time.
 
 For instance, you could combine the pkgconfig `.pc` file, a `.exe` binary and `.ini` override to build one SBoM component. In most cases SBoM metadata is merged, but it can also be replaced.
 
@@ -243,7 +243,7 @@ For example:
 
     uswid --load examples/intel-ucode.ini examples/intel-ucode.vex --verbose
     Loaded:
-    uSwidIdentity(tag_id="bcbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="0",software_name="MCU 06-03-02",software_version="20230808"):
+    uSwidComponent(tag_id="bcbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="0",software_name="MCU 06-03-02",software_version="20230808"):
      - uSwidEntity(regid="com.intel",name="Intel Corporation",roles=TAG_CREATOR,SOFTWARE_CREATOR)
      - uSwidPayload(name="intel-ucode-06-03-02",size=12)
      - uSwidHash(alg_id=SHA256,value="a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447")

@@ -14,7 +14,7 @@ Table of contents
    Enums <enums>
    Errors <errors>
    Format <format>
-   Identity <identity>
+   Component <component>
    Link <link>
    Payload <payload>
    Hash <hash>

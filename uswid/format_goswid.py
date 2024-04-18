@@ -15,8 +15,8 @@ from datetime import datetime
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
-from .identity import (
-    uSwidIdentity,
+from .component import (
+    uSwidComponent,
     _VERSION_SCHEME_TO_STRING,
     _VERSION_SCHEME_FROM_STRING,
 )
@@ -50,16 +50,16 @@ class uSwidFormatGoswid(uSwidFormatBase):
         container = uSwidContainer()
         if "corim_id" in data:
             data = data["corim_tags"]
-        for identity_json in data:
-            identity = uSwidIdentity()
-            self._load_identity_internal(identity, identity_json)
-            container.merge(identity)
+        for component_json in data:
+            component = uSwidComponent()
+            self._load_component_internal(component, component_json)
+            container.merge(component)
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
         root = []
-        for identity in container:
-            root.append(self._save_identity_internal(identity))
+        for component in container:
+            root.append(self._save_component_internal(component))
         return json.dumps(root, indent=2).encode()
 
     def _save_link(self, link: uSwidLink) -> Dict[str, str]:
@@ -117,77 +117,77 @@ class uSwidFormatGoswid(uSwidFormatBase):
             node["role"] = roles
         return node
 
-    def _save_identity_internal(self, identity: uSwidIdentity) -> Dict[str, Any]:
-        # identity
+    def _save_component_internal(self, component: uSwidComponent) -> Dict[str, Any]:
+        # component
         root: Dict[str, Any] = {}
-        if identity.lang:
-            root["lang"] = identity.lang
-        if identity.tag_id:
-            root["tag-id"] = identity.tag_id
-        if identity.tag_version:
-            root["tag-version"] = identity.tag_version
-        if identity.software_name:
-            root["software-name"] = identity.software_name
-        if identity.software_version:
-            root["software-version"] = identity.software_version
-        if identity.version_scheme:
-            root["version-scheme"] = _VERSION_SCHEME_TO_STRING[identity.version_scheme]
+        if component.lang:
+            root["lang"] = component.lang
+        if component.tag_id:
+            root["tag-id"] = component.tag_id
+        if component.tag_version:
+            root["tag-version"] = component.tag_version
+        if component.software_name:
+            root["software-name"] = component.software_name
+        if component.software_version:
+            root["software-version"] = component.software_version
+        if component.version_scheme:
+            root["version-scheme"] = _VERSION_SCHEME_TO_STRING[component.version_scheme]
 
         # optional metadata
         if (
-            identity.summary
-            or identity.revision
-            or identity.product
-            or identity.edition
-            or identity.colloquial_version
-            or identity.persistent_id
+            component.summary
+            or component.revision
+            or component.product
+            or component.edition
+            or component.colloquial_version
+            or component.persistent_id
         ):
             node: Dict[str, str] = {}
-            if identity.summary:
-                node["summary"] = identity.summary
-            if identity.revision:
-                node["revision"] = identity.revision
-            if identity.product:
-                node["product"] = identity.product
-            if identity.edition:
-                node["edition"] = identity.edition
-            if identity.colloquial_version:
-                node["colloquial-version"] = identity.colloquial_version
-            if identity.persistent_id:
-                node["persistent-id"] = identity.persistent_id
+            if component.summary:
+                node["summary"] = component.summary
+            if component.revision:
+                node["revision"] = component.revision
+            if component.product:
+                node["product"] = component.product
+            if component.edition:
+                node["edition"] = component.edition
+            if component.colloquial_version:
+                node["colloquial-version"] = component.colloquial_version
+            if component.persistent_id:
+                node["persistent-id"] = component.persistent_id
             # the CoSWID spec says: 'software-meta => one-or-more'
             root["software-meta"] = [node]
 
         # checksum
-        if identity.payloads:
+        if component.payloads:
             root["payload"] = []
-            for payload in identity.payloads:
+            for payload in component.payloads:
                 root["payload"].append(self._save_payload(payload))
 
         # evidences
-        if identity.evidences:
+        if component.evidences:
             root["evidence"] = []
-            for evidence in identity.evidences:
+            for evidence in component.evidences:
                 root["evidence"].append(self._save_evidence(evidence))
 
         # entities
-        if identity.entities:
+        if component.entities:
             root["entity"] = []
-            for entity in identity.entities:
+            for entity in component.entities:
                 root["entity"].append(self._save_entity(entity))
 
         # links
-        if identity.links:
+        if component.links:
             root["link"] = []
-            for link in identity.links:
+            for link in component.links:
                 root["link"].append(self._save_link(link))
 
         # success
         return root
 
-    def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """Exports a uSwidIdentity goSWID blob"""
-        return json.dumps(self._save_identity_internal(identity), indent=2).encode(
+    def _save_component(self, component: uSwidComponent) -> bytes:
+        """Exports a uSwidComponent goSWID blob"""
+        return json.dumps(self._save_component_internal(component), indent=2).encode(
             "utf-8"
         )
 
@@ -252,23 +252,23 @@ class uSwidFormatGoswid(uSwidFormatBase):
                     f"{role_str} not supported from {','.join(_ENTITY_MAP_FROM_XML)}"
                 ) from e
 
-    def _load_identity_internal(
-        self, identity: uSwidIdentity, data: Dict[str, Any]
+    def _load_component_internal(
+        self, component: uSwidComponent, data: Dict[str, Any]
     ) -> None:
         # for compat with Intel FSP template
         for key in list(data):
             data[key.replace("_", "-")] = data.pop(key)
 
-        # identity
-        identity.tag_id = data.get("tag-id")
+        # component
+        component.tag_id = data.get("tag-id")
         tag_version = data.get("tag-version")
         if tag_version:
-            identity.tag_version = int(tag_version)
-        identity.software_name = data.get("software-name")
-        identity.software_version = data.get("software-version")
+            component.tag_version = int(tag_version)
+        component.software_name = data.get("software-name")
+        component.software_version = data.get("software-version")
         version_scheme = data.get("version-scheme")
         if version_scheme:
-            identity.version_scheme = _VERSION_SCHEME_FROM_STRING[version_scheme]
+            component.version_scheme = _VERSION_SCHEME_FROM_STRING[version_scheme]
 
         # optional metadata
         for meta in _get_one_or_more(data, "software-meta"):
@@ -280,26 +280,26 @@ class uSwidFormatGoswid(uSwidFormatBase):
                 ("colloquial-version", "colloquial_version"),
             ]:
                 if attr_name in meta:
-                    setattr(identity, attrib_name, meta[attr_name])
+                    setattr(component, attrib_name, meta[attr_name])
 
         # entities
         for node in _get_one_or_more(data, "entity"):
             entity = uSwidEntity()
             self._load_entity(entity, node)
-            identity.add_entity(entity)
+            component.add_entity(entity)
 
         # links
         for node in _get_one_or_more(data, "links"):
             link = uSwidLink()
             self._load_link(link, node)
-            identity.add_link(link)
+            component.add_link(link)
 
         # payloads
         for node in _get_one_or_more(data, "payload"):
             for node_file in _get_one_or_more(node, "file"):
                 payload = uSwidPayload()
                 self._load_file(payload, node_file)
-                identity.add_payload(payload)
+                component.add_payload(payload)
             for node_directory in _get_one_or_more(node, "directory"):
                 for node_path_elements in _get_one_or_more(
                     node_directory, "path_elements"
@@ -307,19 +307,19 @@ class uSwidFormatGoswid(uSwidFormatBase):
                     for node_file in _get_one_or_more(node_path_elements, "file"):
                         payload = uSwidPayload()
                         self._load_file(payload, node_file)
-                        identity.add_payload(payload)
+                        component.add_payload(payload)
 
         # evidences
         for node in _get_one_or_more(data, "evidence"):
             evidence = uSwidEvidence()
             self._load_evidence(evidence, node)
-            identity.add_evidence(evidence)
+            component.add_evidence(evidence)
 
-    def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """Imports a uSwidIdentity goSWID blob"""
+    def _load_component(self, component: uSwidComponent, blob: bytes) -> None:
+        """Imports a uSwidComponent goSWID blob"""
 
         try:
             data: Dict[str, Any] = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
             raise NotSupportedError(f"invalid goSWID: {e}") from e
-        self._load_identity_internal(identity, data)
+        self._load_component_internal(component, data)

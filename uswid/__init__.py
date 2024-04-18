@@ -10,7 +10,7 @@ from uswid.link import uSwidLink, uSwidLinkRel
 from uswid.hash import uSwidHash, uSwidHashAlg
 from uswid.payload import uSwidPayload
 from uswid.evidence import uSwidEvidence
-from uswid.identity import uSwidIdentity
+from uswid.component import uSwidComponent
 from uswid.problem import uSwidProblem
 from uswid.entity import uSwidEntity, uSwidEntityRole
 from uswid.enums import (

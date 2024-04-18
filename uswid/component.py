@@ -57,8 +57,8 @@ def _fix_appstream_id(appstream_id: str) -> str:
     return appstream_id
 
 
-class uSwidIdentity:
-    """Represents a SWID identity"""
+class uSwidComponent:
+    """Represents a SWID component"""
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class uSwidIdentity:
         software_version: Optional[str] = None,
         generator: Optional[str] = "uSWID",
     ):
-        """Initializes uSwidIdentity"""
+        """Initializes uSwidComponent"""
         self._auto_increment_tag_version = False
         self._tag_id: Optional[str] = None
         if tag_id:
@@ -144,7 +144,7 @@ class uSwidIdentity:
             self._tag_id = tag_id
 
     def problems(self) -> List[uSwidProblem]:
-        """Checks the identity for common problems"""
+        """Checks the component for common problems"""
 
         problems: List[uSwidProblem] = []
 
@@ -152,44 +152,46 @@ class uSwidIdentity:
             if fnmatch.fnmatch(self.tag_id, "????????_????_????_????_????????????"):
                 problems += [
                     uSwidProblem(
-                        "identity",
+                        "component",
                         f"Tag GUID {self.tag_id} should use dashes",
                         since="0.4.7",
                     )
                 ]
         if not self.software_name:
-            problems += [uSwidProblem("identity", "No software name", since="0.4.7")]
+            problems += [uSwidProblem("component", "No software name", since="0.4.7")]
         elif self.software_name.find("REDACTED") != -1:
             problems += [
-                uSwidProblem("identity", "Redacted software name", since="0.4.8")
+                uSwidProblem("component", "Redacted software name", since="0.4.8")
             ]
         if not self.software_version:
-            problems += [uSwidProblem("identity", "No software version", since="0.4.7")]
+            problems += [
+                uSwidProblem("component", "No software version", since="0.4.7")
+            ]
         elif self.software_version.find("REDACTED") != -1:
             problems += [
-                uSwidProblem("identity", "Redacted software version", since="0.4.8")
+                uSwidProblem("component", "Redacted software version", since="0.4.8")
             ]
         if not self.version_scheme:
-            problems += [uSwidProblem("identity", "No version scheme", since="0.4.7")]
+            problems += [uSwidProblem("component", "No version scheme", since="0.4.7")]
 
         if self.summary and self.summary.find("REDACTED") != -1:
-            problems += [uSwidProblem("identity", "Redacted summary", since="0.4.8")]
+            problems += [uSwidProblem("component", "Redacted summary", since="0.4.8")]
         if self.product and self.product.find("REDACTED") != -1:
-            problems += [uSwidProblem("identity", "Redacted product", since="0.4.8")]
+            problems += [uSwidProblem("component", "Redacted product", since="0.4.8")]
         if self.colloquial_version and self.colloquial_version.find("REDACTED") != -1:
             problems += [
-                uSwidProblem("identity", "Redacted colloquial version", since="0.4.8")
+                uSwidProblem("component", "Redacted colloquial version", since="0.4.8")
             ]
         if self.revision and self.revision.find("REDACTED") != -1:
-            problems += [uSwidProblem("identity", "Redacted revision", since="0.4.8")]
+            problems += [uSwidProblem("component", "Redacted revision", since="0.4.8")]
         if self.edition and self.edition.find("REDACTED") != -1:
-            problems += [uSwidProblem("identity", "Redacted edition", since="0.4.8")]
+            problems += [uSwidProblem("component", "Redacted edition", since="0.4.8")]
         if self.persistent_id and self.persistent_id.find("REDACTED") != -1:
             problems += [
-                uSwidProblem("identity", "Redacted persistent id", since="0.4.8")
+                uSwidProblem("component", "Redacted persistent id", since="0.4.8")
             ]
         if self.generator and self.generator.find("REDACTED") != -1:
-            problems += [uSwidProblem("identity", "Redacted generator", since="0.4.8")]
+            problems += [uSwidProblem("component", "Redacted generator", since="0.4.8")]
 
         # should be reverse-DNS name
         if self.persistent_id and self.persistent_id != _fix_appstream_id(
@@ -197,7 +199,7 @@ class uSwidIdentity:
         ):
             problems += [
                 uSwidProblem(
-                    "identity",
+                    "component",
                     "Invalid persistent_id, should be reverse-DNS "
                     f"name {_fix_appstream_id(self.persistent_id)}",
                     since="0.4.7",
@@ -233,7 +235,7 @@ class uSwidIdentity:
         if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
             problems += [
                 uSwidProblem(
-                    "identity",
+                    "component",
                     "Has no colloquial_version (source code file hash)",
                     since="0.4.7",
                 )
@@ -241,7 +243,7 @@ class uSwidIdentity:
         if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
             problems += [
                 uSwidProblem(
-                    "identity", "Has no edition (source code tree hash)", since="0.4.7"
+                    "component", "Has no edition (source code tree hash)", since="0.4.7"
                 )
             ]
 
@@ -255,42 +257,42 @@ class uSwidIdentity:
         return problems
 
     def add_vex_statement(self, vex_statement: uSwidVexStatement) -> None:
-        """Adds a relevant VEX statement tp the identity"""
+        """Adds a relevant VEX statement tp the component"""
         if vex_statement in self.vex_statements:
             return
         self.vex_statements.append(vex_statement)
 
-    def merge(self, identity_new: "uSwidIdentity") -> None:
-        """Add new things from the new identity into the current one"""
-        if identity_new.tag_version:
-            self.tag_version = identity_new.tag_version
-        if identity_new.software_name:
-            self.software_name = identity_new.software_name
-        if identity_new.software_version:
-            self.software_version = identity_new.software_version
-        if identity_new.version_scheme:
-            self.version_scheme = identity_new.version_scheme
-        if identity_new.summary:
-            self.summary = identity_new.summary
-        if identity_new.product:
-            self.product = identity_new.product
-        if identity_new.colloquial_version:
-            self.colloquial_version = identity_new.colloquial_version
-        if identity_new.revision:
-            self.revision = identity_new.revision
-        if identity_new.edition:
-            self.edition = identity_new.edition
-        if identity_new.persistent_id:
-            self.persistent_id = identity_new.persistent_id
-        if identity_new.lang:
-            self.lang = identity_new.lang
-        for entity in identity_new.entities:
+    def merge(self, component_new: "uSwidComponent") -> None:
+        """Add new things from the new component into the current one"""
+        if component_new.tag_version:
+            self.tag_version = component_new.tag_version
+        if component_new.software_name:
+            self.software_name = component_new.software_name
+        if component_new.software_version:
+            self.software_version = component_new.software_version
+        if component_new.version_scheme:
+            self.version_scheme = component_new.version_scheme
+        if component_new.summary:
+            self.summary = component_new.summary
+        if component_new.product:
+            self.product = component_new.product
+        if component_new.colloquial_version:
+            self.colloquial_version = component_new.colloquial_version
+        if component_new.revision:
+            self.revision = component_new.revision
+        if component_new.edition:
+            self.edition = component_new.edition
+        if component_new.persistent_id:
+            self.persistent_id = component_new.persistent_id
+        if component_new.lang:
+            self.lang = component_new.lang
+        for entity in component_new.entities:
             self.add_entity(entity)
-        for link in identity_new.links:
+        for link in component_new.links:
             self.add_link(link)
-        for payload in identity_new.payloads:
+        for payload in component_new.payloads:
             self.add_payload(payload)
-        for evidence in identity_new.evidences:
+        for evidence in component_new.evidences:
             self.add_evidence(evidence)
 
     def add_entity(self, entity: uSwidEntity) -> None:
@@ -329,7 +331,7 @@ class uSwidIdentity:
 
     def __repr__(self) -> str:
         tmp = (
-            f'uSwidIdentity(tag_id="{self.tag_id}",'
+            f'uSwidComponent(tag_id="{self.tag_id}",'
             + f'tag_version="{self.tag_version}",'
             + f'software_name="{self.software_name}",'
             + f'software_version="{self.software_version}")'

@@ -38,7 +38,7 @@ from uswid import (
     uSwidContainer,
     uSwidEntity,
     uSwidEntityRole,
-    uSwidIdentity,
+    uSwidComponent,
     uSwidProblem,
     uSwidVersionScheme,
     uSwidPayloadCompression,
@@ -104,10 +104,10 @@ def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
         return uSwidFormatCoswid().load(dst.read())
 
 
-def _save_efi_pefile(identity: uSwidIdentity, filepath: str) -> None:
+def _save_efi_pefile(component: uSwidComponent, filepath: str) -> None:
     """modify EFI file using pefile"""
 
-    blob = uSwidFormatCoswid().save(uSwidContainer([identity]))
+    blob = uSwidFormatCoswid().save(uSwidContainer([component]))
     pe = pefile.PE(filepath)
     sect = _pe_get_section_by_name(pe, ".sbom")
     if not sect:
@@ -123,7 +123,11 @@ def _save_efi_pefile(identity: uSwidIdentity, filepath: str) -> None:
 
 
 def _save_efi_objcopy(
-    identity: uSwidIdentity, filepath: str, cc: Optional[str], cflags: str, objcopy: str
+    component: uSwidComponent,
+    filepath: str,
+    cc: Optional[str],
+    cflags: str,
+    objcopy: str,
 ) -> None:
     """modify EFI file using objcopy"""
     objcopy_full = shutil.which(objcopy)
@@ -140,7 +144,7 @@ def _save_efi_objcopy(
 
     # save to file?
     try:
-        blob = uSwidFormatIni().save(uSwidContainer([identity]))
+        blob = uSwidFormatIni().save(uSwidContainer([component]))
     except NotSupportedError as e:
         print(e)
         sys.exit(1)
@@ -324,10 +328,10 @@ def main():
         print("Use uswid --help for command line arguments")
         sys.exit(1)
 
-    # always load into a temporary identity so that we can query the tag_id
+    # always load into a temporary component so that we can query the tag_id
     container = uSwidContainer()
 
-    # generate 1000 plausible identities, each with:
+    # generate 1000 plausible components, each with:
     # - unique tag-id GUID
     # - unique software-name of size 4-30 chars
     # - colloquial-version from a random selection of 10 SHA-1 hashes
@@ -346,19 +350,19 @@ def main():
             entity.roles = [uSwidEntityRole.TAG_CREATOR]
             entities.append(entity)
         for i in range(1000):
-            identity = uSwidIdentity()
-            identity.tag_id = str(uuid.uuid4())
-            identity.software_name = "".join(
+            component = uSwidComponent()
+            component.tag_id = str(uuid.uuid4())
+            component.software_name = "".join(
                 choices(string.ascii_lowercase, k=randrange(4, 30))
             )
-            identity.software_version = "1." + "".join(
+            component.software_version = "1." + "".join(
                 choices("123456789", k=randrange(1, 6))
             )
-            identity.colloquial_version = tree_hashes[randrange(len(tree_hashes))]
-            identity.edition = "".join(choices("0123456789abcdef", k=40))
-            identity.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
-            identity.add_entity(entities[randrange(len(entities))])
-            container.append(identity)
+            component.colloquial_version = tree_hashes[randrange(len(tree_hashes))]
+            component.edition = "".join(choices("0123456789abcdef", k=40))
+            component.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
+            component.add_entity(entities[randrange(len(entities))])
+            container.append(component)
 
     # collect data here
     for filepath in load_filepaths:
@@ -372,12 +376,12 @@ def main():
                     container_tmp = _load_efi_objcopy(filepath, objcopy=args.objcopy)
                 else:
                     container_tmp = _load_efi_pefile(filepath)
-                for identity in container_tmp:
-                    identity_new = container.merge(identity)
-                    if identity_new:
+                for component in container_tmp:
+                    component_new = container.merge(component)
+                    if component_new:
                         print(
-                            "{} was merged into existing identity {}".format(
-                                filepath, identity_new.tag_id
+                            "{} was merged into existing component {}".format(
+                                filepath, component_new.tag_id
                             )
                         )
             elif fmt == SwidFormat.VEX:
@@ -398,12 +402,14 @@ def main():
                     print(f"{fmt} no type for format")
                     sys.exit(1)
                 with open(filepath, "rb") as f:
-                    for identity in base.load(f.read(), path=os.path.dirname(filepath)):
-                        identity_new = container.merge(identity)
-                        if identity_new:
+                    for component in base.load(
+                        f.read(), path=os.path.dirname(filepath)
+                    ):
+                        component_new = container.merge(component)
+                        if component_new:
                             print(
-                                "{} was merged into existing identity {}".format(
-                                    filepath, identity_new.tag_id
+                                "{} was merged into existing component {}".format(
+                                    filepath, component_new.tag_id
                                 )
                             )
 
@@ -420,22 +426,22 @@ def main():
     # validate
     rc: int = 0
     if args.validate:
-        problems_dict: dict[Optional[uSwidIdentity], List[uSwidProblem]] = defaultdict(
+        problems_dict: dict[Optional[uSwidComponent], List[uSwidProblem]] = defaultdict(
             list
         )
         if len(container) == 0:
             problems_dict[None] += uSwidProblem(
-                "all", "There are no defined identities", since="0.4.7"
+                "all", "There are no defined components", since="0.4.7"
             )
-        for identity in container:
-            problems_dict[identity].extend(identity.problems())
+        for component in container:
+            problems_dict[component].extend(component.problems())
         if problems_dict:
             rc = 2
             print("Validation problems:")
-            for identity, problems in problems_dict.items():
+            for component, problems in problems_dict.items():
                 for problem in problems:
-                    if identity:
-                        key = identity.tag_id
+                    if component:
+                        key = component.tag_id
                     else:
                         key = "*"
                     print(
@@ -444,8 +450,8 @@ def main():
                     )
 
     # add any missing evidence
-    for identity in container:
-        for evidence in identity.evidences:
+    for component in container:
+        for evidence in component.evidences:
             if not evidence.date and not evidence.device_id:
                 evidence.date = datetime.now()
                 evidence.device_id = socket.getfqdn()
@@ -453,28 +459,28 @@ def main():
     # debug
     if load_filepaths and args.verbose:
         print("Loaded:")
-        for identity in container:
-            print(f"{identity}")
+        for component in container:
+            print(f"{component}")
 
     # optional save
     if save_filepaths and args.verbose:
         print("Saving:")
-        for identity in container:
-            print(f"{identity}")
+        for component in container:
+            print(f"{component}")
     for filepath in save_filepaths:
         try:
             fmt = _detect_format(filepath)
             if fmt == SwidFormat.PE:
-                identity_pe: Optional[uSwidIdentity] = container.get_default()
-                if not identity_pe:
-                    print("cannot save PE when no default identity")
+                component_pe: Optional[uSwidComponent] = container.get_default()
+                if not component_pe:
+                    print("cannot save PE when no default component")
                     sys.exit(1)
                 if args.objcopy:
                     _save_efi_objcopy(
-                        identity_pe, filepath, args.cc, args.cflags, args.objcopy
+                        component_pe, filepath, args.cc, args.cflags, args.objcopy
                     )
                 else:
-                    _save_efi_pefile(identity_pe, filepath)
+                    _save_efi_pefile(component_pe, filepath)
             elif fmt in [
                 SwidFormat.INI,
                 SwidFormat.COSWID,

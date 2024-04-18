@@ -9,7 +9,7 @@
 
 
 class uSwidProblem:
-    """Represents a SWID identity problem"""
+    """Represents a SWID component problem"""
 
     def __init__(
         self,

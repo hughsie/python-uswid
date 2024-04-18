@@ -15,7 +15,7 @@ from typing import List, Optional, TYPE_CHECKING
 from .problem import uSwidProblem
 
 if TYPE_CHECKING:
-    from .identity import uSwidIdentity
+    from .component import uSwidComponent
 
 
 class uSwidLinkRel(IntEnum):
@@ -47,8 +47,8 @@ class uSwidLink:
         """Initializes uSwidLink"""
         self._href: Optional[str] = href
         self._rel: Optional[str] = rel
-        self.identity: Optional[uSwidIdentity] = None
-        """Identity, if the SWID reference in internally resolvable"""
+        self.component: Optional[uSwidComponent] = None
+        """Component, if the SWID reference in internally resolvable"""
 
     @property
     def rel(self) -> Optional[str]:
