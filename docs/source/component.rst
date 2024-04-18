@@ -1,7 +1,7 @@
-:mod:`uswid.identity`
+:mod:`uswid.component`
 =====================
 
-.. automodule:: uswid.identity
+.. automodule:: uswid.component
     :members:
     :undoc-members:
     :special-members: __init__

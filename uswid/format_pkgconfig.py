@@ -13,7 +13,7 @@ import os
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .entity import uSwidEntityRole
 
 _ENTITY_MAP_FROM_INI = {
@@ -43,18 +43,18 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
         self.filepath: Optional[str] = filepath
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
-        identity = uSwidIdentity()
-        self._load_identity(identity, blob)
-        return uSwidContainer([identity])
+        component = uSwidComponent()
+        self._load_component(component, blob)
+        return uSwidContainer([component])
 
-    def _load_identity(self, identity: uSwidIdentity, blob: bytes) -> None:
-        """Imports a pkg-conifg file as overrides to the uSwidIdentity data"""
+    def _load_component(self, component: uSwidComponent, blob: bytes) -> None:
+        """Imports a pkg-conifg file as overrides to the uSwidComponent data"""
 
         # filename base is the ID
         if self.filepath:
-            identity.tag_id = os.path.basename(self.filepath)
-            if identity.tag_id.endswith(".pc"):
-                identity.tag_id = identity.tag_id[:-3]
+            component.tag_id = os.path.basename(self.filepath)
+            if component.tag_id.endswith(".pc"):
+                component.tag_id = component.tag_id[:-3]
 
         # read out properties
         for line in blob.decode().split("\n"):
@@ -63,14 +63,14 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
             except ValueError:
                 continue
             if key == "Name":
-                identity.software_name = value.strip()
+                component.software_name = value.strip()
                 continue
             if key == "Description":
-                identity.summary = value.strip()
+                component.summary = value.strip()
                 continue
             if key == "Version":
-                identity.software_version = value.strip()
+                component.software_version = value.strip()
                 continue
             if key == "AppstreamId":
-                identity.persistent_id = value.strip()
+                component.persistent_id = value.strip()
                 continue

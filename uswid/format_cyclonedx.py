@@ -13,7 +13,7 @@ from datetime import datetime
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .entity import uSwidEntityRole
 from .hash import uSwidHashAlg
 
@@ -55,9 +55,9 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         components: List[Dict[str, Any]] = []
         licenses: List[Dict[str, Any]] = []
         dependencies: List[Dict[str, str]] = []
-        for identity in container:
-            components.append(self._save_identity(identity))
-            for link in identity.links:
+        for component in container:
+            components.append(self._save_component(component))
+            for link in component.links:
                 if not link.href:
                     continue
                 if link.rel == "license":
@@ -77,37 +77,37 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         return json.dumps(root, indent=2).encode()
 
-    def _save_identity(self, identity: uSwidIdentity) -> Dict[str, Any]:
-        component: Dict[str, Any] = {}
-        component["type"] = "firmware"
-        if identity.persistent_id:
-            component["group"] = identity.persistent_id
-        if identity.product:
-            component["name"] = identity.product
-        if identity.summary:
-            component["description"] = identity.summary
+    def _save_component(self, component: uSwidComponent) -> Dict[str, Any]:
+        root: Dict[str, Any] = {}
+        root["type"] = "firmware"
+        if component.persistent_id:
+            root["group"] = component.persistent_id
+        if component.product:
+            root["name"] = component.product
+        if component.summary:
+            root["description"] = component.summary
 
         swid: Dict[str, Any] = {}
-        if identity.tag_id:
-            swid["tagId"] = identity.tag_id
-        if identity.software_name:
-            swid["name"] = identity.software_name
-        if identity.software_version:
-            swid["version"] = identity.software_version
-        if identity.tag_version:
-            swid["tagVersion"] = identity.tag_version
-        component["swid"] = swid
+        if component.tag_id:
+            swid["tagId"] = component.tag_id
+        if component.software_name:
+            swid["name"] = component.software_name
+        if component.software_version:
+            swid["version"] = component.software_version
+        if component.tag_version:
+            swid["tagVersion"] = component.tag_version
+        root["swid"] = swid
 
-        if identity.colloquial_version:
+        if component.colloquial_version:
             commit: Dict[str, str] = {}
-            commit["uid"] = identity.colloquial_version
-            component["commit"] = commit
+            commit["uid"] = component.colloquial_version
+            root["commit"] = commit
 
         # supplier and authors
         supplier: Dict[str, Any] = {}
         publisher: Optional[str] = None
         author: Optional[str] = None
-        for entity in identity.entities:
+        for entity in component.entities:
             if uSwidEntityRole.LICENSOR in entity.roles:
                 if entity.name:
                     supplier["name"] = entity.name
@@ -120,13 +120,13 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 if entity.name:
                     author = entity.name
         if supplier:
-            component["supplier"] = supplier
+            root["supplier"] = supplier
         if publisher:
-            component["publisher"] = publisher
+            root["publisher"] = publisher
         if author:
-            component["author"] = author
+            root["author"] = author
         hashes: List[Any] = []
-        for payload in identity.payloads:
+        for payload in component.payloads:
             for ihash in payload.hashes:
                 if not ihash.alg_id:
                     continue
@@ -134,18 +134,18 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                     {"alg": _convert_hash_alg_id(ihash.alg_id), "content": ihash.value}
                 )
         if hashes:
-            component["hashes"] = hashes
+            root["hashes"] = hashes
 
         # annotations
         annotations: List[Dict[str, Any]] = []
-        for evidence in identity.evidences:
-            annotation = {"subjects": [identity.tag_id], "annotator": "component"}
+        for evidence in component.evidences:
+            annotation = {"subjects": [component.tag_id], "annotator": "component"}
             if evidence.date:
                 annotation["timestamp"] = evidence.date.isoformat()
             if evidence.device_id:
                 annotation["text"] = evidence.device_id
             annotations.append(annotation)
         if annotations:
-            component["annotations"] = annotations
+            root["annotations"] = annotations
 
-        return component
+        return root

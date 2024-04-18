@@ -9,7 +9,7 @@
 
 from typing import List, Optional, Generator, Dict
 
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .errors import NotSupportedError
 
 from .vex_document import uSwidVexDocument
@@ -19,34 +19,34 @@ from .vex_statement import uSwidVexStatement
 class uSwidContainer:
     """Represents a uSWID container"""
 
-    def __init__(self, identities: Optional[List[uSwidIdentity]] = None) -> None:
+    def __init__(self, components: Optional[List[uSwidComponent]] = None) -> None:
         """Initializes uSwidContainer"""
-        self._identities: List[uSwidIdentity] = []
+        self._components: List[uSwidComponent] = []
         self.vex_documents: List[uSwidVexDocument] = []
-        if identities:
-            for identity in identities:
-                self.append(identity)
+        if components:
+            for component in components:
+                self.append(component)
 
     def __iter__(self) -> Generator:
-        for identity in self._identities:
-            yield identity
+        for component in self._components:
+            yield component
 
     def __len__(self) -> int:
-        return len(self._identities)
+        return len(self._components)
 
     def depsolve(self) -> None:
-        """Sets Link.identity using internally-resolvable SWID entries"""
+        """Sets Link.component using internally-resolvable SWID entries"""
 
-        data: Dict[str, uSwidIdentity] = {}
-        for identity in self._identities:
-            if identity.tag_id:
-                data[identity.tag_id] = identity
-        for identity in self._identities:
-            for link in identity.links:
+        data: Dict[str, uSwidComponent] = {}
+        for component in self._components:
+            if component.tag_id:
+                data[component.tag_id] = component
+        for component in self._components:
+            for link in component.links:
                 if link.href and link.href.startswith("swid:"):
-                    link.identity = data.get(link.href[5:])
+                    link.component = data.get(link.href[5:])
 
-        # add VEX statements to identities
+        # add VEX statements to components
         vex_by_hash: Dict[str:uSwidVexStatement] = {}
         vex_by_tag_version: Dict[str:uSwidVexStatement] = {}
         for vex_document in self.vex_documents:
@@ -58,67 +58,69 @@ class uSwidContainer:
                         vex_by_tag_version[
                             f"{vex_purl.name}:{vex_purl.version}"
                         ] = vex_statement
-        for identity in self._identities:
+        for component in self._components:
             try:
-                identity.add_vex_statement(
-                    vex_by_tag_version[f"{identity.tag_id}:{identity.software_version}"]
+                component.add_vex_statement(
+                    vex_by_tag_version[
+                        f"{component.tag_id}:{component.software_version}"
+                    ]
                 )
             except KeyError:
                 pass
-            for payload in identity.payloads:
+            for payload in component.payloads:
                 for ihash in payload.hashes:
                     try:
-                        identity.add_vex_statement(vex_by_hash[ihash.value])
+                        component.add_vex_statement(vex_by_hash[ihash.value])
                     except KeyError:
                         pass
 
-    def append(self, identity: uSwidIdentity) -> None:
-        """Add an identity to the container"""
-        self._identities.append(identity)
+    def append(self, component: uSwidComponent) -> None:
+        """Add an component to the container"""
+        self._components.append(component)
 
     def add_vex_document(self, vex_document: uSwidVexDocument) -> None:
         """Add a VEX document"""
         self.vex_documents.append(vex_document)
 
-    def merge(self, identity: uSwidIdentity) -> Optional[uSwidIdentity]:
-        """Merges one identity into another, returning None if the ``tag_id`` does not exist"""
+    def merge(self, component: uSwidComponent) -> Optional[uSwidComponent]:
+        """Merges one component into another, returning None if the ``tag_id`` does not exist"""
 
-        # just patching the default (and only) identity
-        if not identity.tag_id:
-            identity_default = self.get_default()
-            if not identity_default:
+        # just patching the default (and only) component
+        if not component.tag_id:
+            component_default = self.get_default()
+            if not component_default:
                 raise NotSupportedError(
-                    "cannot merge file without a tag_id and no default identity"
+                    "cannot merge file without a tag_id and no default component"
                 )
-            identity_default.merge(identity)
-            return identity_default
+            component_default.merge(component)
+            return component_default
 
         # does this tag ID already exist?
-        identity_old = self._get_by_id(identity.tag_id)
-        if identity_old:
-            identity_old.merge(identity)
-            return identity_old
+        component_old = self._get_by_id(component.tag_id)
+        if component_old:
+            component_old.merge(component)
+            return component_old
 
         # new to us
-        self.append(identity)
+        self.append(component)
         return None
 
-    def get_default(self) -> Optional[uSwidIdentity]:
-        """Returns the existing identity, or creates one if none already exist"""
+    def get_default(self) -> Optional[uSwidComponent]:
+        """Returns the existing component, or creates one if none already exist"""
 
-        if len(self._identities) > 1:
+        if len(self._components) > 1:
             return None
-        if not self._identities:
-            self._identities.append(uSwidIdentity())
-        return self._identities[0]
+        if not self._components:
+            self._components.append(uSwidComponent())
+        return self._components[0]
 
-    def _get_by_id(self, tag_id: str) -> Optional[uSwidIdentity]:
-        """Returns the identity that matches the tag ID"""
+    def _get_by_id(self, tag_id: str) -> Optional[uSwidComponent]:
+        """Returns the component that matches the tag ID"""
 
-        for identity in self._identities:
-            if identity.tag_id == tag_id:
-                return identity
+        for component in self._components:
+            if component.tag_id == tag_id:
+                return component
         return None
 
     def __repr__(self) -> str:
-        return f"uSwidContainer({self._identities})"
+        return f"uSwidContainer({self._components})"

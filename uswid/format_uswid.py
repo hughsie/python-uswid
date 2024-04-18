@@ -17,7 +17,7 @@ from .enums import USWID_HEADER_MAGIC, uSwidHeaderFlags, uSwidPayloadCompression
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .format_coswid import uSwidFormatCoswid
 
 
@@ -59,8 +59,8 @@ class uSwidFormatUswid(uSwidFormatBase):
 
     def save(self, container: uSwidContainer) -> bytes:
         blob: bytes = b""
-        for identity in container:
-            blob += uSwidFormatCoswid()._save_identity(identity)
+        for component in container:
+            blob += uSwidFormatCoswid()._save_component(component)
 
         # v3 header specifies the compression type
         if self.compression == uSwidPayloadCompression.LZMA:
@@ -149,11 +149,11 @@ class uSwidFormatUswid(uSwidFormatBase):
         # read each CBOR blob
         payload_offset = 0
         while payload_offset < len(payload):
-            identity = uSwidIdentity()
-            payload_offset += uSwidFormatCoswid()._load_identity(
-                identity, payload, payload_offset
+            component = uSwidComponent()
+            payload_offset += uSwidFormatCoswid()._load_component(
+                component, payload, payload_offset
             )
-            container.append(identity)
+            container.append(component)
 
         # consumed
         return hdrsz + payloadsz

@@ -9,7 +9,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 
 setup(
     name="uswid",
-    version="0.4.8",
+    version="0.5.0",
     license="BSD-2-Clause-Patent",
     license_files=[
         "LICENSE",
@@ -63,7 +63,7 @@ setup(
             "payload.pyi",
             "purl.pyi",
             "evidence.pyi",
-            "identity.pyi",
+            "component.pyi",
             "link.pyi",
             "problem.pyi",
             "vex_document.pyi",

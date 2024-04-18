@@ -1,17 +1,17 @@
 Basic API usage
 ===============
 
-Loading identities from a uSWID-format container:
+Loading components from a uSWID-format container:
 
 .. code-block:: python
 
     from uswid import uSwidFormatUswid
 
     with open(filename, "rb") as f:
-        for identity in uSwidFormatUswid().load(f.read()):
-            print(f"{identity!s}")
+        for component in uSwidFormatUswid().load(f.read()):
+            print(f"{component!s}")
 
-Loading identities from a possible PE file:
+Loading components from a possible PE file:
 
 .. code-block:: python
 
@@ -23,30 +23,30 @@ Loading identities from a possible PE file:
             pe = pefile.PE(data=f.read())
         for sect in pe.sections:
             if sect.Name == b".sbom\0\0\0":
-                for identity in uSwidFormatCoswid().load(sect.get_data()):
-                    print(f"{identity!s}")
+                for component in uSwidFormatCoswid().load(sect.get_data()):
+                    print(f"{component!s}")
     except pefile.PEFormatError:
         # not a PE file, which is fine
         pass
 
-Creating a new identity, entity and payload:
+Creating a new component, entity and payload:
 
 .. code-block:: python
 
     from uswid import (
-        uSwidIdentity,
+        uSwidComponent,
         uSwidEntity,
         uSwidEntityRole,
         uSwidPayload,
         uSwidHash,
     )
 
-    identity = uSwidIdentity(
+    component = uSwidComponent(
         tag_id="foo",
         software_name="bar",
         software_version="baz",
     )
-    identity.add_entity(
+    component.add_entity(
         uSwidEntity(
             name="me",
             regid="example.domain",
@@ -60,7 +60,7 @@ Creating a new identity, entity and payload:
             value="067cb8292dc062eabbe05734ef7987eb1333b6b6",
         )
     )
-    identity.add_payload(payload)
+    component.add_payload(payload)
 
 Saving all three to an XML SWID file:
 
@@ -69,5 +69,5 @@ Saving all three to an XML SWID file:
     from uswid import uSwidContainer, uSwidFormatSwid
 
     with open(filename, "rw") as f:
-        f.write(uSwidFormatSwid().save(uSwidContainer([identity])))
+        f.write(uSwidFormatSwid().save(uSwidContainer([component])))
 

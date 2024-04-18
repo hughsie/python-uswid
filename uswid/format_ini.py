@@ -17,8 +17,8 @@ from datetime import datetime
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
-from .identity import (
-    uSwidIdentity,
+from .component import (
+    uSwidComponent,
     _VERSION_SCHEME_TO_STRING,
     _VERSION_SCHEME_FROM_STRING,
 )
@@ -54,15 +54,15 @@ class uSwidFormatIni(uSwidFormatBase):
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
-        identity = uSwidIdentity()
-        self._load_identity(identity, blob, path=path)
-        return uSwidContainer([identity])
+        component = uSwidComponent()
+        self._load_component(component, blob, path=path)
+        return uSwidContainer([component])
 
     def save(self, container: uSwidContainer) -> bytes:
-        identity = container.get_default()
-        if not identity:
-            raise NotSupportedError("cannot save when no default identity")
-        return self._save_identity(identity)
+        component = container.get_default()
+        if not component:
+            raise NotSupportedError("cannot save when no default component")
+        return self._save_component(component)
 
     def _save_link(self, link: uSwidLink) -> Dict[str, Any]:
         """Exports a uSwidLink INI section"""
@@ -113,50 +113,50 @@ class uSwidFormatIni(uSwidFormatBase):
             data["extra-roles"] = ",".join(extra_roles)
         return data
 
-    def _save_identity(self, identity: uSwidIdentity) -> bytes:
+    def _save_component(self, component: uSwidComponent) -> bytes:
         config = configparser.ConfigParser()
 
         # main section
         main = {}
-        if identity.tag_id:
-            main["tag-id"] = identity.tag_id
-        if identity.tag_version:
-            main["tag-version"] = str(identity.tag_version)
-        if identity.software_name:
-            main["software-name"] = identity.software_name
-        if identity.software_version:
-            main["software-version"] = identity.software_version
-        if identity.version_scheme:
-            main["version-scheme"] = _VERSION_SCHEME_TO_STRING[identity.version_scheme]
-        if identity.summary:
-            main["summary"] = identity.summary
-        if identity.revision:
-            main["revision"] = identity.revision
-        if identity.product:
-            main["product"] = identity.product
-        if identity.edition:
-            main["edition"] = identity.edition
-        if identity.colloquial_version:
-            main["colloquial-version"] = identity.colloquial_version
-        if identity.persistent_id:
-            main["persistent-id"] = identity.persistent_id
+        if component.tag_id:
+            main["tag-id"] = component.tag_id
+        if component.tag_version:
+            main["tag-version"] = str(component.tag_version)
+        if component.software_name:
+            main["software-name"] = component.software_name
+        if component.software_version:
+            main["software-version"] = component.software_version
+        if component.version_scheme:
+            main["version-scheme"] = _VERSION_SCHEME_TO_STRING[component.version_scheme]
+        if component.summary:
+            main["summary"] = component.summary
+        if component.revision:
+            main["revision"] = component.revision
+        if component.product:
+            main["product"] = component.product
+        if component.edition:
+            main["edition"] = component.edition
+        if component.colloquial_version:
+            main["colloquial-version"] = component.colloquial_version
+        if component.persistent_id:
+            main["persistent-id"] = component.persistent_id
         config["uSWID"] = main
 
         # entity
-        if identity.entities:
-            config["uSWID-Entity:TagCreator"] = self._save_entity(identity.entities[0])
+        if component.entities:
+            config["uSWID-Entity:TagCreator"] = self._save_entity(component.entities[0])
 
         # link
-        if identity.links:
-            config["uSWID-Link"] = self._save_link(identity.links[0])
+        if component.links:
+            config["uSWID-Link"] = self._save_link(component.links[0])
 
         # payload
-        if identity.payloads:
-            config["uSWID-Payload"] = self._save_payload(identity.payloads[0])
+        if component.payloads:
+            config["uSWID-Payload"] = self._save_payload(component.payloads[0])
 
         # evidence
-        if identity.evidences:
-            config["uSWID-Evidence"] = self._save_evidence(identity.evidences[0])
+        if component.evidences:
+            config["uSWID-Evidence"] = self._save_evidence(component.evidences[0])
 
         # as string
         with io.StringIO() as f:
@@ -259,8 +259,8 @@ class uSwidFormatIni(uSwidFormatBase):
         if not entity.roles:
             raise NotSupportedError(f"entity {entity.name} MUST have at least one role")
 
-    def _load_identity(
-        self, identity: uSwidIdentity, blob: bytes, path: Optional[str]
+    def _load_component(
+        self, component: uSwidComponent, blob: bytes, path: Optional[str]
     ) -> None:
         config = configparser.ConfigParser()
         config.read_string(blob.decode())
@@ -268,43 +268,43 @@ class uSwidFormatIni(uSwidFormatBase):
             if group == "uSWID":
                 for key, value in config[group].items():
                     if key == "tag-id":
-                        identity.tag_id = value
+                        component.tag_id = value
                     elif key == "tag-version":
-                        identity.tag_version = int(value)
-                        identity._auto_increment_tag_version = False
+                        component.tag_version = int(value)
+                        component._auto_increment_tag_version = False
                     elif key == "software-name":
-                        identity.software_name = value
+                        component.software_name = value
                     elif key == "software-version":
-                        identity.software_version = value
+                        component.software_version = value
                     elif key == "version-scheme":
-                        identity.version_scheme = _VERSION_SCHEME_FROM_STRING[value]
+                        component.version_scheme = _VERSION_SCHEME_FROM_STRING[value]
                     elif key == "summary":
-                        identity.summary = value
+                        component.summary = value
                     elif key == "revision":
-                        identity.revision = value
+                        component.revision = value
                     elif key == "product":
-                        identity.product = value
+                        component.product = value
                     elif key == "edition":
-                        identity.edition = value
+                        component.edition = value
                     elif key == "colloquial-version":
-                        identity.colloquial_version = value
+                        component.colloquial_version = value
                     elif key == "persistent-id":
-                        identity.persistent_id = value
+                        component.persistent_id = value
                     else:
                         print(f"unknown key {key} found in ini file!")
             if group.startswith("uSWID-Entity:"):
                 entity = uSwidEntity()
                 self._load_entity(entity, config[group], role_hint=group)
-                identity.add_entity(entity)
+                component.add_entity(entity)
             if group.startswith("uSWID-Link"):
                 link = uSwidLink()
                 self._load_link(link, config[group])
-                identity.add_link(link)
+                component.add_link(link)
             if group.startswith("uSWID-Payload"):
                 payload = uSwidPayload()
                 self._load_payload(payload, config[group], path=path)
-                identity.add_payload(payload)
+                component.add_payload(payload)
             if group.startswith("uSWID-Evidence"):
                 evidence = uSwidEvidence()
                 self._load_evidence(evidence, config[group])
-                identity.add_evidence(evidence)
+                component.add_evidence(evidence)

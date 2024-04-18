@@ -19,7 +19,7 @@ from .enums import uSwidGlobalMap
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
-from .identity import uSwidIdentity
+from .component import uSwidComponent
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
@@ -66,16 +66,16 @@ class uSwidFormatCoswid(uSwidFormatBase):
         uSwidFormatBase.__init__(self)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
-        identity = uSwidIdentity()
-        container = uSwidContainer([identity])
-        self._load_identity(identity, blob)
+        component = uSwidComponent()
+        container = uSwidContainer([component])
+        self._load_component(component, blob)
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
-        identity = container.get_default()
-        if not identity:
-            raise NotSupportedError("cannot save when no default identity")
-        return self._save_identity(identity)
+        component = container.get_default()
+        if not component:
+            raise NotSupportedError("cannot save when no default component")
+        return self._save_component(component)
 
     def _save_link(self, link: uSwidLink) -> Dict[uSwidGlobalMap, Any]:
         """Exports a uSwidLink CoSWID section"""
@@ -142,74 +142,74 @@ class uSwidFormatCoswid(uSwidFormatBase):
         _set_one_or_more(data, uSwidGlobalMap.ROLE, entity.roles)
         return data
 
-    def _save_identity(self, identity: uSwidIdentity) -> bytes:
-        """Exports a uSwidIdentity CoSWID blob"""
+    def _save_component(self, component: uSwidComponent) -> bytes:
+        """Exports a uSwidComponent CoSWID blob"""
 
-        # general identity section
+        # general component section
         data: Dict[uSwidGlobalMap, Any] = {}
 
-        if identity.lang:
-            data[uSwidGlobalMap.LANG] = identity.lang
-        if identity.tag_id:
+        if component.lang:
+            data[uSwidGlobalMap.LANG] = component.lang
+        if component.tag_id:
             try:
-                data[uSwidGlobalMap.TAG_ID] = uuid.UUID(hex=identity.tag_id).bytes
+                data[uSwidGlobalMap.TAG_ID] = uuid.UUID(hex=component.tag_id).bytes
             except (KeyError, ValueError):
-                data[uSwidGlobalMap.TAG_ID] = identity.tag_id
-        if identity.tag_version:
-            tag_version = identity.tag_version
-            if identity._auto_increment_tag_version:
+                data[uSwidGlobalMap.TAG_ID] = component.tag_id
+        if component.tag_version:
+            tag_version = component.tag_version
+            if component._auto_increment_tag_version:
                 tag_version += 1
             data[uSwidGlobalMap.TAG_VERSION] = tag_version
         data[uSwidGlobalMap.CORPUS] = True  # is firmware installable?
-        if identity.software_name:
-            data[uSwidGlobalMap.SOFTWARE_NAME] = identity.software_name
-        if not identity.software_version:
+        if component.software_name:
+            data[uSwidGlobalMap.SOFTWARE_NAME] = component.software_name
+        if not component.software_version:
             raise NotSupportedError("a software_version MUST be provided")
-        data[uSwidGlobalMap.SOFTWARE_VERSION] = identity.software_version
-        if identity.version_scheme:
-            data[uSwidGlobalMap.VERSION_SCHEME] = identity.version_scheme
+        data[uSwidGlobalMap.SOFTWARE_VERSION] = component.software_version
+        if component.version_scheme:
+            data[uSwidGlobalMap.VERSION_SCHEME] = component.version_scheme
 
         # metadata section
         metadata: Dict[uSwidGlobalMap, Any] = {
-            uSwidGlobalMap.GENERATOR: identity.generator
+            uSwidGlobalMap.GENERATOR: component.generator
         }
-        if identity.summary:
-            metadata[uSwidGlobalMap.SUMMARY] = identity.summary
-        if identity.revision:
-            metadata[uSwidGlobalMap.REVISION] = identity.revision
-        if identity.product:
-            metadata[uSwidGlobalMap.PRODUCT] = identity.product
-        if identity.edition:
-            metadata[uSwidGlobalMap.EDITION] = _to_perhaps_hex_bytes(identity.edition)
-        if identity.colloquial_version:
+        if component.summary:
+            metadata[uSwidGlobalMap.SUMMARY] = component.summary
+        if component.revision:
+            metadata[uSwidGlobalMap.REVISION] = component.revision
+        if component.product:
+            metadata[uSwidGlobalMap.PRODUCT] = component.product
+        if component.edition:
+            metadata[uSwidGlobalMap.EDITION] = _to_perhaps_hex_bytes(component.edition)
+        if component.colloquial_version:
             metadata[uSwidGlobalMap.COLLOQUIAL_VERSION] = _to_perhaps_hex_bytes(
-                identity.colloquial_version
+                component.colloquial_version
             )
-        if identity.persistent_id:
-            metadata[uSwidGlobalMap.PERSISTENT_ID] = identity.persistent_id
+        if component.persistent_id:
+            metadata[uSwidGlobalMap.PERSISTENT_ID] = component.persistent_id
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
 
         # payloads
-        if identity.payloads:
+        if component.payloads:
             _set_one_or_more(
                 data,
                 uSwidGlobalMap.PAYLOAD,
-                [self._save_payload(payload) for payload in identity.payloads],
+                [self._save_payload(payload) for payload in component.payloads],
             )
 
         # evidences
-        if identity.evidences:
+        if component.evidences:
             _set_one_or_more(
                 data,
                 uSwidGlobalMap.EVIDENCE,
-                [self._save_evidence(evidence) for evidence in identity.evidences],
+                [self._save_evidence(evidence) for evidence in component.evidences],
             )
 
         # entities
-        if not identity._entities:
+        if not component._entities:
             raise NotSupportedError("at least one entity MUST be provided")
         has_tag_creator = False
-        for entity in identity._entities.values():
+        for entity in component._entities.values():
             if not entity.roles:
                 raise NotSupportedError(
                     f"all entities MUST have at least one role: {str(entity)}"
@@ -223,12 +223,12 @@ class uSwidFormatCoswid(uSwidFormatBase):
         _set_one_or_more(
             data,
             uSwidGlobalMap.ENTITY,
-            [self._save_entity(entity) for entity in identity._entities.values()],
+            [self._save_entity(entity) for entity in component._entities.values()],
         )
         _set_one_or_more(
             data,
             uSwidGlobalMap.LINK,
-            [self._save_link(link) for link in identity._links.values()],
+            [self._save_link(link) for link in component._links.values()],
         )
         return cbor2.dumps(data)
 
@@ -325,10 +325,10 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 print(f"ignoring invalid role of {role}")
                 continue
 
-    def _load_identity(
-        self, identity: uSwidIdentity, blob: bytes, offset: Optional[int] = 0
+    def _load_component(
+        self, component: uSwidComponent, blob: bytes, offset: Optional[int] = 0
     ) -> int:
-        """Imports a uSwidIdentity CoSWID blob"""
+        """Imports a uSwidComponent CoSWID blob"""
 
         if not blob:
             return 0
@@ -346,38 +346,38 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 raise NotSupportedError("invalid digital signature")
             data = cbor2.loads(data.value[2])
 
-        # identity can be specified as a string or in binary
+        # component can be specified as a string or in binary
         tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
         if isinstance(tag_id_bytes, str):
-            identity.tag_id = tag_id_bytes
+            component.tag_id = tag_id_bytes
         else:
             try:
-                identity.tag_id = str(uuid.UUID(bytes=tag_id_bytes))
+                component.tag_id = str(uuid.UUID(bytes=tag_id_bytes))
             except ValueError:
-                identity.tag_id = tag_id_bytes.hex()
+                component.tag_id = tag_id_bytes.hex()
 
-        identity.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
-        identity.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
-        identity.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
-        identity.version_scheme = data.get(uSwidGlobalMap.VERSION_SCHEME, None)
+        component.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
+        component.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)
+        component.software_version = data.get(uSwidGlobalMap.SOFTWARE_VERSION, None)
+        component.version_scheme = data.get(uSwidGlobalMap.VERSION_SCHEME, None)
 
         # optional metadata
         for sm in _get_one_or_more(data, uSwidGlobalMap.SOFTWARE_META):
             for key, value in sm.items():
                 if key == uSwidGlobalMap.GENERATOR:
-                    identity.generator = value
+                    component.generator = value
                 elif key == uSwidGlobalMap.SUMMARY:
-                    identity.summary = value
+                    component.summary = value
                 elif key == uSwidGlobalMap.REVISION:
-                    identity.revision = value
+                    component.revision = value
                 elif key == uSwidGlobalMap.PRODUCT:
-                    identity.product = value
+                    component.product = value
                 elif key == uSwidGlobalMap.EDITION:
-                    identity.edition = _from_perhaps_hex_bytes(value)
+                    component.edition = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
-                    identity.colloquial_version = _from_perhaps_hex_bytes(value)
+                    component.colloquial_version = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.PERSISTENT_ID:
-                    identity.persistent_id = value
+                    component.persistent_id = value
 
         # payload
         file_datas = []
@@ -393,13 +393,13 @@ class uSwidFormatCoswid(uSwidFormatBase):
         for file_data in file_datas:
             payload = uSwidPayload()
             self._load_payload(payload, file_data)
-            identity.add_payload(payload)
+            component.add_payload(payload)
 
         # evidence
         for evidence_data in _get_one_or_more(data, uSwidGlobalMap.EVIDENCE):
             evidence = uSwidEvidence()
             self._load_evidence(evidence, evidence_data)
-            identity.add_evidence(evidence)
+            component.add_evidence(evidence)
 
         # entities
         for entity_data in _get_one_or_more(data, uSwidGlobalMap.ENTITY):
@@ -408,15 +408,15 @@ class uSwidFormatCoswid(uSwidFormatBase):
             # skip invalid entries
             if not entity.roles:
                 continue
-            identity.add_entity(entity)
+            component.add_entity(entity)
 
         # links
         for link_data in _get_one_or_more(data, uSwidGlobalMap.LINK):
             link = uSwidLink()
             self._load_link(link, link_data)
-            identity.add_link(link)
+            component.add_link(link)
 
-        identity._auto_increment_tag_version = True
+        component._auto_increment_tag_version = True
 
         # number of bytes consumed, i.e. where the next CBOR blob is found
         return consumed
