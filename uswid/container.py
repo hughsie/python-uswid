@@ -28,8 +28,7 @@ class uSwidContainer:
                 self.append(component)
 
     def __iter__(self) -> Generator:
-        for component in self._components:
-            yield component
+        yield from self._components
 
     def __len__(self) -> int:
         return len(self._components)
@@ -47,12 +46,14 @@ class uSwidContainer:
                     link.component = data.get(link.href[5:])
 
         # add VEX statements to components
-        vex_by_hash: Dict[str:uSwidVexStatement] = {}
-        vex_by_tag_version: Dict[str:uSwidVexStatement] = {}
+        vex_by_hash: Dict[str, uSwidVexStatement] = {}
+        vex_by_tag_version: Dict[str, uSwidVexStatement] = {}
         for vex_document in self.vex_documents:
             for vex_statement in vex_document.statements:
                 for vex_product in vex_statement.products:
                     for vex_hash in vex_product.hashes:
+                        if not vex_hash.value:
+                            continue
                         vex_by_hash[vex_hash.value] = vex_statement
                     for vex_purl in vex_product.tag_ids:
                         vex_by_tag_version[
@@ -69,6 +70,8 @@ class uSwidContainer:
                 pass
             for payload in component.payloads:
                 for ihash in payload.hashes:
+                    if not ihash.value:
+                        continue
                     try:
                         component.add_vex_statement(vex_by_hash[ihash.value])
                     except KeyError:

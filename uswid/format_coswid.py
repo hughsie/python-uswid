@@ -53,9 +53,9 @@ def _to_perhaps_hex_bytes(value: str) -> Union[bytes, str]:
 def _from_perhaps_hex_bytes(value: Union[bytes, str]) -> str:
 
     try:
-        return value.hex()
+        return value.hex()  # type: ignore
     except AttributeError:
-        return value
+        return value  # type: ignore
 
 
 class uSwidFormatCoswid(uSwidFormatBase):

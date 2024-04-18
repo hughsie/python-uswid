@@ -24,7 +24,7 @@ class uSwidEntityRole(IntEnum):
     MAINTAINER = 6
 
 
-def _fix_vendor_id(dns: str) -> str:
+def _fix_vendor_id(dns: str) -> Optional[str]:
 
     if not dns:
         return None
