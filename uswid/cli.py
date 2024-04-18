@@ -430,20 +430,19 @@ def main():
             list
         )
         if len(container) == 0:
-            problems_dict[None] += uSwidProblem(
-                "all", "There are no defined components", since="0.4.7"
-            )
+            problems_dict[None] += [
+                uSwidProblem("all", "There are no defined components", since="0.4.7")
+            ]
         for component in container:
             problems_dict[component].extend(component.problems())
         if problems_dict:
             rc = 2
             print("Validation problems:")
-            for component, problems in problems_dict.items():
+            for opt_component, problems in problems_dict.items():
                 for problem in problems:
-                    if component:
-                        key = component.tag_id
-                    else:
-                        key = "*"
+                    key: str = "*"
+                    if opt_component and opt_component.tag_id:
+                        key = opt_component.tag_id
                     print(
                         f"{key.ljust(40)} {problem.kind.rjust(10)}: "
                         f"{problem.description} (uSWID >= v{problem.since})"

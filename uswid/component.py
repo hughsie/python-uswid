@@ -36,7 +36,7 @@ _VERSION_SCHEME_FROM_STRING = {
 }
 
 
-def _fix_appstream_id(appstream_id: str) -> str:
+def _fix_appstream_id(appstream_id: str) -> Optional[str]:
 
     if not appstream_id:
         return None
@@ -149,7 +149,7 @@ class uSwidComponent:
         problems: List[uSwidProblem] = []
 
         if self._tag_id:
-            if fnmatch.fnmatch(self.tag_id, "????????_????_????_????_????????????"):
+            if fnmatch.fnmatch(self._tag_id, "????????_????_????_????_????????????"):
                 problems += [
                     uSwidProblem(
                         "component",
@@ -207,7 +207,7 @@ class uSwidComponent:
             ]
 
         # entity
-        entity_by_role: Dict[uSwidEntityRole:uSwidEntity] = {}
+        entity_by_role: Dict[uSwidEntityRole, uSwidEntity] = {}
         for entity in self.entities:
             for role in entity.roles:
                 entity_by_role[role] = entity
@@ -224,9 +224,9 @@ class uSwidComponent:
             ]
 
         # link
-        link_by_rel: Dict[uSwidLinkRel:uSwidLink] = {}
+        link_by_rel: Dict[str, uSwidLink] = {}
         for link in self.links:
-            link_by_rel[link.rel] = link
+            link_by_rel[link.rel or ""] = link
             problems += link.problems()
         if uSwidLinkRel.LICENSE not in link_by_rel:
             problems += [uSwidProblem("link", "Has no LICENSE", since="0.4.7")]

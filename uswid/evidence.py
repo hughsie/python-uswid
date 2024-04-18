@@ -33,9 +33,9 @@ class uSwidEvidence:
 
         problems: List[uSwidProblem] = []
         if not self.date:
-            problems += uSwidProblem("evidence", "No date", since="0.4.7")
+            problems += [uSwidProblem("evidence", "No date", since="0.4.7")]
         if not self.device_id:
-            problems += uSwidProblem("evidence", "No device_id", since="0.4.7")
+            problems += [uSwidProblem("evidence", "No device_id", since="0.4.7")]
         elif self.device_id.find("REDACTED") != -1:
             problems += [uSwidProblem("evidence", "Redacted device_id", since="0.4.8")]
         return problems
