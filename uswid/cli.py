@@ -24,10 +24,8 @@ import shutil
 import uuid
 import string
 
-if sys.version_info >= (3, 8):
-    from importlib import metadata as importlib_metadata
-else:
-    import importlib_metadata
+from importlib import metadata as importlib_metadata
+from importlib.metadata import PackageNotFoundError
 
 import pefile
 
@@ -240,11 +238,14 @@ def main():
     parser = argparse.ArgumentParser(
         prog="uswid", description="Generate CoSWID metadata"
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s " + importlib_metadata.version("uswid"),
-    )
+    try:
+        parser.add_argument(
+            "--version",
+            action="version",
+            version="%(prog)s " + importlib_metadata.version("uswid"),
+        )
+    except PackageNotFoundError:
+        pass
     parser.add_argument("--cc", default="gcc", help="Compiler to use for empty object")
     parser.add_argument(
         "--cflags", default="", help="C compiler flags to be used by CC"
