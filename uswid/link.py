@@ -35,6 +35,9 @@ class uSwidLinkRel(IntEnum):
     SUPERSEDES = 10
     SUPPLEMENTAL = 11
 
+    def __str__(self):
+        return self.name.lower()
+
 
 class uSwidLink:
     """Represents a SWID link"""

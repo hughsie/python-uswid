@@ -20,6 +20,9 @@ class uSwidHashAlg(IntEnum):
     SHA384 = 7
     SHA512 = 8
 
+    def __str__(self):
+        return self.name.lower()
+
     @classmethod
     def from_string(cls, alg_id: str) -> "uSwidHashAlg":
         """Creates a uSwidHashAlg from a string identifier"""

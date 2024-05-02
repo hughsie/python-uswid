@@ -23,6 +23,9 @@ class uSwidEntityRole(IntEnum):
     LICENSOR = 5
     MAINTAINER = 6
 
+    def __str__(self):
+        return self.name.lower()
+
 
 def _fix_vendor_id(dns: str) -> Optional[str]:
 
