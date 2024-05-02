@@ -69,6 +69,9 @@ class uSwidGlobalMap(IntEnum):
     UNSPSC_CODE = 56
     UNSPSC_VERSION = 57
 
+    def __str__(self):
+        return self.name.lower()
+
 
 class uSwidVersionScheme(IntEnum):
     """Represents an enumerated version scheme"""
@@ -78,6 +81,9 @@ class uSwidVersionScheme(IntEnum):
     ALPHANUMERIC = 3
     DECIMAL = 4
     SEMVER = 16384
+
+    def __str__(self):
+        return self.name.lower()
 
 
 USWID_HEADER_MAGIC = b"\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
@@ -91,6 +97,9 @@ class uSwidHeaderFlags(IntEnum):
 
     NONE = 0x00
     COMPRESSED = 0x01
+
+    def __str__(self):
+        return self.name.lower()
 
 
 class uSwidPayloadCompression(IntEnum):
