@@ -154,7 +154,7 @@ Dependancies like compilers or other security-relevant libraries can be added us
 Where we have added an extra link section in `uswid.ini`:
 
     [uSWID-Link:gcc]
-    rel = see-also
+    rel = compiler
     href = swid:077b4576-92f7-52fd-94eb-af9fc3d52c58
 
 Where `compiler.ini` looks something like:
