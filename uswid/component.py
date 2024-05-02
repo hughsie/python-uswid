@@ -228,11 +228,11 @@ class uSwidComponent:
         for link in self.links:
             link_by_rel[link.rel or ""] = link
             problems += link.problems()
-        if uSwidLinkRel.LICENSE not in link_by_rel:
+        if str(uSwidLinkRel.LICENSE) not in link_by_rel:
             problems += [uSwidProblem("link", "Has no LICENSE", since="0.4.7")]
-        if self.colloquial_version and uSwidLinkRel.COMPILER not in link_by_rel:
+        if self.colloquial_version and str(uSwidLinkRel.COMPILER) not in link_by_rel:
             problems += [uSwidProblem("link", "Has no COMPILER", since="0.4.7")]
-        if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
+        if str(uSwidLinkRel.COMPILER) in link_by_rel and not self.colloquial_version:
             problems += [
                 uSwidProblem(
                     "component",
@@ -240,7 +240,7 @@ class uSwidComponent:
                     since="0.4.7",
                 )
             ]
-        if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
+        if str(uSwidLinkRel.COMPILER) in link_by_rel and not self.colloquial_version:
             problems += [
                 uSwidProblem(
                     "component", "Has no edition (source code tree hash)", since="0.4.7"
