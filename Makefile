@@ -36,6 +36,9 @@ $(STUBGEN):
 $(BLACK):
 	$(PIP) install black
 
+$(RUFF):
+	$(PIP) install ruff
+
 $(SPHINX_BUILD):
 	$(PIP) install sphinx sphinx_autodoc_typehints sphinx_rtd_theme
 
