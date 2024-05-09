@@ -5,6 +5,16 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.5.0** (2024-05-09)
+
+ - Add a validation failure for REDACTED text (Richard Hughes)
+ - Add initial support for VEX (Richard Hughes)
+ - Allow outputting multi-document SWID XML files (Richard Hughes)
+ - Correctly validate missing license and compiler links (Richard Hughes)
+ - Relicense from LGPL-2.1+ to BSD-2-Clause-Patent (Richard Hughes)
+ - Rename identity to component (Richard Hughes)
+ - Save HEX strings as bytes to minimize coSWID size (Richard Hughes)
+
 **0.4.7** (2023-12-03)
 
  - Add support for LZMA payload compression (Richard Hughes)

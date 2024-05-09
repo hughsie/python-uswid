@@ -435,7 +435,9 @@ def main():
                 uSwidProblem("all", "There are no defined components", since="0.4.7")
             ]
         for component in container:
-            problems_dict[component].extend(component.problems())
+            problems = component.problems()
+            if problems:
+                problems_dict[component].extend(problems)
         if problems_dict:
             rc = 2
             print("Validation problems:")

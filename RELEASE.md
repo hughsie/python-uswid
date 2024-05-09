@@ -8,7 +8,7 @@
 Commit changes to git:
 
     # MAKE SURE THAT setup.py IS ALSO CORRECT
-    export release_ver="0.4.8"
+    export release_ver="0.5.0"
     git commit -a -m "Release ${release_ver}"
     git tag -s -f -m "Release ${release_ver}" "${release_ver}"
     make pkg
