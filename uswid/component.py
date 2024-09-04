@@ -17,7 +17,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
-from .problem import uSwidProblem
+from .problem import uSwidProblem, _is_redacted
 from .vex_statement import uSwidVexStatement
 
 _VERSION_SCHEME_TO_STRING = {
@@ -159,7 +159,7 @@ class uSwidComponent:
                 ]
         if not self.software_name:
             problems += [uSwidProblem("component", "No software name", since="0.4.7")]
-        elif self.software_name.find("REDACTED") != -1:
+        elif _is_redacted(self.software_name):
             problems += [
                 uSwidProblem("component", "Redacted software name", since="0.4.8")
             ]
@@ -167,30 +167,30 @@ class uSwidComponent:
             problems += [
                 uSwidProblem("component", "No software version", since="0.4.7")
             ]
-        elif self.software_version.find("REDACTED") != -1:
+        elif _is_redacted(self.software_version):
             problems += [
                 uSwidProblem("component", "Redacted software version", since="0.4.8")
             ]
         if not self.version_scheme:
             problems += [uSwidProblem("component", "No version scheme", since="0.4.7")]
 
-        if self.summary and self.summary.find("REDACTED") != -1:
+        if _is_redacted(self.summary):
             problems += [uSwidProblem("component", "Redacted summary", since="0.4.8")]
-        if self.product and self.product.find("REDACTED") != -1:
+        if _is_redacted(self.product):
             problems += [uSwidProblem("component", "Redacted product", since="0.4.8")]
-        if self.colloquial_version and self.colloquial_version.find("REDACTED") != -1:
+        if _is_redacted(self.colloquial_version):
             problems += [
                 uSwidProblem("component", "Redacted colloquial version", since="0.4.8")
             ]
-        if self.revision and self.revision.find("REDACTED") != -1:
+        if _is_redacted(self.revision):
             problems += [uSwidProblem("component", "Redacted revision", since="0.4.8")]
-        if self.edition and self.edition.find("REDACTED") != -1:
+        if _is_redacted(self.edition):
             problems += [uSwidProblem("component", "Redacted edition", since="0.4.8")]
-        if self.persistent_id and self.persistent_id.find("REDACTED") != -1:
+        if _is_redacted(self.persistent_id):
             problems += [
                 uSwidProblem("component", "Redacted persistent id", since="0.4.8")
             ]
-        if self.generator and self.generator.find("REDACTED") != -1:
+        if _is_redacted(self.generator):
             problems += [uSwidProblem("component", "Redacted generator", since="0.4.8")]
 
         # should be reverse-DNS name

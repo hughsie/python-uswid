@@ -12,7 +12,7 @@ from typing import Optional, List, Dict
 import hashlib
 
 from .hash import uSwidHash, uSwidHashAlg
-from .problem import uSwidProblem
+from .problem import uSwidProblem, _is_redacted
 
 
 class uSwidPayload:
@@ -56,7 +56,7 @@ class uSwidPayload:
         """Checks the payload for common problems"""
 
         problems: List[uSwidProblem] = []
-        if self.name and self.name.find("REDACTED") != -1:
+        if _is_redacted(self.name):
             problems += [uSwidProblem("payload", "Redacted name", since="0.4.8")]
         if not self.size:
             problems += [

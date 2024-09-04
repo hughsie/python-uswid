@@ -11,7 +11,7 @@ from typing import List, Optional
 
 from datetime import datetime
 
-from .problem import uSwidProblem
+from .problem import uSwidProblem, _is_redacted
 
 
 class uSwidEvidence:
@@ -36,7 +36,7 @@ class uSwidEvidence:
             problems += [uSwidProblem("evidence", "No date", since="0.4.7")]
         if not self.device_id:
             problems += [uSwidProblem("evidence", "No device_id", since="0.4.7")]
-        elif self.device_id.find("REDACTED") != -1:
+        elif _is_redacted(self.device_id):
             problems += [uSwidProblem("evidence", "Redacted device_id", since="0.4.8")]
         return problems
 
