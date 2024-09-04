@@ -10,7 +10,7 @@
 from enum import IntEnum
 from typing import List, Optional
 
-from .problem import uSwidProblem
+from .problem import uSwidProblem, _is_redacted
 
 
 class uSwidEntityRole(IntEnum):
@@ -72,11 +72,11 @@ class uSwidEntity:
         problems: List[uSwidProblem] = []
         if not self.name:
             problems += [uSwidProblem("entity", "No name", since="0.4.7")]
-        elif self.name.find("REDACTED") != -1:
+        elif _is_redacted(self.name):
             problems += [uSwidProblem("entity", "Redacted name", since="0.4.8")]
         if not self.regid:
             problems += [uSwidProblem("entity", "No regid", since="0.4.7")]
-        elif self.regid.find("REDACTED") != -1:
+        elif _is_redacted(self.regid):
             problems += [uSwidProblem("entity", "Redacted regid", since="0.4.8")]
 
         # should be DNS name

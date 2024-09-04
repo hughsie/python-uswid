@@ -7,6 +7,22 @@
 #
 # pylint: disable=too-few-public-methods
 
+from typing import Optional
+
+
+def _is_redacted(value: Optional[str]) -> bool:
+    if not value:
+        return False
+    if value.find("REDACTED") != -1:
+        return True
+    if value.find("redacted") != -1:
+        return True
+    if value.find("NOVALUE") != -1:
+        return True
+    if value.find("no value") != -1:
+        return True
+    return False
+
 
 class uSwidProblem:
     """Represents a SWID component problem"""
