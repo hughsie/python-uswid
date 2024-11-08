@@ -45,8 +45,11 @@ class uSwidContainer:
                 data[component.tag_id] = component
         for component in self._components:
             for link in component.links:
-                if link.href and link.href.startswith("swid:"):
-                    link.component = data.get(link.href[5:])
+                if link.href:
+                    if link.href.startswith("swid:"):
+                        link.component = data.get(link.href[5:])
+                    if link.href.startswith("pkg:"):
+                        link.component = data.get(link.href)
 
         # add VEX statements to components
         vex_by_hash: Dict[str, uSwidVexStatement] = {}

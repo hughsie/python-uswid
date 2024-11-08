@@ -299,6 +299,14 @@ class uSwidComponent:
         """Add the latest entity"""
         if not entity.name:
             raise NotSupportedError("the entity name MUST be provided")
+
+        # dedupe
+        for entity_old in self._entities.values():
+            if entity_old.name == entity.name:
+                for role in entity.roles:
+                    entity_old.add_role(role)
+                return
+
         self._entities[entity.name] = entity
 
     def add_link(self, link: uSwidLink) -> None:
@@ -326,6 +334,13 @@ class uSwidComponent:
         """Get the entity"""
         for entity in self.entities:
             if entity.name == name:
+                return entity
+        return None
+
+    def get_entity_by_role(self, role: uSwidEntityRole) -> Optional[uSwidEntity]:
+        """Get the entity"""
+        for entity in self.entities:
+            if role in entity.roles:
                 return entity
         return None
 
