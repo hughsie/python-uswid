@@ -14,8 +14,10 @@ from datetime import datetime
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .component import uSwidComponent
-from .entity import uSwidEntityRole
+from .entity import uSwidEntity, uSwidEntityRole
+from .errors import NotSupportedError
 from .hash import uSwidHashAlg
+from .link import uSwidLink
 
 
 def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
@@ -29,9 +31,96 @@ def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
 class uSwidFormatSpdx(uSwidFormatBase):
     """SPDX file"""
 
+    def _load_component(
+        self, component: uSwidComponent, blob: bytes, offset: Optional[int] = 0
+    ) -> None:
+        """Imports a uSwidComponent SPXD blob"""
+
+        try:
+            data = json.loads(blob[offset:])
+        except json.JSONDecodeError as e:
+            raise NotSupportedError(f"invalid JSON file: {e}") from e
+
+        # package (should always exist)
+        try:
+            tag_id = data["packages"][0]["SPDXID"]
+            if tag_id.startswith("SPDXRef-"):
+                tag_id = tag_id[8:]
+            component.tag_id = tag_id
+        except KeyError:
+            pass
+        try:
+            component.software_name = data["packages"][0]["name"]
+        except KeyError:
+            pass
+        try:
+            component.summary = data["packages"][0]["summary"]
+        except KeyError:
+            pass
+        try:
+            component.software_version = data["packages"][0]["versionInfo"]
+        except KeyError:
+            pass
+        try:
+            spdx_license_ids = data["packages"][0]["licenseDeclared"]
+            for spdx_license_id in spdx_license_ids.split(" AND "):
+                component.add_link(
+                    uSwidLink(
+                        rel="license",
+                        href=f"https://spdx.org/licenses/{spdx_license_id}",
+                    )
+                )
+        except KeyError:
+            pass
+
+        # entities
+        try:
+            name = data["name"]
+            if name.startswith("Organization: "):
+                name = name[14:]
+            component.add_entity(
+                uSwidEntity(name=name, roles=[uSwidEntityRole.LICENSOR])
+            )
+        except KeyError:
+            pass
+        try:
+            name = data["originator"]
+            if name.startswith("Organization: "):
+                name = name[14:]
+            component.add_entity(
+                uSwidEntity(name=name, roles=[uSwidEntityRole.SOFTWARE_CREATOR])
+            )
+        except KeyError:
+            pass
+        try:
+            for creator in data["creationInfo"]["creators"]:
+                if creator.startswith("Organization: "):
+                    component.add_entity(
+                        uSwidEntity(
+                            name=creator[14:], roles=[uSwidEntityRole.TAG_CREATOR]
+                        )
+                    )
+                    break
+                if creator.startswith("Person: "):
+                    component.add_entity(
+                        uSwidEntity(
+                            name=creator[8:], roles=[uSwidEntityRole.TAG_CREATOR]
+                        )
+                    )
+                    break
+        except KeyError:
+            pass
+
     def __init__(self) -> None:
         """Initializes uSwidFormatSpdx"""
         uSwidFormatBase.__init__(self)
+
+    def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
+
+        component = uSwidComponent()
+        container = uSwidContainer([component])
+        self._load_component(component, blob)
+        return container
 
     def save(self, container: uSwidContainer) -> bytes:
         # header
@@ -51,6 +140,16 @@ class uSwidFormatSpdx(uSwidFormatBase):
             "creators": ["Tool: uSWID"],
             "created": datetime.now().strftime("%FT%TZ"),
         }
+
+        # tag creator
+        creator: Optional[str] = None
+        for component in container:
+            for entity in component.entities:
+                if uSwidEntityRole.TAG_CREATOR in entity.roles:
+                    if entity.name:
+                        creator = entity.name
+        if creator:
+            root["creationInfo"]["creators"].append(f"Organization: {creator}")
 
         # what packages are we describing
         document_describes: List[str] = []
@@ -123,5 +222,15 @@ class uSwidFormatSpdx(uSwidFormatBase):
             annotations.append(annotation)
         if annotations:
             root["annotations"] = annotations
+
+        # license
+        license_spdx_ids = []
+        for link in component.links:
+            if link.rel != "license":
+                continue
+            if link.href.startswith("https://spdx.org/licenses/"):
+                license_spdx_ids.append(link.href[26:])
+        if license_spdx_ids:
+            root["licenseDeclared"] = " AND ".join(license_spdx_ids)
 
         return root
