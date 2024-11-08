@@ -88,6 +88,11 @@ class uSwidContainer:
     def merge(self, component: uSwidComponent) -> Optional[uSwidComponent]:
         """Merges one component into another, returning None if the ``tag_id`` does not exist"""
 
+        # short cut because container is empty
+        if not len(self):
+            self.append(component)
+            return None
+
         # just patching the default (and only) component
         if not component.tag_id:
             component_default = self.get_default()

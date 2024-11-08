@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-# pylint: disable=protected-access,too-many-boolean-expressions
+# pylint: disable=protected-access,too-many-boolean-expressions,too-many-positional-arguments
 
 from typing import Dict, Optional, List
 import uuid
