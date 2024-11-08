@@ -66,6 +66,12 @@ class uSwidEntity:
         if roles:
             self.roles.extend(roles)
 
+    def add_role(self, role: uSwidEntityRole) -> None:
+        """Adds a role, checking it does not already exist"""
+
+        if role not in self.roles:
+            self.roles.append(role)
+
     def problems(self) -> List[uSwidProblem]:
         """Checks the entity for common problems"""
 
