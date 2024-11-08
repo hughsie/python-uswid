@@ -5,6 +5,10 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.5.1** (2024-11-xx)
+
+ - Add ``--find`` to recursively find SBOM files (Richard Hughes)
+
 **0.5.0** (2024-05-09)
 
  - Add a validation failure for REDACTED text (Richard Hughes)
