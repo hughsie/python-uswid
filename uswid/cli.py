@@ -414,6 +414,7 @@ def main():
                 SwidFormat.COSWID,
                 SwidFormat.USWID,
                 SwidFormat.XML,
+                SwidFormat.SPDX,
                 SwidFormat.PKG_CONFIG,
             ]:
                 base = _type_for_fmt(fmt, args, filepath=filepath)
@@ -431,7 +432,8 @@ def main():
                                     filepath, component_new.tag_id
                                 )
                             )
-
+            else:
+                print(f"{filepath} has unknown format, ignoring")
         except FileNotFoundError:
             print(f"{filepath} does not exist")
             sys.exit(1)
