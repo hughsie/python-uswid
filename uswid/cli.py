@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position,too-many-locals
 
 from enum import IntEnum
 from collections import defaultdict
@@ -258,6 +258,11 @@ def main():
         "--objcopy", default=None, help="Binary file to use for objcopy"
     )
     parser.add_argument(
+        "--find",
+        nargs="+",
+        help="directory to scan, e.g. ~/Code/firmware",
+    )
+    parser.add_argument(
         "--load",
         nargs="+",
         help="file to import, .efi,.ini,.uswid,.xml,.json",
@@ -309,6 +314,19 @@ def main():
     if not load_filepaths:
         load_filepaths = []
     save_filepaths = args.save if args.save else []
+
+    # search recursively
+    if args.find:
+        sbom_filenames = ["spdx.json", "swid.xml", "bom.json", "bom.coswid", "sbom.ini"]
+        for path in args.find:
+            for dirpath, _, fns in os.walk(path):
+                for fn in fns:
+                    if fn in sbom_filenames:
+                        load_filepaths.append(os.path.join(dirpath, fn))
+        if args.verbose and load_filepaths:
+            print("Found:")
+            for filepath in load_filepaths:
+                print(f" - {filepath}")
 
     # handle deprecated --compress
     if args.compress:

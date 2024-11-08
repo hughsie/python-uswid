@@ -235,6 +235,19 @@ Each generated component includes:
  * A semantic version of size 3-8 chars
  * An entity from a random selection of 10 entities
 
+# Building Composite SBOMs
+
+The `uswid` CLI can scan a target directory and locate component SBOMs in various formats.
+To do this, it uses specific hardcoded filenames for different SBOM formats, for example:
+
+ * `bom.coswid` → CoSWID
+ * `bom.json` → CycloneDX
+ * `sbom.ini` → INI
+ * `spdx.json` → SPDX
+ * `swid.xml` → SWID
+
+To use this functionality, use something like `uswid --find ~/Code/edk2 --save sbom.uswid`
+
 # VEX
 
 The `uswid` binary can load VEX data from [OpenVEX](https://github.com/openvex) and [CSAF-2.0](https://docs.oasis-open.org/csaf/csaf/v2.0/csaf-v2.0.html) files, and will generate a report for the end-user.
