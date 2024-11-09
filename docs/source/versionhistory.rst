@@ -9,6 +9,7 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
  - Add ``--find`` to recursively find SBOM files (Richard Hughes)
  - Add support for loading SPDX files (Richard Hughes)
+ - Add support for verifying different SBOM different formats (Richard Hughes)
 
 **0.5.0** (2024-05-09)
 
