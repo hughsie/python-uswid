@@ -179,6 +179,8 @@ class uSwidFormatSwid(uSwidFormatBase):
             or component.persistent_id
         ):
             node = ET.SubElement(root, "Meta")
+            if component.summary:
+                node.set("summary", component.summary)
             if component.revision:
                 node.set("revision", component.revision)
             if component.product:
@@ -258,7 +260,10 @@ class uSwidFormatSwid(uSwidFormatBase):
         """Imports a uSwidComponent SWID blob"""
 
         parser = ET.XMLParser()
-        tree = ET.fromstring(blob, parser)
+        try:
+            tree = ET.fromstring(blob, parser)
+        except ET.XMLSyntaxError as e:
+            raise NotSupportedError("Invalid syntax") from e
         namespaces = {
             "ns": "http://standards.iso.org/iso/19770/-2/2015/schema.xsd",
             "ds": "http://www.w3.org/2000/09/xmldsig#",
@@ -276,7 +281,10 @@ class uSwidFormatSwid(uSwidFormatBase):
 
         # component
         component.tag_id = element.get("tagId")
-        component.tag_version = element.get("tagVersion")
+        try:
+            component.tag_version = int(element.get("tagVersion"))
+        except TypeError:
+            pass
         component.software_name = element.get("name")
         component.software_version = element.get("version")
         try:

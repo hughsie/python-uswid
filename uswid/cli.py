@@ -5,13 +5,13 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-# pylint: disable=wrong-import-position,too-many-locals
+# pylint: disable=wrong-import-position,too-many-locals,too-many-statements
 
 from enum import IntEnum
 from collections import defaultdict
 from random import choices, randrange
 from datetime import datetime
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Dict
 import argparse
 import tempfile
 import subprocess
@@ -233,6 +233,196 @@ def _type_for_fmt(
     return None
 
 
+def _roundtrip(container: uSwidContainer) -> None:
+
+    # collect for analysis
+    try:
+        component: uSwidComponent = container[0]
+    except IndexError:
+        print("no default component")
+        return
+
+    # convert to each format and back again
+    for base in [
+        uSwidFormatCoswid(),
+        uSwidFormatIni(),
+        uSwidFormatCycloneDX(),
+        uSwidFormatGoswid(),
+        uSwidFormatPkgconfig(),
+        uSwidFormatSpdx(),
+        uSwidFormatSwid(),
+        uSwidFormatUswid(),
+    ]:
+
+        # save
+        try:
+            blob: bytes = base.save(container)
+        except NotImplementedError:
+            continue
+
+        # load
+        try:
+            container_new = base.load(blob)
+        except NotImplementedError:
+            continue
+        try:
+            component_new = container_new[0]
+        except IndexError:
+            print(f"no default component for {base.name}")
+            continue
+
+        # compare the old and the new
+        differences: List[Dict[str, Any]] = []
+        for key in [
+            "tag_id",
+            "tag_version",
+            "software_name",
+            "software_version",
+            "version_scheme",
+            "summary",
+            "product",
+            "colloquial_version",
+            "revision",
+            "edition",
+            "persistent_id",
+        ]:
+            if getattr(component, key) != getattr(component_new, key):
+                differences.append(
+                    {
+                        "class": "uSwidComponent",
+                        "property": key,
+                        "old": getattr(component, key),
+                        "new": getattr(component_new, key),
+                    }
+                )
+
+        # payloads
+        for payload in component.payloads:
+
+            # check still exists
+            payload_new = component_new.get_payload_by_name(payload.name)
+            if not payload_new:
+                differences.append(
+                    {
+                        "class": "uSwidPayload",
+                        "name": payload.name,
+                    }
+                )
+                continue
+
+            # check values
+            for key in [
+                "name",
+                "size",
+            ]:
+                if getattr(payload, key) != getattr(payload_new, key):
+                    differences.append(
+                        {
+                            "class": "uSwidPayload",
+                            "property": key,
+                            "old": getattr(payload, key),
+                            "new": getattr(payload_new, key),
+                        }
+                    )
+
+        # entities
+        for entity in component.entities:
+
+            # check still exists
+            for role in entity.roles:
+                entity_new = component_new.get_entity_by_role(role)
+                if not entity_new:
+                    differences.append(
+                        {
+                            "class": "uSwidEntity",
+                            "name": role,
+                        }
+                    )
+                    continue
+
+                # check values
+                for key in [
+                    "name",
+                    "regid",
+                ]:
+                    if getattr(entity, key) != getattr(entity_new, key):
+                        differences.append(
+                            {
+                                "class": "uSwidEntity",
+                                "property": key,
+                                "old": getattr(entity, key),
+                                "new": getattr(entity_new, key),
+                            }
+                        )
+
+        # link
+        for link in component.links:
+            # check still exists
+            link_new = component_new.get_link_by_rel(link.rel)
+            if not link_new:
+                differences.append(
+                    {
+                        "class": "uSwidLink",
+                        "name": link.rel,
+                    }
+                )
+                continue
+
+            # check values
+            for key in [
+                "href",
+                "rel",
+            ]:
+                if getattr(link, key) != getattr(link_new, key):
+                    differences.append(
+                        {
+                            "class": "uSwidLink",
+                            "property": key,
+                            "old": getattr(link, key),
+                            "new": getattr(link_new, key),
+                        }
+                    )
+
+        # evidence
+        for evidence in component.evidences:
+            # check still exists
+            evidence_new = component_new.get_evidence_by_rel(evidence.rel)
+            if not evidence_new:
+                differences.append(
+                    {
+                        "class": "uSwidEvidence",
+                        "name": evidence.rel,
+                    }
+                )
+                continue
+
+            # check values
+            for key in [
+                "date",
+                "device_id",
+            ]:
+                if getattr(evidence, key) != getattr(evidence_new, key):
+                    differences.append(
+                        {
+                            "class": "uSwidEvidence",
+                            "property": key,
+                            "old": getattr(evidence, key),
+                            "new": getattr(evidence_new, key),
+                        }
+                    )
+
+        # show differences
+        total: float = 20
+        print(f"{fmt.name}: { 100.0 / float(total) * (total - len(differences))}%")
+        for dif in differences:
+            try:
+                print(
+                    f"  - FAILURE {dif['class']}.{dif['property']}: {dif['old']}->{dif['new']}"
+                )
+            except KeyError:
+                print(f"  - FAILURE {dif['class']} [{dif['name']}] -> None")
+
+
 def main():
     """Main entrypoint"""
     parser = argparse.ArgumentParser(
@@ -294,6 +484,13 @@ def main():
         default=False,
         action="store_true",
         help="Generate plausible SWID entries",
+    )
+    parser.add_argument(
+        "--roundtrip",
+        dest="roundtrip",
+        default=False,
+        action="store_true",
+        help="Test various different formats from loaded data",
     )
     parser.add_argument(
         "--validate",
@@ -470,6 +667,10 @@ def main():
                         f"{key.ljust(40)} {problem.kind.rjust(10)}: "
                         f"{problem.description} (uSWID >= v{problem.since})"
                     )
+
+    # test the container with different SBOM formats
+    if args.roundtrip:
+        _roundtrip(container)
 
     # add any missing evidence
     for component in container:

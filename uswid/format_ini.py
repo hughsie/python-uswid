@@ -147,16 +147,25 @@ class uSwidFormatIni(uSwidFormatBase):
             config["uSWID-Entity:TagCreator"] = self._save_entity(component.entities[0])
 
         # link
-        if component.links:
-            config["uSWID-Link"] = self._save_link(component.links[0])
+        for i, link in enumerate(component.links):
+            key = "uSWID-Link"
+            if i == 0:
+                key += f":{i}"
+            config[key] = self._save_link(link)
 
         # payload
-        if component.payloads:
-            config["uSWID-Payload"] = self._save_payload(component.payloads[0])
+        for i, link in enumerate(component.payloads):
+            key = "uSWID-Payload"
+            if i == 0:
+                key += f":{i}"
+            config[key] = self._save_payload(component.payloads[0])
 
         # evidence
-        if component.evidences:
-            config["uSWID-Evidence"] = self._save_evidence(component.evidences[0])
+        for i, link in enumerate(component.evidences):
+            key = "uSWID-Evidence"
+            if i == 0:
+                key += f":{i}"
+            config[key] = self._save_evidence(component.evidences[0])
 
         # as string
         with io.StringIO() as f:

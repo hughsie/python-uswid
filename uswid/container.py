@@ -33,6 +33,9 @@ class uSwidContainer:
     def __len__(self) -> int:
         return len(self._components)
 
+    def __getitem__(self, item):
+        return self._components[item]
+
     def depsolve(self) -> None:
         """Sets Link.component using internally-resolvable SWID entries"""
 

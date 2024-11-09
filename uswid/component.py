@@ -315,6 +315,27 @@ class uSwidComponent:
             )
         self.payloads.append(payload)
 
+    def get_payload_by_name(self, name: str) -> Optional[uSwidPayload]:
+        """Get the payload"""
+        for payload in self.payloads:
+            if payload.name == name:
+                return payload
+        return None
+
+    def get_entity_by_name(self, name: str) -> Optional[uSwidEntity]:
+        """Get the entity"""
+        for entity in self.entities:
+            if entity.name == name:
+                return entity
+        return None
+
+    def get_link_by_rel(self, rel: str) -> Optional[uSwidLink]:
+        """Get the link"""
+        for link in self.links:
+            if link.rel == rel:
+                return link
+        return None
+
     def add_evidence(self, evidence: uSwidEvidence) -> None:
         """Add the evidence"""
         self.evidences.append(evidence)
