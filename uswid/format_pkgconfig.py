@@ -39,7 +39,7 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
 
     def __init__(self, filepath: Optional[str] = None) -> None:
         """Initializes uSwidFormatPkgconfig"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "pkgconfig")
         self.filepath: Optional[str] = filepath
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:

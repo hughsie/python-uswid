@@ -30,7 +30,7 @@ class uSwidFormatUswid(uSwidFormatBase):
         compression: uSwidPayloadCompression = uSwidPayloadCompression.NONE,
     ) -> None:
         """Initializes uSwidFormatUswid"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "uSWID")
         self.compression: uSwidPayloadCompression = compression
         if self.compression == uSwidPayloadCompression.NONE and compress:
             self.compression = uSwidPayloadCompression.ZLIB
