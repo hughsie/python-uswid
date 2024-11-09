@@ -40,7 +40,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatGoswid"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "goSWID")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         try:

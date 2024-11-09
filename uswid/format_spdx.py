@@ -113,7 +113,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatSpdx"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "SPDX")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
 

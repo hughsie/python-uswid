@@ -49,7 +49,7 @@ class uSwidFormatSwid(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatSwid"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "SWID")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         component = uSwidComponent()

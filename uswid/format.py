@@ -27,8 +27,9 @@ class uSwidFormatBase:
     * ``uSwidFormatUswid``
     """
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         """Initializes uSwidFormatBase"""
+        self.name: str = name
 
     def load(self, blob: bytes, path: Optional[str] = None) -> "uSwidContainer":
         """Load a blob of data"""

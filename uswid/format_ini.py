@@ -51,7 +51,7 @@ class uSwidFormatIni(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatIni"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "INI")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         component = uSwidComponent()

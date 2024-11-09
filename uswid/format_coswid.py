@@ -63,7 +63,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatCoswid"""
-        uSwidFormatBase.__init__(self)
+        uSwidFormatBase.__init__(self, "CoSWID")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         component = uSwidComponent()
