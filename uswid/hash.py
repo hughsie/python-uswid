@@ -19,6 +19,7 @@ class uSwidHashAlg(IntEnum):
     SHA256 = 1
     SHA384 = 7
     SHA512 = 8
+    SHA1 = -1
 
     def __str__(self):
         return self.name.lower()
@@ -28,6 +29,7 @@ class uSwidHashAlg(IntEnum):
         """Creates a uSwidHashAlg from a string identifier"""
         return cls(
             {
+                "SHA1": uSwidHashAlg.SHA1,
                 "SHA256": uSwidHashAlg.SHA256,
                 "SHA384": uSwidHashAlg.SHA384,
                 "SHA512": uSwidHashAlg.SHA512,
@@ -55,6 +57,7 @@ class uSwidHash:
         if not self.alg_id:
             return None
         return {
+            uSwidHashAlg.SHA1: "SHA-1",
             uSwidHashAlg.SHA256: "SHA-256",
             uSwidHashAlg.SHA384: "SHA-384",
             uSwidHashAlg.SHA512: "SHA-512",
@@ -69,7 +72,9 @@ class uSwidHash:
     def value(self, value: Optional[str]) -> None:
         """Sets the value, guessing the alg_id from the length if unset"""
         if self.alg_id is None and value:
-            if len(value) == 64:
+            if len(value) == 20:
+                self.alg_id = uSwidHashAlg.SHA1
+            elif len(value) == 64:
                 self.alg_id = uSwidHashAlg.SHA256
             elif len(value) == 96:
                 self.alg_id = uSwidHashAlg.SHA384
