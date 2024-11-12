@@ -41,6 +41,7 @@ from uswid import (
     uSwidVersionScheme,
     uSwidPayloadCompression,
 )
+from uswid.format import uSwidFormatBase
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_ini import uSwidFormatIni
 from uswid.format_goswid import uSwidFormatGoswid
@@ -231,6 +232,152 @@ def _type_for_fmt(
     if fmt == SwidFormat.USWID:
         return uSwidFormatUswid(compression=args.compression)  # type: ignore
     return None
+
+
+def _get_vcs_tag(filepath: str) -> Optional[str]:
+
+    try:
+        p = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        return p.stdout.decode().strip()
+    except subprocess.CalledProcessError:
+        return "NOASSERTION"
+
+
+def _get_vcs_version(filepath: str) -> str:
+
+    try:
+        p = subprocess.run(
+            ["git", "describe", "--tags"],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        return p.stdout.decode().strip()
+    except subprocess.CalledProcessError:
+        return "NOASSERTION"
+
+
+def _get_vcs_branch(filepath: str) -> str:
+
+    try:
+        p = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        return p.stdout.decode().strip()
+    except subprocess.CalledProcessError:
+        return "NOASSERTION"
+
+
+def _get_vcs_commit(filepath: str) -> str:
+
+    try:
+        p = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        return p.stdout.decode().strip()
+    except subprocess.CalledProcessError:
+        return "NOASSERTION"
+
+
+def _get_vcs_file_authors(filepath: str, theshold: int = 10) -> List[str]:
+
+    authors: List[str] = []
+    try:
+        p = subprocess.run(
+            ["git", "shortlog", "HEAD", "-n", "-s", os.path.basename(filepath)],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        authors_tmp: List[Tuple[int, str]] = []
+        for line in p.stdout.decode().split("\n"):
+            sections = line.split("\t")
+            try:
+                authors_tmp.append((int(sections[0]), sections[1]))
+            except ValueError:
+                pass
+        total: int = 0
+        for cnt, author in authors_tmp:
+            total += cnt
+        for cnt, author in authors_tmp:
+            if (100 / total) * cnt > theshold:
+                authors.append(author)
+    except subprocess.CalledProcessError:
+        pass
+    if not authors:
+        authors.append("NOASSERTION")
+    return authors
+
+
+def _container_merge_from_filepath(
+    container: uSwidContainer,
+    base: uSwidFormatBase,
+    filepath: str,
+    verbose: bool = False,
+) -> None:
+    with open(filepath, "rb") as f:
+        blob: bytes = f.read()
+    try:
+        text: str = blob.decode()
+        replacements: Dict[str, str] = {}
+
+        # substitute some keys with the discovered values
+        for key in [
+            "@VCS_TAG@",
+            "@VCS_VERSION@",
+            "@VCS_BRANCH@",
+            "@VCS_BRANCH@",
+            "@VCS_COMMIT@",
+            "@VCS_SBOM_AUTHORS@",
+            "@VCS_SBOM_AUTHOR@",
+        ]:
+            if text.find(key) != -1:
+                replacements[key] = "NOASSERTION"
+        if "@VCS_TAG@" in replacements:
+            replacements["@VCS_TAG@"] = _get_vcs_tag(filepath)
+        if "@VCS_VERSION@" in replacements:
+            replacements["@VCS_VERSION@"] = _get_vcs_version(filepath)
+        if "@VCS_BRANCH@" in replacements:
+            replacements["@VCS_BRANCH@"] = _get_vcs_branch(filepath)
+        if "@VCS_COMMIT@" in replacements:
+            replacements["@VCS_COMMIT@"] = _get_vcs_commit(filepath)
+        if "@VCS_SBOM_AUTHORS@" in replacements:
+            replacements["@VCS_SBOM_AUTHORS@"] = ", ".join(
+                _get_vcs_file_authors(filepath)
+            )
+        if "@VCS_SBOM_AUTHOR@" in replacements:
+            replacements["@VCS_SBOM_AUTHOR@"] = _get_vcs_file_authors(filepath)[0]
+
+        # do substitutions
+        if replacements:
+            if verbose:
+                print(f"Substitution required in {filepath}:")
+            for key, value in replacements.items():
+                if verbose:
+                    print(f" - {key} → {value}")
+                text = text.replace(key, value)
+            blob = text.encode()
+    except UnicodeDecodeError:
+        pass
+    for component in base.load(blob, path=os.path.dirname(filepath)):
+        component_new = container.merge(component)
+        if component_new:
+            print(
+                "{} was merged into existing component {}".format(
+                    filepath, component_new.tag_id
+                )
+            )
 
 
 def _roundtrip(container: uSwidContainer) -> None:
@@ -619,17 +766,9 @@ def main():
                 if not base:
                     print(f"{fmt} no type for format")
                     sys.exit(1)
-                with open(filepath, "rb") as f:
-                    for component in base.load(
-                        f.read(), path=os.path.dirname(filepath)
-                    ):
-                        component_new = container.merge(component)
-                        if component_new:
-                            print(
-                                "{} was merged into existing component {}".format(
-                                    filepath, component_new.tag_id
-                                )
-                            )
+                _container_merge_from_filepath(
+                    container, base, filepath, verbose=args.verbose
+                )
             else:
                 print(f"{filepath} has unknown format, ignoring")
         except FileNotFoundError:

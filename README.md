@@ -207,6 +207,22 @@ Or the INI override format:
     rel = license
     href = https://spdx.org/licenses/LGPL-2.1-or-later.html
 
+# Substituted Values
+
+All text SBOM formats (e.g. CycloneDX, SPDX, SWID, but *not* coSWID) can use substitute values anywhere in the file.
+For instance, `@VCS_TAG@` can be used to signify the last tagged version in git rather than hardcoding in the file.
+
+The supported values are given below:
+
+ * `@VCS_TAG@` → `git describe --tags --abbrev=0` e.g. `1.2.3`
+ * `@VCS_VERSION@` → `git describe --tags` e.g. `1.2.3-250-gfa2371946`
+ * `@VCS_BRANCH@` → `git rev-parse --abbrev-ref HEAD` e.g. `staging`
+ * `@VCS_COMMIT@` → `git rev-parse HEAD` e.g. `3090e61ee3452c0478860747de057c0269bfb7b6`
+ * `@VCS_SBOM_AUTHORS@` → `git shortlog HEAD -n -s -- bom.json` e.g. `Example User, Another User`
+ * `@VCS_SBOM_AUTHOR@` → `@VCS_SBOM_AUTHORS@[0]` e.g. `Example User`
+
+The only supported source control system is `git`, but patches very welcome for `svn`, `hg` etc.
+
 # Reading and writing to PE files
 
 By default, the uswid command line uses `pefile` to read and write the `.sbom` section in the COFF header.
