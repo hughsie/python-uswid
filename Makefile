@@ -47,6 +47,9 @@ check: $(PYTEST) $(MYPY)
 	$(PYTEST) uswid
 	$(PYLINT) --rcfile pylintrc uswid/*.py *.py
 
+install:
+	$(VENV)/bin/pip install .
+
 blacken: $(BLACK)
 	find uswid -name '*.py' -exec $(BLACK) {} \;
 
