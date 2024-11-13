@@ -324,7 +324,6 @@ def _container_merge_from_filepath(
     container: uSwidContainer,
     base: uSwidFormatBase,
     filepath: str,
-    verbose: bool = False,
 ) -> None:
     with open(filepath, "rb") as f:
         blob: bytes = f.read()
@@ -361,10 +360,10 @@ def _container_merge_from_filepath(
 
         # do substitutions
         if replacements:
-            if verbose:
+            if base.verbose:
                 print(f"Substitution required in {filepath}:")
             for key, value in replacements.items():
-                if verbose:
+                if base.verbose:
                     print(f" - {key} → {value}")
                 text = text.replace(key, value)
             blob = text.encode()
@@ -380,7 +379,7 @@ def _container_merge_from_filepath(
             )
 
 
-def _roundtrip(container: uSwidContainer) -> None:
+def _roundtrip(container: uSwidContainer, verbose: bool = False) -> None:
 
     # collect for analysis
     try:
@@ -400,6 +399,9 @@ def _roundtrip(container: uSwidContainer) -> None:
         uSwidFormatSwid(),
         uSwidFormatUswid(),
     ]:
+
+        # proxy
+        base.verbose = verbose
 
         # save
         try:
@@ -764,12 +766,11 @@ def main():
                 SwidFormat.PKG_CONFIG,
             ]:
                 base = _type_for_fmt(fmt, args, filepath=filepath)
+                base.verbose = args.verbose
                 if not base:
                     print(f"{fmt} no type for format")
                     sys.exit(1)
-                _container_merge_from_filepath(
-                    container, base, filepath, verbose=args.verbose
-                )
+                _container_merge_from_filepath(container, base, filepath)
             else:
                 print(f"{filepath} has unknown format, ignoring")
         except FileNotFoundError:
@@ -811,7 +812,7 @@ def main():
 
     # test the container with different SBOM formats
     if args.roundtrip:
-        _roundtrip(container)
+        _roundtrip(container, verbose=args.verbose)
 
     # add any missing evidence
     for component in container:
@@ -855,6 +856,7 @@ def main():
                 SwidFormat.SPDX,
             ]:
                 base = _type_for_fmt(fmt, args)
+                base.verbose = args.verbose
                 if not base:
                     print(f"{fmt} no type for format")
                     sys.exit(1)
