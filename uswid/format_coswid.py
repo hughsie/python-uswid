@@ -19,7 +19,7 @@ from .enums import uSwidGlobalMap
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .errors import NotSupportedError
-from .component import uSwidComponent
+from .component import uSwidComponent, uSwidComponentType
 from .entity import uSwidEntity, uSwidEntityRole
 from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
@@ -173,6 +173,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
         metadata: Dict[uSwidGlobalMap, Any] = {
             uSwidGlobalMap.GENERATOR: component.generator
         }
+        if component.type and component.type != uSwidComponentType.FIRMWARE:
+            metadata[uSwidGlobalMap.MEDIA] = str(component.type)
         if component.summary:
             metadata[uSwidGlobalMap.SUMMARY] = component.summary
         if component.revision:
@@ -378,6 +380,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     component.colloquial_version = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.PERSISTENT_ID:
                     component.persistent_id = value
+                elif key == uSwidGlobalMap.MEDIA:
+                    component.type = uSwidComponentType.from_str(value)
 
         # payload
         file_datas = []

@@ -423,6 +423,7 @@ def _roundtrip(container: uSwidContainer) -> None:
         for key in [
             "tag_id",
             "tag_version",
+            "type",
             "software_name",
             "software_version",
             "version_scheme",
@@ -559,8 +560,8 @@ def _roundtrip(container: uSwidContainer) -> None:
                     )
 
         # show differences
-        total: float = 20
-        print(f"{fmt.name}: { 100.0 / float(total) * (total - len(differences))}%")
+        total: float = 21
+        print(f"{base.name}: { 100.0 / float(total) * (total - len(differences)):.0f}%")
         for dif in differences:
             try:
                 print(

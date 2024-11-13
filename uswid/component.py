@@ -9,6 +9,7 @@
 
 from typing import Dict, Optional, List
 import uuid
+from enum import Enum
 import fnmatch
 
 from .errors import NotSupportedError
@@ -57,6 +58,22 @@ def _fix_appstream_id(appstream_id: str) -> Optional[str]:
     return appstream_id
 
 
+class uSwidComponentType(Enum):
+    """Represents the component type"""
+
+    FIRMWARE = "firmware"
+    APPLICATION = "application"
+    LIBRARY = "library"
+
+    def __str__(self):
+        return self.name.lower()
+
+    @staticmethod
+    def from_str(value: str) -> str:
+        """converts a lowercase component type to a uSwidComponentType"""
+        return uSwidComponentType[value.upper()]
+
+
 class uSwidComponent:
     """Represents a SWID component"""
 
@@ -84,6 +101,8 @@ class uSwidComponent:
         """One line summary"""
         self.product: Optional[str] = None
         """Product"""
+        self.type: uSwidComponentType = uSwidComponentType.FIRMWARE
+        """Type"""
         self.colloquial_version: Optional[str] = None
         """Colloquial version, usually the source hash"""
         self.revision: Optional[str] = None
@@ -276,6 +295,8 @@ class uSwidComponent:
             self.summary = component_new.summary
         if component_new.product:
             self.product = component_new.product
+        if component_new.type:
+            self.type = component_new.type
         if component_new.colloquial_version:
             self.colloquial_version = component_new.colloquial_version
         if component_new.revision:

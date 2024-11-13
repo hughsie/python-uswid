@@ -337,7 +337,8 @@ rel = see-also
             b'  <Entity name="Hughski Limited" regid="hughski.com" role="aggregator"/>\n'
             b'  <Link href="https://hughski.com/" rel="see-also"/>\n'
             b'  <Meta colloquialVersion="22905301d08e69473393d94c3e787e4bf0453268" '
-            b'persistentId="org.hughski.colorhug"/>\n'
+            b'persistentId="org.hughski.colorhug" '
+            b'type="firmware"/>\n'
             b"</SoftwareIdentity>\n",
         )
 

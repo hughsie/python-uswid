@@ -19,6 +19,7 @@ from .format import uSwidFormatBase
 from .errors import NotSupportedError
 from .component import (
     uSwidComponent,
+    uSwidComponentType,
     _VERSION_SCHEME_TO_STRING,
     _VERSION_SCHEME_FROM_STRING,
 )
@@ -122,6 +123,8 @@ class uSwidFormatIni(uSwidFormatBase):
             main["tag-id"] = component.tag_id
         if component.tag_version:
             main["tag-version"] = str(component.tag_version)
+        if component.type:
+            main["type"] = str(component.type)
         if component.software_name:
             main["software-name"] = component.software_name
         if component.software_version:
@@ -281,6 +284,8 @@ class uSwidFormatIni(uSwidFormatBase):
                     elif key == "tag-version":
                         component.tag_version = int(value)
                         component._auto_increment_tag_version = False
+                    elif key == "type":
+                        component.type = uSwidComponentType.from_str(value)
                     elif key == "software-name":
                         component.software_name = value
                     elif key == "software-version":

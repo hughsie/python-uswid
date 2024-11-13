@@ -13,7 +13,7 @@ import os
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
-from .component import uSwidComponent
+from .component import uSwidComponent, uSwidComponentType
 from .entity import uSwidEntityRole
 
 _ENTITY_MAP_FROM_INI = {
@@ -52,6 +52,7 @@ class uSwidFormatPkgconfig(uSwidFormatBase):
 
         # filename base is the ID
         if self.filepath:
+            component.type = uSwidComponentType.LIBRARY
             component.tag_id = os.path.basename(self.filepath)
             if component.tag_id.endswith(".pc"):
                 component.tag_id = component.tag_id[:-3]
