@@ -324,6 +324,7 @@ def _container_merge_from_filepath(
     container: uSwidContainer,
     base: uSwidFormatBase,
     filepath: str,
+    fixup: bool = False,
 ) -> None:
     with open(filepath, "rb") as f:
         blob: bytes = f.read()
@@ -370,6 +371,34 @@ def _container_merge_from_filepath(
     except UnicodeDecodeError:
         pass
     for component in base.load(blob, path=os.path.dirname(filepath)):
+
+        # guess something sane
+        if fixup:
+            fixup_strs: List[str] = []
+            if not component.software_version:
+                component.version_scheme = uSwidVersionScheme.ALPHANUMERIC
+                component.software_version = _get_vcs_version(filepath)
+                if base.verbose:
+                    fixup_strs.append(f"Add VCS version → {component.software_version}")
+            if not component.colloquial_version:
+                component.colloquial_version = _get_vcs_commit(filepath)
+                if base.verbose:
+                    fixup_strs.append(
+                        f"Add VCS commit → {component.colloquial_version}"
+                    )
+            if not component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR):
+                entity: uSwidEntity = uSwidEntity(
+                    name=", ".join(_get_vcs_file_authors(filepath)),
+                    roles=[uSwidEntityRole.TAG_CREATOR],
+                )
+                component.add_entity(entity)
+                if base.verbose:
+                    fixup_strs.append(f"Add VCS author → {entity.name}")
+            if fixup_strs:
+                print(f"Fixup required in {filepath}:")
+                for fixup_str in fixup_strs:
+                    print(f" - {fixup_str}")
+
         component_new = container.merge(component)
         if component_new:
             print(
@@ -643,6 +672,13 @@ def main():
         help="Test various different formats from loaded data",
     )
     parser.add_argument(
+        "--fixup",
+        dest="fixup",
+        default=False,
+        action="store_true",
+        help="Fix components with missing VCS data",
+    )
+    parser.add_argument(
         "--validate",
         dest="validate",
         default=False,
@@ -770,7 +806,9 @@ def main():
                 if not base:
                     print(f"{fmt} no type for format")
                     sys.exit(1)
-                _container_merge_from_filepath(container, base, filepath)
+                _container_merge_from_filepath(
+                    container, base, filepath, fixup=args.fixup
+                )
             else:
                 print(f"{filepath} has unknown format, ignoring")
         except FileNotFoundError:
