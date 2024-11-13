@@ -15,7 +15,7 @@ from datetime import datetime
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
-from .component import uSwidComponent
+from .component import uSwidComponent, uSwidComponentType
 from .link import uSwidLink
 from .payload import uSwidPayload
 from .enums import uSwidVersionScheme
@@ -90,6 +90,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         self, component: uSwidComponent, data: Dict[str, Any]
     ) -> None:
 
+        component.type = uSwidComponentType.from_str(data.get("type", "firmware"))
         component.persistent_id = data.get("group")
         component.software_name = data.get("name")
         component.software_version = data.get("version")
@@ -273,7 +274,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
     def _save_component(self, component: uSwidComponent) -> Dict[str, Any]:
         root: Dict[str, Any] = {}
-        root["type"] = "firmware"
+        if component.type:
+            root["type"] = str(component.type)
         if component.persistent_id:
             root["group"] = component.persistent_id
         if component.software_name:

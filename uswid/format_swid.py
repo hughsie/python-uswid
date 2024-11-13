@@ -17,6 +17,7 @@ from .format import uSwidFormatBase
 from .errors import NotSupportedError
 from .component import (
     uSwidComponent,
+    uSwidComponentType,
     _VERSION_SCHEME_FROM_STRING,
     _VERSION_SCHEME_TO_STRING,
 )
@@ -172,6 +173,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         # optional metadata
         if (
             component.summary
+            or component.type
             or component.revision
             or component.product
             or component.edition
@@ -191,6 +193,8 @@ class uSwidFormatSwid(uSwidFormatBase):
                 node.set("colloquialVersion", component.colloquial_version)
             if component.persistent_id:
                 node.set("persistentId", component.persistent_id)
+            if component.type:
+                node.set("type", str(component.type))
 
         # success
         return ET.tostring(
@@ -306,6 +310,8 @@ class uSwidFormatSwid(uSwidFormatBase):
             ]:
                 if attr_name in meta.attrib:
                     setattr(component, attrib_name, meta.attrib[attr_name])
+            if "type" in meta.attrib:
+                component.type = uSwidComponentType.from_str(meta.attrib["type"])
 
         # entities
         for node in element.xpath("ns:Entity", namespaces=namespaces):

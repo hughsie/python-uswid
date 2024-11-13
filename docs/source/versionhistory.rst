@@ -8,6 +8,7 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 **0.5.1** (2024-11-xx)
 
  - Add ``--find`` to recursively find SBOM files (Richard Hughes)
+ - Add support for component types, e.g. library, application or firmware (Richard Hughes)
  - Add support for loading SPDX files (Richard Hughes)
  - Add support for loading CycloneDX files (Richard Hughes)
  - Add support for substituted values like ``@VCS_VERSION@`` (Richard Hughes)
