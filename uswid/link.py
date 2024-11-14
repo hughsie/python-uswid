@@ -39,6 +39,17 @@ class uSwidLinkRel(IntEnum):
         return self.name.lower()
 
 
+class uSwidLinkUse(IntEnum):
+    """Represents an enumerated uses of link"""
+
+    OPTIONAL = 1
+    REQUIRED = 2
+    RECOMMENDED = 3
+
+    def __str__(self):
+        return self.name.lower()
+
+
 class uSwidLink:
     """Represents a SWID link"""
 
@@ -46,10 +57,12 @@ class uSwidLink:
         self,
         href: Optional[str] = None,
         rel: Optional[str] = None,
+        use: Optional[uSwidLinkUse] = None,
     ):
         """Initializes uSwidLink"""
         self._href: Optional[str] = href
         self._rel: Optional[str] = rel
+        self.use: Optional[uSwidLinkUse] = use
         self.component: Optional[uSwidComponent] = None
         """Component, if the SWID reference in internally resolvable"""
 
@@ -104,4 +117,11 @@ class uSwidLink:
         return problems
 
     def __repr__(self) -> str:
-        return f'uSwidLink(rel="{self.rel or "none"}",href="{self.href}")'
+        attrs: List[str] = []
+        if self.rel:
+            attrs.append(f'rel="{self.rel}"')
+        if self.use:
+            attrs.append(f'use="{self.use}"')
+        if self.href:
+            attrs.append(f'href="{self.href}"')
+        return f'uSwidLink({",".join(attrs)})'

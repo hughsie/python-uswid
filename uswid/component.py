@@ -125,6 +125,9 @@ class uSwidComponent:
         self._links: Dict[str, uSwidLink] = {}
         self.vex_statements: List[uSwidVexStatement] = []
 
+        """Top-level source directory for the project"""
+        self.source_dir: Optional[str] = None
+
     @property
     def software_name(self) -> Optional[str]:
         """Returns the software name"""

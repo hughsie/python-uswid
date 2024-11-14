@@ -11,7 +11,7 @@ from enum import IntEnum
 from collections import defaultdict
 from random import choices, randrange
 from datetime import datetime
-from typing import Optional, Any, List, Dict
+from typing import Optional, Any, List, Dict, Tuple
 import argparse
 import tempfile
 import subprocess
@@ -40,6 +40,9 @@ from uswid import (
     uSwidProblem,
     uSwidVersionScheme,
     uSwidPayloadCompression,
+    uSwidLink,
+    uSwidLinkRel,
+    uSwidLinkUse,
 )
 from uswid.format import uSwidFormatBase
 from uswid.format_coswid import uSwidFormatCoswid
@@ -290,6 +293,20 @@ def _get_vcs_commit(filepath: str) -> str:
         return "NOASSERTION"
 
 
+def _get_vcs_toplevel(filepath: str) -> Optional[str]:
+
+    try:
+        p = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            cwd=os.path.dirname(filepath),
+            check=True,
+        )
+        return p.stdout.decode().strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
 def _get_vcs_file_authors(filepath: str, theshold: int = 10) -> List[str]:
 
     authors: List[str] = []
@@ -398,6 +415,9 @@ def _container_merge_from_filepath(
                 print(f"Fixup required in {filepath}:")
                 for fixup_str in fixup_strs:
                     print(f" - {fixup_str}")
+
+            # get the toplevel so that we can auto-add deps
+            component.source_dir = _get_vcs_toplevel(filepath)
 
         component_new = container.merge(component)
         if component_new:
@@ -818,6 +838,35 @@ def main():
         except NotSupportedError as e:
             print(e)
             sys.exit(1)
+
+    # auto-add deps using the top-level project paths
+    if args.fixup:
+
+        fixup_strs: List[str] = []
+
+        # order by length
+        components = list(container)
+        components.sort(key=lambda s: -len(s.source_dir))
+        for component in components:
+            if component.get_link_by_rel(uSwidLinkRel.COMPONENT):
+                continue
+            for component2 in components:
+                if component.source_dir == component2.source_dir:
+                    continue
+                if component.source_dir.find(component2.source_dir) != -1:
+                    fixup_strs.append(f"{component2.tag_id} → {component.tag_id}")
+                    component2.add_link(
+                        uSwidLink(
+                            rel="component",
+                            href=component.tag_id,
+                            use=uSwidLinkUse.REQUIRED,
+                        )
+                    )
+                    break
+        if fixup_strs:
+            print("Additional dependencies added:")
+            for fixup_str in fixup_strs:
+                print(f" - {fixup_str}")
 
     # depsolve any internal SWID links
     container.depsolve()
