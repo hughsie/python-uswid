@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 
 from uswid.container import uSwidContainer
-from uswid.link import uSwidLink, uSwidLinkRel
+from uswid.link import uSwidLink, uSwidLinkRel, uSwidLinkUse
 from uswid.hash import uSwidHash, uSwidHashAlg
 from uswid.payload import uSwidPayload
 from uswid.evidence import uSwidEvidence
