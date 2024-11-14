@@ -173,6 +173,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         # optional metadata
         if (
             component.summary
+            or component.cpe
             or component.type
             or component.revision
             or component.product
@@ -193,6 +194,8 @@ class uSwidFormatSwid(uSwidFormatBase):
                 node.set("colloquialVersion", component.colloquial_version)
             if component.persistent_id:
                 node.set("persistentId", component.persistent_id)
+            if component.cpe:
+                node.set("cpe", component.cpe)
             if component.type:
                 node.set("type", str(component.type))
 
@@ -307,6 +310,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 ("edition", "edition"),
                 ("colloquialVersion", "colloquial_version"),
                 ("persistentId", "persistent_id"),
+                ("cpe", "cpe"),
             ]:
                 if attr_name in meta.attrib:
                     setattr(component, attrib_name, meta.attrib[attr_name])

@@ -464,6 +464,7 @@ def _roundtrip(container: uSwidContainer, verbose: bool = False) -> None:
             "revision",
             "edition",
             "persistent_id",
+            "cpe",
         ]:
             if getattr(component, key) != getattr(component_new, key):
                 differences.append(
@@ -591,7 +592,7 @@ def _roundtrip(container: uSwidContainer, verbose: bool = False) -> None:
                     )
 
         # show differences
-        total: float = 21
+        total: float = 22
         print(f"{base.name}: { 100.0 / float(total) * (total - len(differences)):.0f}%")
         for dif in differences:
             try:

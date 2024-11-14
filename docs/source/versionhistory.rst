@@ -9,6 +9,7 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
  - Add ``--find`` to recursively find SBOM files (Richard Hughes)
  - Add ``--fixup`` to repair any loaded SBOM files (Richard Hughes)
+ - Add support for component CPE values (Richard Hughes)
  - Add support for component types, e.g. library, application or firmware (Richard Hughes)
  - Add support for loading SPDX files (Richard Hughes)
  - Add support for loading CycloneDX files (Richard Hughes)
