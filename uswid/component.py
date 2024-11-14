@@ -111,6 +111,8 @@ class uSwidComponent:
         """Edition, usually the tree hash"""
         self.persistent_id: Optional[str] = None
         """Persistent AppStream ID"""
+        self.cpe: Optional[str] = None
+        """Common Platform Enumeration tag"""
         self.lang: Optional[str] = "en-US"
         """Language code"""
         self.generator = generator

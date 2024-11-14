@@ -92,6 +92,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         component.type = uSwidComponentType.from_str(data.get("type", "firmware"))
         component.persistent_id = data.get("group")
+        component.cpe = data.get("cpe")
         component.software_name = data.get("name")
         component.software_version = data.get("version")
         component.summary = data.get("description")
@@ -278,6 +279,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             root["type"] = str(component.type)
         if component.persistent_id:
             root["group"] = component.persistent_id
+        if component.cpe:
+            root["cpe"] = component.cpe
         if component.software_name:
             root["name"] = component.software_name
         if component.software_version:

@@ -143,6 +143,8 @@ class uSwidFormatIni(uSwidFormatBase):
             main["colloquial-version"] = component.colloquial_version
         if component.persistent_id:
             main["persistent-id"] = component.persistent_id
+        if component.cpe:
+            main["cpe"] = component.cpe
         config["uSWID"] = main
 
         # entity
@@ -304,6 +306,8 @@ class uSwidFormatIni(uSwidFormatBase):
                         component.colloquial_version = value
                     elif key == "persistent-id":
                         component.persistent_id = value
+                    elif key == "cpe":
+                        component.cpe = value
                     else:
                         print(f"unknown key {key} found in ini file!")
             if group.startswith("uSWID-Entity:"):
