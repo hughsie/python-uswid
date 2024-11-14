@@ -42,7 +42,8 @@ class TestSwidEntity(unittest.TestCase):
             name="test", regid="example.com", roles=[uSwidEntityRole.MAINTAINER]
         )
         self.assertEqual(
-            str(entity), 'uSwidEntity(regid="example.com",name="test",roles=MAINTAINER)'
+            str(entity),
+            'uSwidEntity(regid="example.com",name="test",roles=[MAINTAINER])',
         )
         self.assertEqual(
             str(uSwidFormatCoswid()._save_entity(entity)),  # type: ignore
@@ -71,7 +72,7 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertEqual(
             str(entity),
-            'uSwidEntity(regid="bar",name="foo",roles=TAG_CREATOR,MAINTAINER)',
+            'uSwidEntity(regid="bar",name="foo",roles=[TAG_CREATOR,MAINTAINER])',
         )
         with self.assertRaises(NotSupportedError):
             uSwidFormatSwid()._load_entity(  # type: ignore
@@ -90,7 +91,7 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertEqual(
             str(entity),
-            'uSwidEntity(regid="bar",name="foo",roles=TAG_CREATOR,MAINTAINER)',
+            'uSwidEntity(regid="bar",name="foo",roles=[TAG_CREATOR,MAINTAINER])',
         )
         with self.assertRaises(NotSupportedError):
             uSwidFormatIni()._load_entity(  # type: ignore
@@ -247,7 +248,7 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(
             str(component),
             'uSwidComponent(tag_id="foobarbaz",tag_version="5",software_name="foo",software_version="1.2.3"):\n'
-            ' - uSwidEntity(regid="example.com",name="test",roles=MAINTAINER)',
+            ' - uSwidEntity(regid="example.com",name="test",roles=[MAINTAINER])',
         )
 
         # SWID XML import
@@ -272,7 +273,7 @@ xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0">
             'software_name="DellBiosConnectNetwork",software_version="1.5.2"):\n'
             ' - uSwidLink(rel="see-also",href="http://hughsie.com")\n'
             ' - uSwidLink(rel="license",href="www.gnu.org/licenses/gpl.txt")\n'
-            ' - uSwidEntity(regid="dell.com",name="Dell Technologies",roles=SOFTWARE_CREATOR,TAG_CREATOR)',
+            ' - uSwidEntity(regid="dell.com",name="Dell Technologies",roles=[SOFTWARE_CREATOR,TAG_CREATOR])',
         )
         self.assertEqual(
             component.summary,
@@ -310,8 +311,8 @@ rel = see-also
             'uSwidComponent(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
             'software_name="HughskiColorHug.efi",software_version="1.0.0"):\n'
             ' - uSwidLink(rel="see-also",href="https://hughski.com/")\n'
-            ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=TAG_CREATOR)\n'
-            ' - uSwidEntity(regid="hughski.com",name="Hughski Limited",roles=AGGREGATOR)',
+            ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=[TAG_CREATOR])\n'
+            ' - uSwidEntity(regid="hughski.com",name="Hughski Limited",roles=[AGGREGATOR])',
         )
 
         # INI export

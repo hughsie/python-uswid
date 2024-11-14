@@ -94,5 +94,11 @@ class uSwidEntity:
         return problems
 
     def __repr__(self) -> str:
-        role_str = ",".join([role.name for role in self.roles])
-        return f'uSwidEntity(regid="{self.regid}",name="{self.name}",roles={role_str})'
+        attrs: List[str] = []
+        if self.regid:
+            attrs.append(f'regid="{self.regid}"')
+        if self.name:
+            attrs.append(f'name="{self.name}"')
+        if self.roles:
+            attrs.append(f'roles=[{",".join([role.name for role in self.roles])}]')
+        return f'uSwidEntity({",".join(attrs)})'
