@@ -257,9 +257,9 @@ The `uswid` CLI can scan a target directory and locate component SBOMs in variou
 To do this, it uses specific hardcoded filenames for different SBOM formats, for example:
 
  * `bom.coswid` → CoSWID
- * `bom.json` → CycloneDX
+ * `sbom.cdx.json` → CycloneDX
  * `sbom.ini` → INI
- * `spdx.json` → SPDX
+ * `sbom.spdx.json` → SPDX
  * `swid.xml` → SWID
 
 To use this functionality, use something like `uswid --find ~/Code/edk2 --save sbom.uswid`
