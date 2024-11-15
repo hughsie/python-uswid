@@ -1,4 +1,4 @@
-uSWID allows you to **create**, **convert** and **merge** SBoM metadata to and from most SBoM formats,
+uSWID allows you to **create**, **convert** and **merge** SBOM metadata to and from most SBOM formats,
 with the initial focus being functionality useful for firmware files.
 
 Table of contents
