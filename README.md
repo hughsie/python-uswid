@@ -3,10 +3,10 @@ python-uswid
 
 # Introduction
 
-A Software Bill of Materials (SBoM) is a manifest of what components are included inside your software.
+A Software Bill of Materials (SBOM) is a manifest of what components are included inside your software.
 It helps vendors and consumers keep track of software components for better software supply chain security.
 
-When building or creating a SBoM there are lots of formats to choose from:
+When building or creating a SBOM there are lots of formats to choose from:
 
 - [SWID](https://csrc.nist.gov/Projects/Software-Identification-SWID/guidelines)
 - [coSWID](https://datatracker.ietf.org/doc/rfc9393/)
@@ -14,25 +14,25 @@ When building or creating a SBoM there are lots of formats to choose from:
 - [SPDX](https://spdx.dev/)
 - [goSWID](https://github.com/veraison/swid)
 
-Using the uSWID tool allows you to **create**, **convert** and **merge** SBoM metadata to and from most of those formats, with the initial focus being functionality useful for firmware files.
+Using the uSWID tool allows you to **create**, **convert** and **merge** SBOM metadata to and from most of those formats, with the initial focus being functionality useful for firmware files.
 
-Additionally, uSWID supports importing SBoM metadata from a few additional file formats:
+Additionally, uSWID supports importing SBOM metadata from a few additional file formats:
 
 - `.ini` files -- designed to be easier for humans to write
 - `pkgconfig` -- `.pc` files that are shipped with most open source libraries
 - [PE binaries](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) -- coSWID metadata can be inserted in a `.sbom` section at link time
-- unspecified firmware files -- using a 24 byte header to locate the coSWID CBOR SBoM entry
+- unspecified firmware files -- using a 24 byte header to locate the coSWID CBOR SBOM entry
 
-There are three elements of an SBoM that uswid supports. These are:
+There are three elements of an SBOM that uswid supports. These are:
 
 - Identities -- the *what*, describing the software subcomponents
 - Entities -- the *who*, describing the company or person responsible for the component in some way
-- Payloads (optional) -- the *file* that we are referring to, for when the SBoM is not embedded
-- Evidence (optional) -- the *proof*, typically the date and time the SBoM was built
+- Payloads (optional) -- the *file* that we are referring to, for when the SBOM is not embedded
+- Evidence (optional) -- the *proof*, typically the date and time the SBOM was built
 
 One of the core features of uswid is that you can import multiple files to build a single component at construction time.
 
-For instance, you could combine the pkgconfig `.pc` file, a `.exe` binary and `.ini` override to build one SBoM component. In most cases SBoM metadata is merged, but it can also be replaced.
+For instance, you could combine the pkgconfig `.pc` file, a `.exe` binary and `.ini` override to build one SBOM component. In most cases SBOM metadata is merged, but it can also be replaced.
 
 There is also a [web-generator on the LVFS](https://fwupd.org/lvfs/uswid) that uses uSWID to easily build INI, coSWID and coSWID with uSWID header.
 
@@ -59,7 +59,7 @@ If we are asked to process lots of different kinds of firmware, we do not always
 | VENDOR_HDR | ARC_IMAGE | FREE_SPACE | coSWID | FREE_SPACE |
 |------------|-----------|------------|--------|------------|
 
-With this the SBoM builder tool does not know *where* the coSWID data starts in the blob, or *how many* coSWID sections there might be.
+With this the SBOM builder tool does not know *where* the coSWID data starts in the blob, or *how many* coSWID sections there might be.
 If we include a small header with a 16 byte *magic* identifier then we can search the image to discover the offsets to read the coSWID blobs.
 
 The 25 byte uSWID header in full:
@@ -82,9 +82,9 @@ The uSWID header is automatically added when the file extension is `.uswid`, e.g
 
 ## INI File
 
-It's sometimes much easier to use the simple key=vaue INI format when creating component SBoMs, or overriding specific values compared to building a new SWID XML document:
+It's sometimes much easier to use the simple key=vaue INI format when creating component SBOMs, or overriding specific values compared to building a new SWID XML document:
 
-Let's create an example component SBoM, using the INI-file format:
+Let's create an example component SBOM, using the INI-file format:
 
     [uSWID]
     tag-id = acbd84ff-9898-4922-8ade-dd4bbe2e40ba
@@ -106,7 +106,7 @@ Let's create an example component SBoM, using the INI-file format:
 The `tag-id` value has to be unique, but for UEFI firmware this is typically the ESRT GUID value.
 The `product`, `summary`, `colloquial-version`, `revision` and `edition` values are optional but at least the first two are highly recommended.
 
-If we are not including the SBoM into the binary, and instead building a *detached* component SBoM, we need to make sure that we can verify the blob is valid. To do this we can also add a file hash:
+If we are not including the SBOM into the binary, and instead building a *detached* component SBOM, we need to make sure that we can verify the blob is valid. To do this we can also add a file hash:
 
     [uSWID-Payload]
     name = HughskiColorHug.efi
@@ -236,9 +236,9 @@ You can use `objdump -s -j .sbom payload.efi` to verify that the tag has been wr
 
 # Generating Test Data
 
-The `uswid` CLI can generate a complete "worst case" platform SBoM, with 1000 plausible (but random) components. This is generates a ~140kB file, or ~60kB when compressed with LZMA.
+The `uswid` CLI can generate a complete "worst case" platform SBOM, with 1000 plausible (but random) components. This is generates a ~140kB file, or ~60kB when compressed with LZMA.
 
-You can use the uswid command line to generate a plausible UEFI platform SBoM:
+You can use the uswid command line to generate a plausible UEFI platform SBOM:
 
     uswid --generate --save test.uswid --compression lzma
 

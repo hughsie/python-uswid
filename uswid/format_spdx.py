@@ -129,7 +129,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
         root["spdxVersion"] = "SPDX-2.3"
         root["dataLicense"] = "CC0-1.0"
         root["documentNamespace"] = f"urn:uuid:{str(uuid.uuid4())}"
-        # root["name"] = "uSWID SBoM")
+        # root["name"] = "uSWID SBOM")
         root["name"] = "NOASSERTION"
 
         # this has to be defined
