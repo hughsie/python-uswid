@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-# pylint: disable=wrong-import-position,too-many-locals,too-many-statements
+# pylint: disable=wrong-import-position,too-many-locals,too-many-statements,too-many-nested-blocks
 
 from enum import IntEnum
 from collections import defaultdict
@@ -191,9 +191,9 @@ class SwidFormat(IntEnum):
 
 
 def _detect_format(filepath: str) -> SwidFormat:
-    if os.path.basename(filepath).endswith("bom.json"):
+    if filepath.endswith("bom.json") or filepath.endswith("cdx.json"):
         return SwidFormat.CYCLONE_DX
-    if os.path.basename(filepath).endswith("spdx.json"):
+    if filepath.endswith("spdx.json"):
         return SwidFormat.SPDX
     ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
     if ext in ["exe", "efi", "o"]:
@@ -719,14 +719,22 @@ def main():
         load_filepaths = []
     save_filepaths = args.save if args.save else []
 
-    # search recursively
+    # search for known suffixes recursively
     if args.find:
-        sbom_filenames = ["spdx.json", "swid.xml", "bom.json", "bom.coswid", "sbom.ini"]
+        sbom_suffixes = [
+            "spdx.json",
+            "swid.xml",
+            "cdx.json",
+            "bom.json",
+            "bom.coswid",
+            "sbom.ini",
+        ]
         for path in args.find:
             for dirpath, _, fns in os.walk(path):
                 for fn in fns:
-                    if fn in sbom_filenames:
-                        load_filepaths.append(os.path.join(dirpath, fn))
+                    for sbom_suffix in sbom_suffixes:
+                        if fn.endswith(sbom_suffix):
+                            load_filepaths.append(os.path.join(dirpath, fn))
         if args.verbose and load_filepaths:
             print("Found:")
             for filepath in load_filepaths:
