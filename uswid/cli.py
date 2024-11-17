@@ -307,12 +307,19 @@ def _get_vcs_toplevel(filepath: str) -> Optional[str]:
         return None
 
 
-def _get_vcs_file_authors(filepath: str, theshold: int = 10) -> List[str]:
+def _get_vcs_authors(filepath: str, theshold: int = 10, single_file=False) -> List[str]:
 
     authors: List[str] = []
     try:
         p = subprocess.run(
-            ["git", "shortlog", "HEAD", "-n", "-s", os.path.basename(filepath)],
+            [
+                "git",
+                "shortlog",
+                "HEAD",
+                "-n",
+                "-s",
+                os.path.basename(filepath) if single_file else ".",
+            ],
             capture_output=True,
             cwd=os.path.dirname(filepath),
             check=True,
@@ -358,6 +365,8 @@ def _container_merge_from_filepath(
             "@VCS_COMMIT@",
             "@VCS_SBOM_AUTHORS@",
             "@VCS_SBOM_AUTHOR@",
+            "@VCS_AUTHORS@",
+            "@VCS_AUTHOR@",
         ]:
             if text.find(key) != -1:
                 replacements[key] = "NOASSERTION"
@@ -371,10 +380,18 @@ def _container_merge_from_filepath(
             replacements["@VCS_COMMIT@"] = _get_vcs_commit(filepath)
         if "@VCS_SBOM_AUTHORS@" in replacements:
             replacements["@VCS_SBOM_AUTHORS@"] = ", ".join(
-                _get_vcs_file_authors(filepath)
+                _get_vcs_authors(filepath, single_file=True)
             )
         if "@VCS_SBOM_AUTHOR@" in replacements:
-            replacements["@VCS_SBOM_AUTHOR@"] = _get_vcs_file_authors(filepath)[0]
+            replacements["@VCS_SBOM_AUTHOR@"] = _get_vcs_authors(
+                filepath, single_file=True
+            )[0]
+        if "@VCS_AUTHORS@" in replacements:
+            replacements["@VCS_AUTHORS@"] = ", ".join(
+                _get_vcs_authors(filepath, theshold=5)
+            )
+        if "@VCS_AUTHOR@" in replacements:
+            replacements["@VCS_AUTHOR@"] = _get_vcs_authors(filepath, theshold=5)[0]
 
         # do substitutions
         if replacements:
@@ -405,7 +422,7 @@ def _container_merge_from_filepath(
                     )
             if not component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR):
                 entity: uSwidEntity = uSwidEntity(
-                    name=", ".join(_get_vcs_file_authors(filepath)),
+                    name=", ".join(_get_vcs_authors(filepath)),
                     roles=[uSwidEntityRole.TAG_CREATOR],
                 )
                 component.add_entity(entity)
