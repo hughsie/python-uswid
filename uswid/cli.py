@@ -307,7 +307,9 @@ def _get_vcs_toplevel(filepath: str) -> Optional[str]:
         return None
 
 
-def _get_vcs_authors(filepath: str, theshold: int = 10, single_file=False) -> List[str]:
+def _get_vcs_authors(
+    filepath: str, threshold: int = 10, single_file=False
+) -> List[str]:
 
     authors: List[str] = []
     try:
@@ -335,7 +337,7 @@ def _get_vcs_authors(filepath: str, theshold: int = 10, single_file=False) -> Li
         for cnt, author in authors_tmp:
             total += cnt
         for cnt, author in authors_tmp:
-            if (100 / total) * cnt > theshold:
+            if (100 / total) * cnt > threshold:
                 authors.append(author)
     except subprocess.CalledProcessError:
         pass
@@ -388,10 +390,10 @@ def _container_merge_from_filepath(
             )[0]
         if "@VCS_AUTHORS@" in replacements:
             replacements["@VCS_AUTHORS@"] = ", ".join(
-                _get_vcs_authors(filepath, theshold=5)
+                _get_vcs_authors(filepath, threshold=5)
             )
         if "@VCS_AUTHOR@" in replacements:
-            replacements["@VCS_AUTHOR@"] = _get_vcs_authors(filepath, theshold=5)[0]
+            replacements["@VCS_AUTHOR@"] = _get_vcs_authors(filepath, threshold=5)[0]
 
         # do substitutions
         if replacements:
