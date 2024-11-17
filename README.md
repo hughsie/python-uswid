@@ -220,6 +220,8 @@ The supported values are given below:
  * `@VCS_COMMIT@` → `git rev-parse HEAD` e.g. `3090e61ee3452c0478860747de057c0269bfb7b6`
  * `@VCS_SBOM_AUTHORS@` → `git shortlog HEAD -n -s -- bom.json` e.g. `Example User, Another User`
  * `@VCS_SBOM_AUTHOR@` → `@VCS_SBOM_AUTHORS@[0]` e.g. `Example User`
+ * `@VCS_AUTHORS@` → `git shortlog HEAD -n -s` e.g. `Example User, Another User`
+ * `@VCS_AUTHOR@` → `@VCS_AUTHORS@[0]` e.g. `Example User`
 
 The only supported source control system is `git`, but patches very welcome for `svn`, `hg` etc.
 
