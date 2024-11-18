@@ -66,6 +66,7 @@ setup(
             "component.pyi",
             "link.pyi",
             "problem.pyi",
+            "vcs.pyi",
             "vex_document.pyi",
             "vex_product.pyi",
             "vex_statement.pyi",

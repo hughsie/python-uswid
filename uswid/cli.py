@@ -11,7 +11,7 @@ from enum import IntEnum
 from collections import defaultdict
 from random import choices, randrange
 from datetime import datetime
-from typing import Optional, Any, List, Dict, Tuple
+from typing import Optional, Any, List, Dict
 import argparse
 import tempfile
 import subprocess
@@ -53,6 +53,7 @@ from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 from uswid.format_spdx import uSwidFormatSpdx
+from uswid.vcs import uSwidVcs
 from uswid.vex_document import uSwidVexDocument
 
 
@@ -237,123 +238,16 @@ def _type_for_fmt(
     return None
 
 
-def _get_vcs_tag(filepath: str) -> Optional[str]:
-
-    try:
-        p = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError:
-        return "NOASSERTION"
-
-
-def _get_vcs_version(filepath: str) -> str:
-
-    try:
-        p = subprocess.run(
-            ["git", "describe", "--tags"],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError:
-        return "NOASSERTION"
-
-
-def _get_vcs_branch(filepath: str) -> str:
-
-    try:
-        p = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError:
-        return "NOASSERTION"
-
-
-def _get_vcs_commit(filepath: str) -> str:
-
-    try:
-        p = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError:
-        return "NOASSERTION"
-
-
-def _get_vcs_toplevel(filepath: str) -> Optional[str]:
-
-    try:
-        p = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        return p.stdout.decode().strip()
-    except subprocess.CalledProcessError:
-        return None
-
-
-def _get_vcs_authors(
-    filepath: str, threshold: int = 10, single_file=False
-) -> List[str]:
-
-    authors: List[str] = []
-    try:
-        p = subprocess.run(
-            [
-                "git",
-                "shortlog",
-                "HEAD",
-                "-n",
-                "-s",
-                os.path.basename(filepath) if single_file else ".",
-            ],
-            capture_output=True,
-            cwd=os.path.dirname(filepath),
-            check=True,
-        )
-        authors_tmp: List[Tuple[int, str]] = []
-        for line in p.stdout.decode().split("\n"):
-            sections = line.split("\t")
-            try:
-                authors_tmp.append((int(sections[0]), sections[1]))
-            except ValueError:
-                pass
-        total: int = 0
-        for cnt, author in authors_tmp:
-            total += cnt
-        for cnt, author in authors_tmp:
-            if (100 / total) * cnt > threshold:
-                authors.append(author)
-    except subprocess.CalledProcessError:
-        pass
-    if not authors:
-        authors.append("NOASSERTION")
-    return authors
-
-
 def _container_merge_from_filepath(
     container: uSwidContainer,
     base: uSwidFormatBase,
     filepath: str,
+    dirpath: Optional[str] = None,
     fixup: bool = False,
 ) -> None:
     with open(filepath, "rb") as f:
         blob: bytes = f.read()
+    vcs = uSwidVcs(filepath=filepath, dirpath=dirpath)
     try:
         text: str = blob.decode()
         replacements: Dict[str, str] = {}
@@ -373,27 +267,21 @@ def _container_merge_from_filepath(
             if text.find(key) != -1:
                 replacements[key] = "NOASSERTION"
         if "@VCS_TAG@" in replacements:
-            replacements["@VCS_TAG@"] = _get_vcs_tag(filepath)
+            replacements["@VCS_TAG@"] = vcs.get_tag()
         if "@VCS_VERSION@" in replacements:
-            replacements["@VCS_VERSION@"] = _get_vcs_version(filepath)
+            replacements["@VCS_VERSION@"] = vcs.get_version()
         if "@VCS_BRANCH@" in replacements:
-            replacements["@VCS_BRANCH@"] = _get_vcs_branch(filepath)
+            replacements["@VCS_BRANCH@"] = vcs.get_branch()
         if "@VCS_COMMIT@" in replacements:
-            replacements["@VCS_COMMIT@"] = _get_vcs_commit(filepath)
+            replacements["@VCS_COMMIT@"] = vcs.get_commit()
         if "@VCS_SBOM_AUTHORS@" in replacements:
-            replacements["@VCS_SBOM_AUTHORS@"] = ", ".join(
-                _get_vcs_authors(filepath, single_file=True)
-            )
+            replacements["@VCS_SBOM_AUTHORS@"] = ", ".join(vcs.get_sbom_authors())
         if "@VCS_SBOM_AUTHOR@" in replacements:
-            replacements["@VCS_SBOM_AUTHOR@"] = _get_vcs_authors(
-                filepath, single_file=True
-            )[0]
+            replacements["@VCS_SBOM_AUTHOR@"] = vcs.get_sbom_authors()[0]
         if "@VCS_AUTHORS@" in replacements:
-            replacements["@VCS_AUTHORS@"] = ", ".join(
-                _get_vcs_authors(filepath, threshold=5)
-            )
+            replacements["@VCS_AUTHORS@"] = ", ".join(vcs.get_authors())
         if "@VCS_AUTHOR@" in replacements:
-            replacements["@VCS_AUTHOR@"] = _get_vcs_authors(filepath, threshold=5)[0]
+            replacements["@VCS_AUTHOR@"] = vcs.get_authors()[0]
 
         # do substitutions
         if replacements:
@@ -406,25 +294,25 @@ def _container_merge_from_filepath(
             blob = text.encode()
     except UnicodeDecodeError:
         pass
-    for component in base.load(blob, path=os.path.dirname(filepath)):
+    for component in base.load(blob, path=filepath):
 
         # guess something sane
         if fixup:
             fixup_strs: List[str] = []
             if not component.software_version:
                 component.version_scheme = uSwidVersionScheme.ALPHANUMERIC
-                component.software_version = _get_vcs_version(filepath)
+                component.software_version = vcs.get_version()
                 if base.verbose:
                     fixup_strs.append(f"Add VCS version → {component.software_version}")
             if not component.colloquial_version:
-                component.colloquial_version = _get_vcs_commit(filepath)
+                component.colloquial_version = vcs.get_commit()
                 if base.verbose:
                     fixup_strs.append(
                         f"Add VCS commit → {component.colloquial_version}"
                     )
             if not component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR):
                 entity: uSwidEntity = uSwidEntity(
-                    name=", ".join(_get_vcs_authors(filepath)),
+                    name=", ".join(vcs.get_sbom_authors()),
                     roles=[uSwidEntityRole.TAG_CREATOR],
                 )
                 component.add_entity(entity)
@@ -444,7 +332,7 @@ def _container_merge_from_filepath(
                     print(f" - {fixup_str}")
 
             # get the toplevel so that we can auto-add deps
-            component.source_dir = _get_vcs_toplevel(filepath)
+            component.source_dir = vcs.get_toplevel()
 
         component_new = container.merge(component)
         if component_new:
