@@ -125,8 +125,15 @@ class uSwidComponent:
         self._links: Dict[str, uSwidLink] = {}
         self.vex_statements: List[uSwidVexStatement] = []
 
+        """Top-level source files used construct the component"""
+        self.source_filenames: List[str] = []
         """Top-level source directory for the project"""
         self.source_dir: Optional[str] = None
+
+    def add_source_filename(self, source_file: str):
+        """Adds a source filename, i.e. what file helped created this component"""
+        if source_file not in self.source_filenames:
+            self.source_filenames.append(source_file)
 
     @property
     def software_name(self) -> Optional[str]:
@@ -320,6 +327,8 @@ class uSwidComponent:
             self.add_payload(payload)
         for evidence in component_new.evidences:
             self.add_evidence(evidence)
+        for filepath in component_new.source_filenames:
+            self.add_source_filename(filepath)
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """Add the latest entity"""
