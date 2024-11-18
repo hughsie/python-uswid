@@ -108,6 +108,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component.tag_version = data["swid"].get("tagVersion")
         for eref_data in data.get("externalReferences", []):
             if eref_data["type"] == "vcs":
+                component.add_link(uSwidLink(rel="see-also", href=eref_data["url"]))
                 if "hashes" in eref_data:
                     try:
                         component.colloquial_version = eref_data["hashes"][0]["content"]
@@ -303,17 +304,24 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             root["swid"] = swid
 
         if component.colloquial_version:
-            commit: Dict[str, str] = {"type": "vcs", "url": "https://NOASSERTION/"}
+            vcs_data: Dict[str, str] = {"type": "vcs"}
+
+            # get the source code VCS
+            link_vcs = component.get_link_by_rel("see-also")
+            if link_vcs:
+                vcs_data["url"] = link_vcs.href
+            else:
+                vcs_data["url"] = "https://NOASSERTION/"
 
             # set the correct hash algorithm automatically
             hash_tmp = uSwidHash(value=component.colloquial_version)
-            commit["hashes"] = [
+            vcs_data["hashes"] = [
                 {
                     "alg": _convert_hash_alg_to_str(hash_tmp.alg_id),
                     "content": hash_tmp.value,
                 }
             ]
-            root["externalReferences"] = [commit]
+            root["externalReferences"] = [vcs_data]
 
         # additional metadata, not yet standardized in cdx
         metadata: Dict[str, str] = {}
