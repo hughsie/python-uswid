@@ -136,5 +136,14 @@ class uSwidContainer:
                 return component
         return None
 
+    def get_by_link_href(self, url: str) -> Optional[uSwidComponent]:
+        """Returns the component that matches the URL href"""
+
+        for component in self._components:
+            for link in component.links:
+                if link.href == url:
+                    return component
+        return None
+
     def __repr__(self) -> str:
         return f"uSwidContainer({self._components})"

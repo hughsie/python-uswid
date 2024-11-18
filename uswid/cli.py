@@ -76,7 +76,9 @@ def _load_efi_pefile(filepath: str) -> uSwidContainer:
     sect = _pe_get_section_by_name(pe, ".sbom")
     if not sect:
         raise NotSupportedError("PE files have to have an linker-defined .sbom section")
-    return uSwidFormatCoswid().load(sect.get_data())
+    component = uSwidFormatCoswid().load(sect.get_data())
+    component.add_source_filename(filepath)
+    return component
 
 
 def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
@@ -104,7 +106,9 @@ def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
         except subprocess.CalledProcessError as e:
             print(e)
             sys.exit(1)
-        return uSwidFormatCoswid().load(dst.read())
+        component = uSwidFormatCoswid().load(dst.read())
+        component.add_source_filename(filepath)
+        return component
 
 
 def _save_efi_pefile(component: uSwidComponent, filepath: str) -> None:
@@ -295,6 +299,9 @@ def _container_merge_from_filepath(
     except UnicodeDecodeError:
         pass
     for component in base.load(blob, path=filepath):
+
+        # where this came from
+        component.add_source_filename(filepath)
 
         # guess something sane
         if fixup:
@@ -564,8 +571,15 @@ def main():
     )
     parser.add_argument(
         "--find",
+        default=[],
         nargs="+",
         help="directory to scan, e.g. ~/Code/firmware",
+    )
+    parser.add_argument(
+        "--fallback-path",
+        default=[],
+        nargs="+",
+        help="fallback directory to scan, e.g. ~/fallback",
     )
     parser.add_argument(
         "--load",
@@ -634,26 +648,82 @@ def main():
         load_filepaths = []
     save_filepaths = args.save if args.save else []
 
+    # always load into a temporary component
+    container = uSwidContainer()
+
+    # load a fallback path of sboms
+    container_fallback = uSwidContainer()
+    for path in args.fallback_path:
+        for basename in os.listdir(path):
+            filepath = os.path.join(path, basename)
+            fmt = _detect_format(filepath)
+            if fmt == SwidFormat.UNKNOWN:
+                continue
+            base = _type_for_fmt(fmt, args, filepath=filepath)
+            if not base:
+                continue
+            base.verbose = args.verbose
+            with open(filepath, "rb") as f:
+                blob: bytes = f.read()
+            for component in base.load(blob, path=filepath):
+                component.add_source_filename(filepath)
+                container_fallback.append(component)
+
     # search for known suffixes recursively
-    if args.find:
-        sbom_suffixes = [
-            "spdx.json",
-            "swid.xml",
-            "cdx.json",
-            "bom.json",
-            "bom.coswid",
-            "sbom.ini",
-        ]
-        for path in args.find:
-            for dirpath, _, fns in os.walk(path):
-                for fn in fns:
-                    for sbom_suffix in sbom_suffixes:
-                        if fn.endswith(sbom_suffix):
-                            load_filepaths.append(os.path.join(dirpath, fn))
-        if args.verbose and load_filepaths:
-            print("Found:")
-            for filepath in load_filepaths:
-                print(f" - {filepath}")
+    sbom_suffixes = [
+        "spdx.json",
+        "swid.xml",
+        "cdx.json",
+        "bom.json",
+        "bom.coswid",
+        "sbom.ini",
+    ]
+    fallback_dirpaths: List[str] = []
+    for path in args.find:
+        for dirpath, dirs, fns in os.walk(path):
+            if container_fallback:
+                for path in dirs:
+                    if path == ".git":
+                        fallback_dirpaths.append(dirpath)
+                for path in fns:
+                    if path == ".git":
+                        fallback_dirpaths.append(dirpath)
+            for fn in fns:
+                for sbom_suffix in sbom_suffixes:
+                    if fn.endswith(sbom_suffix):
+                        load_filepaths.append(os.path.join(dirpath, fn))
+    if args.verbose and load_filepaths:
+        print("Found:")
+        for filepath in load_filepaths:
+            print(f" - {filepath}")
+
+    # any fallbacks
+    for dirpath in fallback_dirpaths:
+        vcs = uSwidVcs(filepath=dirpath, dirpath=dirpath)
+        remote_path = vcs.get_remote_url()
+        if remote_path:
+            component = container_fallback.get_by_link_href(remote_path)
+            if component:
+                filepath = component.source_filenames[0]
+                fmt = _detect_format(filepath)
+                if fmt == SwidFormat.UNKNOWN:
+                    continue
+                base = _type_for_fmt(fmt, args, filepath=filepath)
+                if not base:
+                    print(f"{fmt} no type for format")
+                    sys.exit(1)
+                base.verbose = args.verbose
+                _container_merge_from_filepath(
+                    container, base, filepath, dirpath=dirpath, fixup=args.fixup
+                )
+                if args.verbose:
+                    print(f"Using {filepath} fallback for {remote_path}")
+            else:
+                if args.verbose:
+                    print(f"No fallback component for {remote_path}")
+        else:
+            if args.verbose:
+                print(f"No git directory for {dirpath}")
 
     # handle deprecated --compress
     if args.compress:
@@ -673,9 +743,6 @@ def main():
     if not load_filepaths and not save_filepaths:
         print("Use uswid --help for command line arguments")
         sys.exit(1)
-
-    # always load into a temporary component so that we can query the tag_id
-    container = uSwidContainer()
 
     # generate 1000 plausible components, each with:
     # - unique tag-id GUID
