@@ -10,6 +10,10 @@
 import os
 import sys
 import unittest
+from typing import Optional
+import shutil
+import subprocess
+
 from lxml import etree as ET
 
 # allows us to run this from the project root
@@ -29,12 +33,105 @@ from .format_coswid import uSwidFormatCoswid
 from .format_swid import uSwidFormatSwid
 from .format_cyclonedx import uSwidFormatCycloneDX
 from .format_spdx import uSwidFormatSpdx
+from .vcs import uSwidVcs
 
 from .purl import uSwidPurl
 
 
 class TestSwidEntity(unittest.TestCase):
     """Tescases for components, entities, links, evidence and payloads"""
+
+    def test_vcs(self):
+        """Unit tests for uSwidVcs"""
+
+        tmp_remote = "/tmp/remote"
+        try:
+            shutil.rmtree(tmp_remote)
+        except FileNotFoundError:
+            pass
+        subprocess.run(
+            ["git", "init", tmp_remote, "--initial-branch", "main"],
+            cwd=".",
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "admin@example.com"],
+            cwd=tmp_remote,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "RH"],
+            cwd=tmp_remote,
+            check=True,
+        )
+        subprocess.run(
+            ["mkdir", "contrib"],
+            cwd=tmp_remote,
+            check=True,
+        )
+        with open("/tmp/remote/contrib/bom.cdx.json", "wb") as f:
+            f.write(b"hello")
+        subprocess.run(
+            ["git", "add", "contrib/bom.cdx.json"],
+            cwd=tmp_remote,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-a", "-m", "Add SBOM"],
+            cwd=tmp_remote,
+            check=True,
+            env={},
+        )
+        subprocess.run(
+            ["git", "tag", "v1.2.3"],
+            cwd=tmp_remote,
+            check=True,
+        )
+        with open("/tmp/remote/contrib/bom.cdx.json", "wb") as f:
+            f.write(b"hello world")
+        subprocess.run(
+            ["git", "commit", "-a", "-m", "A SBOM fixup"],
+            cwd=tmp_remote,
+            check=True,
+            env={},
+        )
+        subprocess.run(
+            [
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "git@github.com:hughsie/python-uswid.git",
+            ],
+            cwd=tmp_remote,
+            check=True,
+        )
+
+        vcs = uSwidVcs(filepath=os.path.join(tmp_remote, "contrib", "bom.cdx.json"))
+
+        # 0.5.0
+        self.assertEqual(vcs.get_tag(), "v1.2.3")
+
+        # 0.5.0-25-g26af980
+        self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
+
+        # main
+        self.assertEqual(vcs.get_branch(), "main")
+
+        # 26af9806ef407b171481ff234d2fe16386dc75eb
+        self.assertEqual(len(vcs.get_commit()), 40)
+
+        # /home/hughsie/Code/uswid
+        value: Optional[str] = vcs.get_toplevel()
+        self.assertEqual(value, "/tmp/remote")
+
+        # https://github.com/hughsie/python-uswid
+        value = vcs.get_remote_url()
+        self.assertEqual(value, "https://github.com/hughsie/python-uswid")
+
+        # me!
+        self.assertEqual(vcs.get_sbom_authors(), ["RH"])
+        self.assertEqual(vcs.get_authors(), ["RH"])
 
     def test_entity(self):
         """Unit tests for uSwidEntity"""
