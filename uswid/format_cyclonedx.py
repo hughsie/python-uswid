@@ -178,7 +178,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         try:
             root = json.loads(blob)
         except json.decoder.JSONDecodeError as e:
-            raise NotSupportedError(f"invalid GoSWID: {e}") from e
+            raise NotSupportedError(f"invalid JSON: {e}") from e
 
         if root.get("bomFormat") != "CycloneDX":
             raise NotSupportedError("not in CycloneDX format")
