@@ -154,21 +154,21 @@ class uSwidFormatIni(uSwidFormatBase):
         # link
         for i, link in enumerate(component.links):
             key = "uSWID-Link"
-            if i == 0:
+            if i > 0:
                 key += f":{i}"
             config[key] = self._save_link(link)
 
         # payload
         for i, link in enumerate(component.payloads):
             key = "uSWID-Payload"
-            if i == 0:
+            if i > 0:
                 key += f":{i}"
             config[key] = self._save_payload(component.payloads[0])
 
         # evidence
         for i, link in enumerate(component.evidences):
             key = "uSWID-Evidence"
-            if i == 0:
+            if i > 0:
                 key += f":{i}"
             config[key] = self._save_evidence(component.evidences[0])
 
