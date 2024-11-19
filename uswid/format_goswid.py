@@ -178,9 +178,9 @@ class uSwidFormatGoswid(uSwidFormatBase):
 
         # links
         if component.links:
-            root["link"] = []
+            root["links"] = []
             for link in component.links:
-                root["link"].append(self._save_link(link))
+                root["links"].append(self._save_link(link))
 
         # success
         return root
