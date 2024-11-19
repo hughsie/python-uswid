@@ -24,7 +24,7 @@ from .component import (
     _VERSION_SCHEME_FROM_STRING,
 )
 from .entity import uSwidEntity, uSwidEntityRole
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
@@ -70,7 +70,7 @@ class uSwidFormatIni(uSwidFormatBase):
 
         data: Dict[str, Any] = {}
         if link.rel:
-            data["rel"] = link.rel
+            data["rel"] = str(link.rel)
         if link.href:
             data["href"] = link.href
         return data
@@ -187,7 +187,7 @@ class uSwidFormatIni(uSwidFormatBase):
             if key == "href":
                 link.href = value
             elif key == "rel":
-                link.rel = value
+                link.rel = uSwidLinkRel.from_string(value)
             else:
                 print(f"unknown key {key} found in ini file!")
         if not link.href:

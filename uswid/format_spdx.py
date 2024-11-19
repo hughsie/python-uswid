@@ -17,7 +17,7 @@ from .component import uSwidComponent
 from .entity import uSwidEntity, uSwidEntityRole
 from .errors import NotSupportedError
 from .hash import uSwidHashAlg
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 
 
 def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
@@ -66,7 +66,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
             for spdx_license_id in spdx_license_ids.split(" AND "):
                 component.add_link(
                     uSwidLink(
-                        rel="license",
+                        rel=uSwidLinkRel.LICENSE,
                         href=f"https://spdx.org/licenses/{spdx_license_id}",
                     )
                 )
@@ -226,7 +226,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
         # license
         license_spdx_ids = []
         for link in component.links:
-            if link.rel != "license":
+            if link.rel != uSwidLinkRel.LICENSE:
                 continue
             if link.href.startswith("https://spdx.org/licenses/"):
                 license_spdx_ids.append(link.href[26:])

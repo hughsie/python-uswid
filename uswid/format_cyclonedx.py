@@ -16,7 +16,7 @@ from datetime import datetime
 from .container import uSwidContainer
 from .format import uSwidFormatBase
 from .component import uSwidComponent, uSwidComponentType
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 from .payload import uSwidPayload
 from .enums import uSwidVersionScheme
 from .evidence import uSwidEvidence
@@ -108,7 +108,9 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component.tag_version = data["swid"].get("tagVersion")
         for eref_data in data.get("externalReferences", []):
             if eref_data["type"] == "vcs":
-                component.add_link(uSwidLink(rel="see-also", href=eref_data["url"]))
+                component.add_link(
+                    uSwidLink(rel=uSwidLinkRel.SEE_ALSO, href=eref_data["url"])
+                )
                 if "hashes" in eref_data:
                     try:
                         component.colloquial_version = eref_data["hashes"][0]["content"]
@@ -142,15 +144,16 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             spdx_id: Optional[str] = lic["license"].get("id")
             name: Optional[str] = lic["license"].get("name")
             if url:
-                component.add_link(uSwidLink(rel="license", href=url))
+                component.add_link(uSwidLink(rel=uSwidLinkRel.LICENSE, href=url))
             elif spdx_id:
                 component.add_link(
                     uSwidLink(
-                        rel="license", href=f"https://spdx.org/licenses/{spdx_id}.html"
+                        rel=uSwidLinkRel.LICENSE,
+                        href=f"https://spdx.org/licenses/{spdx_id}.html",
                     )
                 )
             elif name:
-                component.add_link(uSwidLink(rel="license", href=name))
+                component.add_link(uSwidLink(rel=uSwidLinkRel.LICENSE, href=name))
 
         # entities
         if "supplier" in data:
@@ -204,11 +207,13 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 continue
             if component_other.tag_id == "compiler":
                 component.add_link(
-                    uSwidLink(rel="compiler", href=component_other.software_name)
+                    uSwidLink(
+                        rel=uSwidLinkRel.COMPILER, href=component_other.software_name
+                    )
                 )
             else:
                 component.add_link(
-                    uSwidLink(rel="component", href=component_other.tag_id)
+                    uSwidLink(rel=uSwidLinkRel.COMPONENT, href=component_other.tag_id)
                 )
 
         for ann in root.get("annotations", []):
@@ -252,7 +257,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         for component in container:
             components.append(self._save_component(component))
             for link in component.links:
-                if link.rel in ["compiler"]:
+                if link.rel in [uSwidLinkRel.COMPILER]:
                     components.append(
                         self._save_component(
                             uSwidComponent(tag_id="compiler", software_name=link.href)
@@ -261,7 +266,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                     dependencies.append(
                         {"ref": component.tag_id, "dependsOn": "compiler"}
                     )
-                if link.rel in ["component"]:
+                if link.rel in [uSwidLinkRel.COMPONENT]:
                     dependencies.append(
                         {"ref": component.tag_id, "dependsOn": link.href}
                     )
@@ -307,7 +312,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             vcs_data: Dict[str, str] = {"type": "vcs"}
 
             # get the source code VCS
-            link_vcs = component.get_link_by_rel("see-also")
+            link_vcs = component.get_link_by_rel(uSwidLinkRel.SEE_ALSO)
             if link_vcs:
                 vcs_data["url"] = link_vcs.href
             else:
@@ -338,7 +343,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         for link in component.links:
             if not link.href:
                 continue
-            if link.rel == "license":
+            if link.rel == uSwidLinkRel.LICENSE:
                 license_choice: Dict[str, Any] = {}
                 spdx_id: Optional[str] = _spdx_url_to_id(link.href)
                 if spdx_id:

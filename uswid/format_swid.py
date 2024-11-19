@@ -22,7 +22,7 @@ from .component import (
     _VERSION_SCHEME_TO_STRING,
 )
 from .entity import uSwidEntity, uSwidEntityRole
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
@@ -72,7 +72,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         if link.href:
             node.set("href", link.href)
         if link.rel:
-            node.set("rel", link.rel)
+            node.set("rel", str(link.rel))
 
     def _save_payload(self, payload: uSwidPayload, root: ET.Element) -> None:
         """Exports a uSwidHash SWID section"""
@@ -212,7 +212,7 @@ class uSwidFormatSwid(uSwidFormatBase):
         }
         link.href = node.get("href")
         rel_data = node.get("rel")
-        link.rel = LINK_MAP.get(rel_data, rel_data)
+        link.rel = uSwidLinkRel.from_string(LINK_MAP.get(rel_data, rel_data))
 
     def _load_payload(self, payload: uSwidPayload, node: ET.SubElement) -> None:
         """Imports a uSwidPayload SWID section"""

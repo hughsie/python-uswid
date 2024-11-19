@@ -21,7 +21,7 @@ from .component import (
     _VERSION_SCHEME_FROM_STRING,
 )
 from .entity import uSwidEntity
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
@@ -69,7 +69,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         if link.href:
             node["href"] = link.href
         if link.rel:
-            node["rel"] = link.rel
+            node["rel"] = str(link.rel)
         return node
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[str, Any]:
@@ -195,7 +195,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         """Imports a uSwidLink goSWID section"""
 
         link.href = node.get("href")
-        link.rel = node.get("rel")
+        link.rel = uSwidLinkRel.from_string(node.get("rel"))
 
     def _load_evidence(self, evidence: uSwidEvidence, node: Dict[str, str]) -> None:
         """Imports a uSwidEvidence goSWID section"""
