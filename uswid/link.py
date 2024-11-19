@@ -26,8 +26,8 @@ class uSwidLinkRel(IntEnum):
     ANCESTOR = 1
     COMPONENT = 2
     FEATURE = 3
-    INSTALLATIONMEDIA = 4
-    PACKAGEINSTALLER = 5
+    INSTALLATION_MEDIA = 4
+    PACKAGE_INSTALLER = 5
     PARENT = 6
     PATCHES = 7
     REQUIRES = 8
@@ -36,7 +36,28 @@ class uSwidLinkRel(IntEnum):
     SUPPLEMENTAL = 11
 
     def __str__(self):
-        return self.name.lower()
+        return self.name.replace("_", "-").lower()
+
+    @classmethod
+    def from_string(cls, value: str) -> "uSwidLinkRel":
+        """Creates a uSwidLinkRel from a string identifier"""
+        return cls(
+            {
+                "license": uSwidLinkRel.LICENSE,
+                "compiler": uSwidLinkRel.COMPILER,
+                "ancestor": uSwidLinkRel.ANCESTOR,
+                "component": uSwidLinkRel.COMPONENT,
+                "feature": uSwidLinkRel.FEATURE,
+                "installation-media": uSwidLinkRel.INSTALLATION_MEDIA,
+                "package-installer": uSwidLinkRel.PACKAGE_INSTALLER,
+                "parent": uSwidLinkRel.PARENT,
+                "patches": uSwidLinkRel.PATCHES,
+                "requires": uSwidLinkRel.REQUIRES,
+                "see-also": uSwidLinkRel.SEE_ALSO,
+                "supersedes": uSwidLinkRel.SUPERSEDES,
+                "supplemental": uSwidLinkRel.SUPPLEMENTAL,
+            }[value]
+        )
 
 
 class uSwidLinkUse(IntEnum):
@@ -56,28 +77,28 @@ class uSwidLink:
     def __init__(
         self,
         href: Optional[str] = None,
-        rel: Optional[str] = None,
+        rel: Optional[uSwidLinkRel] = None,
         use: Optional[uSwidLinkUse] = None,
     ):
         """Initializes uSwidLink"""
         self._href: Optional[str] = href
-        self._rel: Optional[str] = rel
+        self._rel: Optional[uSwidLinkRel] = rel
         self.use: Optional[uSwidLinkUse] = use
         self.component: Optional[uSwidComponent] = None
         """Component, if the SWID reference in internally resolvable"""
 
     @property
-    def rel(self) -> Optional[str]:
+    def rel(self) -> Optional[uSwidLinkRel]:
         """Returns rel, guessing from the ``href`` if not provided"""
         if not self._rel:
             if self.href and self.href.startswith("swid"):
-                return "component"
+                return uSwidLinkRel.COMPONENT
             if self.href and self.href.startswith("https://spdx.org/"):
-                return "license"
+                return uSwidLinkRel.LICENSE
         return self._rel
 
     @rel.setter
-    def rel(self, rel: Optional[str]) -> None:
+    def rel(self, rel: Optional[uSwidLinkRel]) -> None:
         """Sets rel"""
         self._rel = rel
 
@@ -119,7 +140,7 @@ class uSwidLink:
     def __repr__(self) -> str:
         attrs: List[str] = []
         if self.rel:
-            attrs.append(f'rel="{self.rel}"')
+            attrs.append(f'rel="{str(self.rel)}"')
         if self.use:
             attrs.append(f'use="{self.use}"')
         if self.href:

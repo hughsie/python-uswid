@@ -91,8 +91,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
                 "ancestor": uSwidLinkRel.ANCESTOR,
                 "component": uSwidLinkRel.COMPONENT,
                 "feature": uSwidLinkRel.FEATURE,
-                "installation-media": uSwidLinkRel.INSTALLATIONMEDIA,
-                "package-installer": uSwidLinkRel.PACKAGEINSTALLER,
+                "installation-media": uSwidLinkRel.INSTALLATION_MEDIA,
+                "package-installer": uSwidLinkRel.PACKAGE_INSTALLER,
                 "parent": uSwidLinkRel.PARENT,
                 "patches": uSwidLinkRel.PATCHES,
                 "requires": uSwidLinkRel.REQUIRES,
@@ -245,31 +245,11 @@ class uSwidFormatCoswid(uSwidFormatBase):
         # rel can either be a uSwidLinkRel or a string
         rel_data = data.get(uSwidGlobalMap.REL)
         if isinstance(rel_data, str):
+            link.rel = uSwidLinkRel.from_string(rel_data)
+        elif isinstance(rel_data, int):
+            link.rel = uSwidLinkRel(rel_data)
+        elif isinstance(rel_data, uSwidLinkRel):
             link.rel = rel_data
-        if isinstance(rel_data, int):
-            rel_data = uSwidLinkRel(rel_data)
-        if isinstance(rel_data, uSwidLinkRel):
-            LINK_MAP: Dict[uSwidLinkRel, str] = {
-                uSwidLinkRel.LICENSE: "license",
-                uSwidLinkRel.COMPILER: "compiler",
-                uSwidLinkRel.ANCESTOR: "ancestor",
-                uSwidLinkRel.COMPONENT: "component",
-                uSwidLinkRel.FEATURE: "feature",
-                uSwidLinkRel.INSTALLATIONMEDIA: "installation-media",
-                uSwidLinkRel.PACKAGEINSTALLER: "package-installer",
-                uSwidLinkRel.PARENT: "parent",
-                uSwidLinkRel.PATCHES: "patches",
-                uSwidLinkRel.REQUIRES: "requires",
-                uSwidLinkRel.SEE_ALSO: "see-also",
-                uSwidLinkRel.SUPERSEDES: "supersedes",
-                uSwidLinkRel.SUPPLEMENTAL: "supplemental",
-            }
-            try:
-                link.rel = LINK_MAP[rel_data]
-            except KeyError as e:
-                raise NotSupportedError(
-                    f"{rel_data} not supported from {','.join(LINK_MAP.values())}"
-                ) from e
 
     def _load_hash(self, ihash: uSwidHash, data: Any) -> None:
         """Imports a uSwidHash CoSWID section"""

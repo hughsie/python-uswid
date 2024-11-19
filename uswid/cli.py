@@ -485,7 +485,7 @@ def _roundtrip(container: uSwidContainer, verbose: bool = False) -> None:
                 differences.append(
                     {
                         "class": "uSwidLink",
-                        "name": link.rel,
+                        "name": str(link.rel),
                     }
                 )
                 continue
@@ -847,7 +847,7 @@ def main():
                     fixup_strs.append(f"{component2.tag_id} → {component.tag_id}")
                     component2.add_link(
                         uSwidLink(
-                            rel="component",
+                            rel=uSwidLinkRel.COMPONENT,
                             href=component.tag_id,
                             use=uSwidLinkUse.REQUIRED,
                         )
