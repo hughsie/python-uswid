@@ -149,7 +149,7 @@ class uSwidVcs:
                 cwd=os.path.dirname(self.filepath),
                 check=True,
             )
-            authors = _filter_lines(p.stdout.decode(), threshold)
+            authors = _filter_lines(p.stdout.decode(errors="ignore"), threshold)
         except subprocess.CalledProcessError:
             pass
         if not authors:
@@ -173,7 +173,7 @@ class uSwidVcs:
                 cwd=self.dirpath,
                 check=True,
             )
-            authors = _filter_lines(p.stdout.decode(), threshold)
+            authors = _filter_lines(p.stdout.decode(errors="ignore"), threshold)
         except subprocess.CalledProcessError:
             pass
         if not authors:
