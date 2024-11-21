@@ -14,7 +14,6 @@ from uswid.component import uSwidComponent
 from uswid.problem import uSwidProblem
 from uswid.entity import uSwidEntity, uSwidEntityRole
 from uswid.enums import (
-    uSwidGlobalMap,
     uSwidVersionScheme,
     uSwidHeaderFlags,
     uSwidPayloadCompression,
