@@ -24,7 +24,7 @@ def _filter_lines(lines: str, threshold: int) -> List[str]:
     for cnt, author in authors_tmp:
         total += cnt
     for cnt, author in authors_tmp:
-        if (100 / total) * cnt > threshold:
+        if cnt > threshold or (100 / total) * cnt > threshold:
             authors.append(author)
     return authors
 
