@@ -429,6 +429,14 @@ def _container_merge_from_filepath(
                 )
                 component.add_entity(entity)
                 if base.verbose:
+                    fixup_strs.append(f"Add VCS SBOM author → {entity.name}")
+            if not component.get_entity_by_role(uSwidEntityRole.SOFTWARE_CREATOR):
+                entity: uSwidEntity = uSwidEntity(
+                    name=", ".join(vcs.get_authors()),
+                    roles=[uSwidEntityRole.SOFTWARE_CREATOR],
+                )
+                component.add_entity(entity)
+                if base.verbose:
                     fixup_strs.append(f"Add VCS author → {entity.name}")
             if fixup_strs:
                 print(f"Fixup required in {filepath}:")
