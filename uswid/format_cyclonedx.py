@@ -73,7 +73,9 @@ def _convert_entity_from_dict(data: Dict[str, Any]) -> uSwidEntity:
     if isinstance(data, list):
         raise NotSupportedError("multiple entities not expected")
     try:
-        regid = data.get("url", [])[0]
+        regid = data.get("url")
+        if isinstance(regid, list):
+            regid = regid[0]
     except IndexError:
         regid = None
     return uSwidEntity(name=data.get("name"), regid=regid)
