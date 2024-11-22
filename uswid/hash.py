@@ -72,7 +72,7 @@ class uSwidHash:
     def value(self, value: Optional[str]) -> None:
         """Sets the value, guessing the alg_id from the length if unset"""
         if self.alg_id is None and value:
-            if len(value) == 20:
+            if len(value) == 40:
                 self.alg_id = uSwidHashAlg.SHA1
             elif len(value) == 64:
                 self.alg_id = uSwidHashAlg.SHA256
