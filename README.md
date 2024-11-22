@@ -210,20 +210,63 @@ Or the INI override format:
 # Substituted Values
 
 All text SBOM formats (e.g. CycloneDX, SPDX, SWID, but *not* coSWID) can use substitute values anywhere in the file.
-For instance, `@VCS_TAG@` can be used to signify the last tagged version in git rather than hardcoding in the file.
+For instance, `@VCS_TAG@` can be used to signify the last tagged version from git rather than hardcoding during the release process.
 
 The supported values are given below:
 
- * `@VCS_TAG@` → `git describe --tags --abbrev=0` e.g. `1.2.3`
- * `@VCS_VERSION@` → `git describe --tags` e.g. `1.2.3-250-gfa2371946`
- * `@VCS_BRANCH@` → `git rev-parse --abbrev-ref HEAD` e.g. `staging`
- * `@VCS_COMMIT@` → `git rev-parse HEAD` e.g. `3090e61ee3452c0478860747de057c0269bfb7b6`
- * `@VCS_SBOM_AUTHORS@` → `git shortlog HEAD -n -s -- bom.json` e.g. `Example User, Another User`
- * `@VCS_SBOM_AUTHOR@` → `@VCS_SBOM_AUTHORS@[0]` e.g. `Example User`
- * `@VCS_AUTHORS@` → `git shortlog HEAD -n -s` e.g. `Example User, Another User`
- * `@VCS_AUTHOR@` → `@VCS_AUTHORS@[0]` e.g. `Example User`
+## @VCS_TAG@
 
-The only supported source control system is `git`, but patches very welcome for `svn`, `hg` etc.
+The semantic version of the last version control tag, for example `1.2.3`.
+
+NOTE: Any prefixed non-semantic version contents are also removed, so `v1.2.3->1.2.3`.
+
+For git, generated using: `git describe --tags --abbrev=0`
+
+## @VCS_VERSION@
+
+The version control identifier that includes information about how far we are from the last commit.
+
+For example `1.2.3-250-gfa2371946` when there have been 250 additional commits since the last tag or `1.2.3` in the case of no additional commits since the last tag.
+
+For git, generated using: `git describe --tags`
+
+## @VCS_BRANCH@
+
+The version control branch in use, for example `staging`, `master` or `main`.
+
+For git, generated using: `git rev-parse --abbrev-ref HEAD`
+
+## @VCS_COMMIT@
+
+The version control full commit, typically a SHA-1 or SHA-256 hash. For example `3090e61ee3452c0478860747de057c0269bfb7b6`.
+
+For git, generated using: `git rev-parse HEAD`
+
+## @VCS_SBOM_AUTHORS@
+
+The authors of the SBOM file itself, for example `Example User, Another User`.
+
+NOTE: Only authors contributing more than 10% of the file commits (or more than 10 commits) are included by default.
+
+For git, generated using: `git shortlog HEAD -n -s -- bom.json`
+
+## @VCS_SBOM_AUTHOR@
+
+The first listed `@VCS_SBOM_AUTHORS@`, for example `Example User`.
+
+## @VCS_AUTHORS@
+
+The authors of the project as registed in version control, for example `Example User, Another User`.
+
+NOTE: Only authors contributing more than 5% of the project commits (or more than 5 commits) are included by default.
+
+For git, generated using: `git shortlog HEAD -n -s`
+
+## @VCS_AUTHOR@
+
+The first listed `@VCS_AUTHORS@`, for example `Example User`.
+
+Patches are very welcome for other source control systems, e.g. `svn` or `hg`.
 
 # Reading and writing to PE files
 

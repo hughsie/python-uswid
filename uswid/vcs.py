@@ -39,7 +39,7 @@ class uSwidVcs:
 
     def get_tag(self) -> str:
 
-        """Gets the last tag, e.g. `v3.6.0`"""
+        """Gets the last tag, e.g. `3.6.0`"""
         try:
             p = subprocess.run(
                 ["git", "describe", "--tags", "--abbrev=0"],
@@ -47,7 +47,10 @@ class uSwidVcs:
                 cwd=self.dirpath,
                 check=True,
             )
-            return p.stdout.decode().strip()
+            tag: str = p.stdout.decode().strip()
+            if tag.startswith("v"):
+                tag = tag[1:]
+            return tag
         except subprocess.CalledProcessError:
             return "NOASSERTION"
 

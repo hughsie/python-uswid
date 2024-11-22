@@ -110,7 +110,7 @@ class TestSwidEntity(unittest.TestCase):
         vcs = uSwidVcs(filepath=os.path.join(tmp_remote, "contrib", "bom.cdx.json"))
 
         # 0.5.0
-        self.assertEqual(vcs.get_tag(), "v1.2.3")
+        self.assertEqual(vcs.get_tag(), "1.2.3")
 
         # 0.5.0-25-g26af980
         self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
