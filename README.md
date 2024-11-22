@@ -218,7 +218,7 @@ The supported values are given below:
 
 The semantic version of the last version control tag, for example `1.2.3`.
 
-NOTE: Any prefixed non-semantic version contents are also removed, so `v1.2.3->1.2.3`.
+NOTE: Any prefixed or suffixed non-semantic version contents are also removed, so `v1.2.3->1.2.3` and `krb5-1.21.3-final->1.21.3`.
 
 For git, generated using: `git describe --tags --abbrev=0`
 

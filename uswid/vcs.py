@@ -29,6 +29,25 @@ def _filter_lines(lines: str, threshold: int) -> List[str]:
     return authors
 
 
+def _part_to_semver(part: str) -> str:
+
+    semver: str = ""
+    for char in part:
+        if char in [".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+            semver += char
+    return semver
+
+
+def _convert_to_semver(version: str) -> str:
+
+    semver_best: str = ""
+    for part in version.split("-"):
+        semver: str = _part_to_semver(part)
+        if len(semver) > len(semver_best):
+            semver_best = semver
+    return semver_best
+
+
 class uSwidVcs:
     """Version control system"""
 
@@ -47,10 +66,7 @@ class uSwidVcs:
                 cwd=self.dirpath,
                 check=True,
             )
-            tag: str = p.stdout.decode().strip()
-            if tag.startswith("v"):
-                tag = tag[1:]
-            return tag
+            return _convert_to_semver(p.stdout.decode().strip())
         except subprocess.CalledProcessError:
             return "NOASSERTION"
 
