@@ -160,7 +160,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         # entities
         if "supplier" in data:
             entity = _convert_entity_from_dict(data["supplier"])
-            entity.roles = [uSwidEntityRole.LICENSOR]
+            entity.roles = [uSwidEntityRole.SOFTWARE_CREATOR]
             component.add_entity(entity)
         if "publisher" in data:
             entity = _convert_entity_from_dict(data["publisher"])
@@ -168,16 +168,18 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component.add_entity(entity)
         if "manufacturer" in data:
             entity = _convert_entity_from_dict(data["manufacturer"])
-            entity.roles = [uSwidEntityRole.SOFTWARE_CREATOR]
+            entity.roles = [uSwidEntityRole.LICENSOR]
             component.add_entity(entity)
         for author_data in data.get("authors", []):
             entity = _convert_entity_from_dict(author_data)
-            entity.roles = [uSwidEntityRole.TAG_CREATOR]
+            entity.roles = [uSwidEntityRole.MAINTAINER]
             component.add_entity(entity)
 
         # we only have authors
-        if len(component.entities) == 1:
-            entity = component.entities[0]
+        entity = component.get_entity_by_role(uSwidEntityRole.MAINTAINER)
+        if entity and not component.get_entity_by_role(
+            uSwidEntityRole.SOFTWARE_CREATOR
+        ):
             entity.add_role(uSwidEntityRole.SOFTWARE_CREATOR)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
@@ -189,6 +191,15 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         if root.get("bomFormat") != "CycloneDX":
             raise NotSupportedError("not in CycloneDX format")
 
+        # tag creator
+        tag_creators: List[str] = []
+        metadata = root.get("metadata")
+        if metadata:
+            for data_author in metadata.get("authors", []):
+                if data_author["name"] == "NOASSERTION":
+                    continue
+                tag_creators.append(data_author["name"])
+
         container = uSwidContainer()
         for data in root.get("components", []):
             component = uSwidComponent()
@@ -199,6 +210,12 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 except AttributeError:
                     pass
             container.append(component)
+
+            # the person that created the source file
+            for tag_creator in tag_creators:
+                component.add_entity(
+                    uSwidEntity(name=tag_creator, roles=[uSwidEntityRole.TAG_CREATOR])
+                )
 
         for dep in root.get("dependencies", []):
             component = container._get_by_id(dep["ref"])
@@ -248,10 +265,22 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         metadata["timestamp"] = datetime.now().isoformat()
         root["metadata"] = metadata
 
+        # find tag creator
+        metadata_authors: List[str] = []
+        for component in container:
+            entity = component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR)
+            if entity and entity.name not in metadata_authors:
+                metadata_authors.append(entity.name)
+
         # generator
         metadata["tools"] = [
             {"vendor": "uSWID Authors", "name": "uSWID", "version": "0.4.0"}
         ]
+        if metadata_authors:
+            data_metadata_authors: List[Dict[str, str]] = []
+            for name in metadata_authors:
+                data_metadata_authors.append({"name": name})
+            metadata["authors"] = data_metadata_authors
 
         # find components
         components: List[Dict[str, Any]] = []
@@ -363,12 +392,12 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         manufacturer: Optional[Dict[str, Any]] = None
         for entity in component.entities:
             if uSwidEntityRole.LICENSOR in entity.roles:
-                supplier = _convert_entity_to_dict(entity)
+                manufacturer = _convert_entity_to_dict(entity)
             if uSwidEntityRole.DISTRIBUTOR in entity.roles:
                 publisher = _convert_entity_to_dict(entity)
             if uSwidEntityRole.SOFTWARE_CREATOR in entity.roles:
-                manufacturer = _convert_entity_to_dict(entity)
-            if uSwidEntityRole.TAG_CREATOR in entity.roles:
+                supplier = _convert_entity_to_dict(entity)
+            if uSwidEntityRole.MAINTAINER in entity.roles:
                 authors.append(_convert_entity_to_dict(entity))
         if supplier:
             # the organization that supplied the component --
