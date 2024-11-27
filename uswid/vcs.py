@@ -10,6 +10,14 @@ import subprocess
 from typing import Optional, List, Tuple
 
 
+def _is_valid_author(author: str) -> bool:
+
+    for token in ["@", "dependabot", "[bot]"]:
+        if author.find(token) != -1:
+            return False
+    return True
+
+
 def _filter_lines(lines: str, threshold: int) -> List[str]:
 
     authors: List[str] = []
@@ -24,6 +32,8 @@ def _filter_lines(lines: str, threshold: int) -> List[str]:
     for cnt, author in authors_tmp:
         total += cnt
     for cnt, author in authors_tmp:
+        if not _is_valid_author(author):
+            continue
         if cnt > threshold or (100 / total) * cnt > threshold:
             authors.append(author)
     return authors
