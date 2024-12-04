@@ -269,8 +269,13 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         metadata_authors: List[str] = []
         for component in container:
             entity = component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR)
-            if entity and entity.name not in metadata_authors:
-                metadata_authors.append(entity.name)
+            if not entity:
+                continue
+            if entity.name in metadata_authors:
+                continue
+            if entity.name in ["NOASSERTION"]:
+                continue
+            metadata_authors.append(entity.name)
 
         # generator
         metadata["tools"] = [
