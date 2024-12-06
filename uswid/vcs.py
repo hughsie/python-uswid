@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 
 import os
+import sys
 import subprocess
 from typing import Optional, List, Tuple
 
@@ -210,3 +211,15 @@ class uSwidVcs:
         if not authors:
             authors.append("NOASSERTION")
         return authors
+
+
+if __name__ == "__main__":
+
+    for _filepath in sys.argv[1:]:
+        vcs = uSwidVcs(filepath=_filepath)
+        print(f"VCS_TAG: {vcs.get_tag()}")
+        print(f"VCS_VERSION: {vcs.get_version()}")
+        print(f"VCS_BRANCH: {vcs.get_branch()}")
+        print(f"VCS_COMMIT: {vcs.get_commit()}")
+        print(f"VCS_SBOM_AUTHORS: {vcs.get_sbom_authors()}")
+        print(f"VCS_AUTHORS: {vcs.get_authors()}")
