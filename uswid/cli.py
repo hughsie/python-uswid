@@ -261,7 +261,6 @@ def _container_merge_from_filepath(
             "@VCS_TAG@",
             "@VCS_VERSION@",
             "@VCS_BRANCH@",
-            "@VCS_BRANCH@",
             "@VCS_COMMIT@",
             "@VCS_SBOM_AUTHORS@",
             "@VCS_SBOM_AUTHOR@",
