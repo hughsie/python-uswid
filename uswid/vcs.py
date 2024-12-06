@@ -23,9 +23,11 @@ def _filter_lines(lines: str, threshold: int) -> List[str]:
     authors: List[str] = []
     authors_tmp: List[Tuple[int, str]] = []
     for line in lines.split("\n"):
-        sections = line.split("\t")
         try:
-            authors_tmp.append((int(sections[0]), sections[1]))
+            cnt_as_str, author = line.split("\t")
+            for extra in [" via groups.io"]:
+                author = author.replace(extra, "")
+            authors_tmp.append((int(cnt_as_str), author))
         except ValueError:
             pass
     total: int = 0
