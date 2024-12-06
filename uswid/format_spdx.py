@@ -165,7 +165,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
         if packages:
             root["packages"] = packages
 
-        return json.dumps(root, indent=2).encode()
+        return json.dumps(root, indent=2, ensure_ascii=False).encode()
 
     def _save_component(self, component: uSwidComponent) -> Dict[str, Any]:
         root: Dict[str, Any] = {}

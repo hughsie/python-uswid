@@ -60,7 +60,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         root = []
         for component in container:
             root.append(self._save_component_internal(component))
-        return json.dumps(root, indent=2).encode()
+        return json.dumps(root, indent=2, ensure_ascii=False).encode()
 
     def _save_link(self, link: uSwidLink) -> Dict[str, str]:
         """Exports a uSwidLink goSWID section"""
