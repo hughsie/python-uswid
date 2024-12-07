@@ -344,24 +344,25 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         if swid:
             root["swid"] = swid
 
-        if component.colloquial_version:
+        # save the source code VCS and colloquial version
+        link_vcs = component.get_link_by_rel(uSwidLinkRel.SEE_ALSO)
+        if link_vcs or component.colloquial_version:
             vcs_data: Dict[str, str] = {"type": "vcs"}
 
-            # get the source code VCS
-            link_vcs = component.get_link_by_rel(uSwidLinkRel.SEE_ALSO)
             if link_vcs:
                 vcs_data["url"] = link_vcs.href
             else:
                 vcs_data["url"] = "https://NOASSERTION/"
 
             # set the correct hash algorithm automatically
-            hash_tmp = uSwidHash(value=component.colloquial_version)
-            vcs_data["hashes"] = [
-                {
-                    "alg": _convert_hash_alg_to_str(hash_tmp.alg_id),
-                    "content": hash_tmp.value,
-                }
-            ]
+            if component.colloquial_version:
+                hash_tmp = uSwidHash(value=component.colloquial_version)
+                vcs_data["hashes"] = [
+                    {
+                        "alg": _convert_hash_alg_to_str(hash_tmp.alg_id),
+                        "content": hash_tmp.value,
+                    }
+                ]
             root["externalReferences"] = [vcs_data]
 
         # additional metadata, not yet standardized in cdx
