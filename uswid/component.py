@@ -129,6 +129,8 @@ class uSwidComponent:
         self.source_filenames: List[str] = []
         """Top-level source directory for the project"""
         self.source_dir: Optional[str] = None
+        """Status, with specific terms and conditions for its use, e.g. 'DO NOT SHIP'"""
+        self.activation_status: Optional[str] = None
 
     def add_source_filename(self, source_file: str):
         """Adds a source filename, i.e. what file helped created this component"""
@@ -204,6 +206,14 @@ class uSwidComponent:
             ]
         if not self.version_scheme:
             problems += [uSwidProblem("component", "No version scheme", since="0.4.7")]
+        if self.activation_status in ["DO NOT TRUST", "DO NOT SHIP"]:
+            problems += [
+                uSwidProblem(
+                    "component",
+                    "Software should not be used in production",
+                    since="0.5.1",
+                )
+            ]
 
         if _is_redacted(self.summary):
             problems += [uSwidProblem("component", "Redacted summary", since="0.4.8")]

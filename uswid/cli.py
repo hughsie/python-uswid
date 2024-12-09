@@ -408,6 +408,7 @@ def _roundtrip(container: uSwidContainer, verbose: bool = False) -> None:
             "revision",
             "edition",
             "persistent_id",
+            "activation_status",
             "cpe",
         ]:
             if getattr(component, key) != getattr(component_new, key):

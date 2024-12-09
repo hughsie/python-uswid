@@ -143,6 +143,8 @@ class uSwidFormatIni(uSwidFormatBase):
             main["colloquial-version"] = component.colloquial_version
         if component.persistent_id:
             main["persistent-id"] = component.persistent_id
+        if component.activation_status:
+            main["activation-status"] = component.activation_status
         if component.cpe:
             main["cpe"] = component.cpe
         config["uSWID"] = main
@@ -306,6 +308,8 @@ class uSwidFormatIni(uSwidFormatBase):
                         component.colloquial_version = value
                     elif key == "persistent-id":
                         component.persistent_id = value
+                    elif key == "activation-status":
+                        component.activation_status = value
                     elif key == "cpe":
                         component.cpe = value
                     else:
