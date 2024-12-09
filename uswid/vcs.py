@@ -15,7 +15,7 @@ from uswid import uSwidVersionScheme
 
 def _is_valid_author(author: str) -> bool:
 
-    for token in ["@", "dependabot", "[bot]"]:
+    for token in ["@", "dependabot", "[bot]", "\\"]:
         if author.find(token) != -1:
             return False
     return True
