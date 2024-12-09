@@ -50,6 +50,12 @@ check: $(PYTEST) $(MYPY)
 install:
 	$(VENV)/bin/pip install .
 
+roundtrip:
+	PYTHONPATH=. $(VENV)/bin/python ./uswid/cli.py --roundtrip \
+		--load ./examples/sample.ini \
+		--save ./roundtrip.cdx.json \
+		--verbose
+
 blacken: $(BLACK)
 	find uswid -name '*.py' -exec $(BLACK) {} \;
 

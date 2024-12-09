@@ -246,6 +246,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
             metadata[uSwidGlobalMap.REVISION] = component.revision
         if component.product:
             metadata[uSwidGlobalMap.PRODUCT] = component.product
+        if component.activation_status:
+            metadata[uSwidGlobalMap.ACTIVATION_STATUS] = component.activation_status
         if component.edition:
             metadata[uSwidGlobalMap.EDITION] = _to_perhaps_hex_bytes(component.edition)
         if component.colloquial_version:
@@ -421,6 +423,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     component.revision = value
                 elif key == uSwidGlobalMap.PRODUCT:
                     component.product = value
+                elif key == uSwidGlobalMap.ACTIVATION_STATUS:
+                    component.activation_status = value
                 elif key == uSwidGlobalMap.EDITION:
                     component.edition = _from_perhaps_hex_bytes(value)
                 elif key == uSwidGlobalMap.COLLOQUIAL_VERSION:
