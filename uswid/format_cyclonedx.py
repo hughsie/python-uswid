@@ -126,6 +126,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 component.revision = meta.get("value")
             if meta.get("name") == "product":
                 component.product = meta.get("value")
+            if meta.get("name") == "activationStatus":
+                component.activation_status = meta.get("value")
             if meta.get("name") == "versionScheme":
                 component.version_scheme = _convert_str_to_version_scheme(
                     meta.get("value")
@@ -371,6 +373,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             metadata["edition"] = component.edition
         if component.product:
             metadata["product"] = component.product
+        if component.activation_status:
+            metadata["activationStatus"] = component.activation_status
         if component.revision:
             metadata["revision"] = component.revision
         if component.version_scheme:

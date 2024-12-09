@@ -180,6 +180,7 @@ class uSwidFormatSwid(uSwidFormatBase):
             or component.edition
             or component.colloquial_version
             or component.persistent_id
+            or component.activation_status
         ):
             node = ET.SubElement(root, "Meta")
             if component.summary:
@@ -194,6 +195,8 @@ class uSwidFormatSwid(uSwidFormatBase):
                 node.set("colloquialVersion", component.colloquial_version)
             if component.persistent_id:
                 node.set("persistentId", component.persistent_id)
+            if component.activation_status:
+                node.set("activationStatus", component.activation_status)
             if component.cpe:
                 node.set("cpe", component.cpe)
             if component.type:
@@ -310,6 +313,7 @@ class uSwidFormatSwid(uSwidFormatBase):
                 ("edition", "edition"),
                 ("colloquialVersion", "colloquial_version"),
                 ("persistentId", "persistent_id"),
+                ("activationStatus", "activation_status"),
                 ("cpe", "cpe"),
             ]:
                 if attr_name in meta.attrib:
