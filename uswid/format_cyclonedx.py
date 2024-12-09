@@ -131,6 +131,11 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                     meta.get("value")
                 )
 
+        try:
+            component.activation_status = data["pedigree"]["notes"]
+        except KeyError:
+            pass
+
         for hash_data in data.get("hashes", []):
             payload = uSwidPayload()
             payload.add_hash(
@@ -375,6 +380,9 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             metadata["revision"] = component.revision
         if component.version_scheme:
             metadata["versionScheme"] = str(component.version_scheme)
+
+        if component.activation_status:
+            root["pedigree"] = {"notes": component.activation_status}
 
         licenses: List[Dict[str, Any]] = []
         for link in component.links:
