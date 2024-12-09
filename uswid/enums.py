@@ -20,6 +20,19 @@ class uSwidVersionScheme(IntEnum):
     def __str__(self):
         return self.name.lower()
 
+    @classmethod
+    def from_version(cls, version: str) -> "uSwidVersionScheme":
+        """guesses a version scheme from a version string"""
+
+        version_set = set(version)
+        if version_set.issubset(set("0123456789")):
+            return cls(uSwidVersionScheme.DECIMAL)
+        if version_set.issubset(set("0123456789.")):
+            return cls(uSwidVersionScheme.SEMVER)
+        if version_set.issubset(set("0123456789.-")):
+            return cls(uSwidVersionScheme.MULTIPARTNUMERIC)
+        return cls(uSwidVersionScheme.ALPHANUMERIC)
+
 
 USWID_HEADER_MAGIC = b"\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
 

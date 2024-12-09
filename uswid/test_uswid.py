@@ -41,6 +41,24 @@ from .purl import uSwidPurl
 class TestSwidEntity(unittest.TestCase):
     """Tescases for components, entities, links, evidence and payloads"""
 
+    def test_vcs_verfmt(self):
+        """Unit tests for uSwidVcs, version format conversion"""
+
+        self.assertEqual(
+            uSwidVersionScheme.from_version("123"), uSwidVersionScheme.DECIMAL
+        )
+        self.assertEqual(
+            uSwidVersionScheme.from_version("1.2.3"), uSwidVersionScheme.SEMVER
+        )
+        self.assertEqual(
+            uSwidVersionScheme.from_version("1.2.3-4"),
+            uSwidVersionScheme.MULTIPARTNUMERIC,
+        )
+        self.assertEqual(
+            uSwidVersionScheme.from_version("1.2.3-4~5"),
+            uSwidVersionScheme.ALPHANUMERIC,
+        )
+
     def test_vcs(self):
         """Unit tests for uSwidVcs"""
 

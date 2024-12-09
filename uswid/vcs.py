@@ -10,6 +10,8 @@ import sys
 import subprocess
 from typing import Optional, List, Tuple
 
+from uswid import uSwidVersionScheme
+
 
 def _is_valid_author(author: str) -> bool:
 
@@ -93,7 +95,15 @@ class uSwidVcs:
                 cwd=self.dirpath,
                 check=True,
             )
-            return p.stdout.decode().strip()
+
+            # remove the very common v${semver} prefix
+            version = p.stdout.decode().strip()
+            if version.startswith("v") and uSwidVersionScheme.from_version(
+                version[1:]
+            ) in [uSwidVersionScheme.SEMVER, uSwidVersionScheme.DECIMAL]:
+                version = version[1:]
+
+            return version
         except subprocess.CalledProcessError:
             return "NOASSERTION"
 

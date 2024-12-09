@@ -242,31 +242,6 @@ def _type_for_fmt(
     return None
 
 
-def _contains_strict_subset(value: str, allowed: List[str]) -> bool:
-
-    for letter in value:
-        if letter not in allowed:
-            return False
-    return True
-
-
-def _detect_version_format_from_version(software_version: str) -> uSwidVersionScheme:
-
-    if _contains_strict_subset(
-        software_version, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    ):
-        return uSwidVersionScheme.DECIMAL
-    if _contains_strict_subset(
-        software_version, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
-    ):
-        return uSwidVersionScheme.SEMVER
-    if _contains_strict_subset(
-        software_version, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-"]
-    ):
-        return uSwidVersionScheme.MULTIPARTNUMERIC
-    return uSwidVersionScheme.ALPHANUMERIC
-
-
 def _container_merge_from_filepath(
     container: uSwidContainer,
     base: uSwidFormatBase,
@@ -331,12 +306,11 @@ def _container_merge_from_filepath(
         if fixup:
             fixup_strs: List[str] = []
             if not component.software_version:
-                component.version_scheme = uSwidVersionScheme.ALPHANUMERIC
                 component.software_version = vcs.get_version()
                 if base.verbose:
                     fixup_strs.append(f"Add VCS version → {component.software_version}")
             if not component.version_scheme and component.software_version:
-                component.version_scheme = _detect_version_format_from_version(
+                component.version_scheme = uSwidVersionScheme.from_version(
                     component.software_version
                 )
             if not component.colloquial_version:
