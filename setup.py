@@ -59,6 +59,7 @@ setup(
             "format_spdx.pyi",
             "format_swid.pyi",
             "format_uswid.pyi",
+            "format_pe.pyi",
             "hash.pyi",
             "payload.pyi",
             "purl.pyi",
