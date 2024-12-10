@@ -65,6 +65,8 @@ setup(
             "purl.pyi",
             "evidence.pyi",
             "component.pyi",
+            "container.pyi",
+            "container_utils.pyi",
             "link.pyi",
             "problem.pyi",
             "vcs.pyi",
