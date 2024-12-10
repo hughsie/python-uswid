@@ -25,6 +25,7 @@ class uSwidFormatBase:
     * ``uSwidFormatPkgconfig`` (``.load`` only)
     * ``uSwidFormatSwid``
     * ``uSwidFormatUswid``
+    * ``uSwidFormatPe``
     """
 
     def __init__(self, name: str, verbose: bool = False) -> None:

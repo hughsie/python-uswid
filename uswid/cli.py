@@ -7,27 +7,20 @@
 #
 # pylint: disable=wrong-import-position,too-many-locals,too-many-statements,too-many-nested-blocks
 
-from enum import IntEnum
 from collections import defaultdict
 from random import choices, randrange
 from datetime import datetime
-from typing import Optional, Any, List, Dict
+from typing import Optional, Any, List, Dict, Callable
 import argparse
-import tempfile
-import subprocess
 import socket
 import json
-
 import os
 import sys
-import shutil
 import uuid
 import string
 
 from importlib import metadata as importlib_metadata
 from importlib.metadata import PackageNotFoundError
-
-import pefile
 
 sys.path.append(os.path.realpath("."))
 
@@ -53,192 +46,31 @@ from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 from uswid.format_spdx import uSwidFormatSpdx
+from uswid.format_pe import uSwidFormatPe
 from uswid.vcs import uSwidVcs
 from uswid.vex_document import uSwidVexDocument
 
 
-def _adjust_SectionSize(sz, align):
-    if sz % align:
-        sz = ((sz + align) // align) * align
-    return sz
-
-
-def _pe_get_section_by_name(pe: pefile.PE, name: str) -> pefile.SectionStructure:
-    for sect in pe.sections:
-        if sect.Name == name.encode().ljust(8, b"\0"):
-            return sect
-    return None
-
-
-def _load_efi_pefile(filepath: str) -> uSwidContainer:
-    """read EFI file using pefile"""
-    pe = pefile.PE(filepath)
-    sect = _pe_get_section_by_name(pe, ".sbom")
-    if not sect:
-        raise NotSupportedError("PE files have to have an linker-defined .sbom section")
-    component = uSwidFormatCoswid().load(sect.get_data())
-    component.add_source_filename(filepath)
-    return component
-
-
-def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
-    """read EFI file using objcopy"""
-    objcopy_full = shutil.which(objcopy)
-    if not objcopy_full:
-        print(f"executable {objcopy} not found")
-        sys.exit(1)
-    with tempfile.NamedTemporaryFile(
-        mode="w+b", prefix="objcopy_", suffix=".bin", delete=True
-    ) as dst:
-        try:
-            # pylint: disable=unexpected-keyword-arg
-            subprocess.check_output(
-                [
-                    objcopy_full,
-                    "-O",
-                    "binary",
-                    "--only-section=.sbom",
-                    filepath,
-                    dst.name,
-                ],
-                stderr=subprocess.PIPE,
-            )
-        except subprocess.CalledProcessError as e:
-            print(e)
-            sys.exit(1)
-        component = uSwidFormatCoswid().load(dst.read())
-        component.add_source_filename(filepath)
-        return component
-
-
-def _save_efi_pefile(component: uSwidComponent, filepath: str) -> None:
-    """modify EFI file using pefile"""
-
-    blob = uSwidFormatCoswid().save(uSwidContainer([component]))
-    pe = pefile.PE(filepath)
-    sect = _pe_get_section_by_name(pe, ".sbom")
-    if not sect:
-        raise NotSupportedError("PE files have to have an linker-defined .sbom section")
-
-    # can we squeeze the new uSWID blob into the existing space
-    sect.Misc = len(blob)
-    if len(blob) <= sect.SizeOfRawData:
-        pe.set_bytes_at_offset(sect.PointerToRawData, blob)
-
-    # save
-    pe.write(filepath)
-
-
-def _save_efi_objcopy(
-    component: uSwidComponent,
-    filepath: str,
-    cc: Optional[str],
-    cflags: str,
-    objcopy: str,
-) -> None:
-    """modify EFI file using objcopy"""
-    objcopy_full = shutil.which(objcopy)
-    if not objcopy_full:
-        print(f"executable {objcopy} not found")
-        sys.exit(1)
-    if not os.path.exists(filepath):
-        if not cc:
-            raise NotSupportedError("compiler is required for missing section")
-        subprocess.run(
-            [cc, "-x", "c", "-c", "-o", filepath, "/dev/null"] + cflags.split(" "),
-            check=True,
-        )
-
-    # save to file?
-    try:
-        blob = uSwidFormatIni().save(uSwidContainer([component]))
-    except NotSupportedError as e:
-        print(e)
-        sys.exit(1)
-
-    with tempfile.NamedTemporaryFile(
-        mode="wb", prefix="objcopy_", suffix=".bin", delete=True
-    ) as src:
-        src.write(blob)
-        src.flush()
-        try:
-            # pylint: disable=unexpected-keyword-arg
-            subprocess.check_output(
-                [
-                    objcopy_full,
-                    "--remove-section=.sbom",
-                    "--add-section",
-                    f".sbom={src.name}",
-                    "--set-section-flags",
-                    ".sbom=contents,alloc,load,readonly,data",
-                    filepath,
-                ]
-            )
-        except subprocess.CalledProcessError as e:
-            print(e)
-            sys.exit(1)
-
-
-class SwidFormat(IntEnum):
-    """Detected file format"""
-
-    UNKNOWN = 0
-    INI = 1
-    XML = 2
-    USWID = 3
-    PE = 4
-    JSON = 5
-    PKG_CONFIG = 6
-    COSWID = 7
-    CYCLONE_DX = 8
-    SPDX = 9
-    VEX = 10
-
-
-def _detect_format(filepath: str) -> SwidFormat:
+def _detect_format(filepath: str) -> Optional[Callable]:
     if filepath.endswith("bom.json") or filepath.endswith("cdx.json"):
-        return SwidFormat.CYCLONE_DX
+        return uSwidFormatCycloneDX()
     if filepath.endswith("spdx.json"):
-        return SwidFormat.SPDX
+        return uSwidFormatSpdx()
     ext = filepath.rsplit(".", maxsplit=1)[-1].lower()
     if ext in ["exe", "efi", "o"]:
-        return SwidFormat.PE
+        return uSwidFormatPe()
     if ext in ["uswid", "raw", "bin"]:
-        return SwidFormat.USWID
+        return uSwidFormatUswid()
     if ext in ["coswid", "cbor"]:
-        return SwidFormat.COSWID
-    if ext == "ini":
-        return SwidFormat.INI
-    if ext == "xml":
-        return SwidFormat.XML
-    if ext == "json":
-        return SwidFormat.JSON
-    if ext == "pc":
-        return SwidFormat.PKG_CONFIG
-    if ext == "vex":
-        return SwidFormat.VEX
-    return SwidFormat.UNKNOWN
-
-
-def _type_for_fmt(
-    fmt: SwidFormat, args: Any, filepath: Optional[str] = None
-) -> Optional[Any]:
-    if fmt == SwidFormat.INI:
-        return uSwidFormatIni()
-    if fmt == SwidFormat.COSWID:
         return uSwidFormatCoswid()
-    if fmt == SwidFormat.JSON:
-        return uSwidFormatGoswid()
-    if fmt == SwidFormat.XML:
+    if ext == "ini":
+        return uSwidFormatIni()
+    if ext == "xml":
         return uSwidFormatSwid()
-    if fmt == SwidFormat.CYCLONE_DX:
-        return uSwidFormatCycloneDX()
-    if fmt == SwidFormat.SPDX:
-        return uSwidFormatSpdx()
-    if fmt == SwidFormat.PKG_CONFIG:
-        return uSwidFormatPkgconfig(filepath=filepath)
-    if fmt == SwidFormat.USWID:
-        return uSwidFormatUswid(compression=args.compression)  # type: ignore
+    if ext == "json":
+        return uSwidFormatGoswid()
+    if ext == "pc":
+        return uSwidFormatPkgconfig()
     return None
 
 
@@ -659,13 +491,12 @@ def main():
     for path in args.fallback_path:
         for basename in os.listdir(path):
             filepath = os.path.join(path, basename)
-            fmt = _detect_format(filepath)
-            if fmt == SwidFormat.UNKNOWN:
-                continue
-            base = _type_for_fmt(fmt, args, filepath=filepath)
+            base = _detect_format(filepath)
             if not base:
                 continue
             base.verbose = args.verbose
+            if isinstance(base, uSwidFormatPkgconfig):
+                base.filepath = filepath
             with open(filepath, "rb") as f:
                 blob: bytes = f.read()
             for component in base.load(blob, path=filepath):
@@ -708,13 +539,9 @@ def main():
             component = container_fallback.get_by_link_href(remote_path)
             if component:
                 filepath = component.source_filenames[0]
-                fmt = _detect_format(filepath)
-                if fmt == SwidFormat.UNKNOWN:
-                    continue
-                base = _type_for_fmt(fmt, args, filepath=filepath)
+                base = _detect_format(filepath)
                 if not base:
-                    print(f"{fmt} no type for format")
-                    sys.exit(1)
+                    continue
                 base.verbose = args.verbose
                 _container_merge_from_filepath(
                     container, base, filepath, dirpath=dirpath, fixup=args.fixup
@@ -783,48 +610,32 @@ def main():
     # collect data here
     for filepath in load_filepaths:
         try:
-            fmt = _detect_format(filepath)
-            if fmt == SwidFormat.UNKNOWN:
-                print(f"{filepath} has unknown extension, using uSWID")
-                fmt = SwidFormat.USWID
-            if fmt == SwidFormat.PE:
-                if args.objcopy:
-                    container_tmp = _load_efi_objcopy(filepath, objcopy=args.objcopy)
-                else:
-                    container_tmp = _load_efi_pefile(filepath)
-                for component in container_tmp:
-                    component_new = container.merge(component)
-                    if component_new:
-                        print(
-                            "{} was merged into existing component {}".format(
-                                filepath, component_new.tag_id
-                            )
-                        )
-            elif fmt == SwidFormat.VEX:
+            if filepath.endswith(".vex"):
                 with open(filepath, "rb") as f:
                     container.add_vex_document(
                         uSwidVexDocument(json.loads(f.read().decode()))
                     )
-            elif fmt in [
-                SwidFormat.INI,
-                SwidFormat.JSON,
-                SwidFormat.COSWID,
-                SwidFormat.USWID,
-                SwidFormat.XML,
-                SwidFormat.SPDX,
-                SwidFormat.CYCLONE_DX,
-                SwidFormat.PKG_CONFIG,
-            ]:
-                base = _type_for_fmt(fmt, args, filepath=filepath)
-                base.verbose = args.verbose
-                if not base:
-                    print(f"{fmt} no type for format")
-                    sys.exit(1)
-                _container_merge_from_filepath(
-                    container, base, filepath, fixup=args.fixup
-                )
             else:
-                print(f"{filepath} has unknown format, ignoring")
+                base = _detect_format(filepath)
+                if not base:
+                    print(f"{filepath} has unknown extension, using uSWID")
+                    base = uSwidFormatUswid()
+                base.verbose = args.verbose
+                if isinstance(base, uSwidFormatPe):
+                    base.objcopy = args.objcopy
+                    with open(filepath, "rb") as f:
+                        for component in base.load(f.read(), filepath):
+                            component_new = container.merge(component)
+                            if component_new:
+                                print(
+                                    "{} was merged into existing component {}".format(
+                                        filepath, component_new.tag_id
+                                    )
+                                )
+                else:
+                    _container_merge_from_filepath(
+                        container, base, filepath, fixup=args.fixup
+                    )
         except FileNotFoundError:
             print(f"{filepath} does not exist")
             sys.exit(1)
@@ -915,38 +726,22 @@ def main():
             print(f"{component}")
     for filepath in save_filepaths:
         try:
-            fmt = _detect_format(filepath)
-            if fmt == SwidFormat.PE:
-                component_pe: Optional[uSwidComponent] = container.get_default()
-                if not component_pe:
-                    print("cannot save PE when no default component")
-                    sys.exit(1)
-                if args.objcopy:
-                    _save_efi_objcopy(
-                        component_pe, filepath, args.cc, args.cflags, args.objcopy
-                    )
-                else:
-                    _save_efi_pefile(component_pe, filepath)
-            elif fmt in [
-                SwidFormat.INI,
-                SwidFormat.COSWID,
-                SwidFormat.JSON,
-                SwidFormat.XML,
-                SwidFormat.USWID,
-                SwidFormat.CYCLONE_DX,
-                SwidFormat.SPDX,
-            ]:
-                base = _type_for_fmt(fmt, args)
-                base.verbose = args.verbose
-                if not base:
-                    print(f"{fmt} no type for format")
-                    sys.exit(1)
-                blob = base.save(container)
-                with open(filepath, "wb") as f:
-                    f.write(blob)
-            else:
+            base = _detect_format(filepath)
+            if not base:
                 print(f"{filepath} extension is not supported")
                 sys.exit(1)
+            base.verbose = args.verbose
+            if isinstance(base, uSwidFormatUswid):
+                base.compression = args.compression
+            if isinstance(base, uSwidFormatPe):
+                base.filepath = filepath
+                base.objcopy = args.objcopy
+                base.cc = args.cc
+                base.cflags = args.cflags
+            blob = base.save(container)
+            if blob:
+                with open(filepath, "wb") as f:
+                    f.write(blob)
         except NotSupportedError as e:
             print(e)
             sys.exit(1)
