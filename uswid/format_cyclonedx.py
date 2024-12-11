@@ -292,6 +292,14 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 data_metadata_authors.append({"name": name})
             metadata["authors"] = data_metadata_authors
 
+        # we are generating as part of the build?
+        has_compiler = False
+        for component in container:
+            if component.get_link_by_rel(uSwidLinkRel.COMPILER):
+                has_compiler = True
+                break
+        metadata["lifecycles"] = {"phase": "build" if has_compiler else "pre-build"}
+
         # find components
         components: List[Dict[str, Any]] = []
         dependencies: List[Dict[str, str]] = []

@@ -389,7 +389,7 @@ class uSwidComponent:
                 return entity
         return None
 
-    def get_link_by_rel(self, rel: str) -> Optional[uSwidLink]:
+    def get_link_by_rel(self, rel: uSwidLinkRel) -> Optional[uSwidLink]:
         """Get the link"""
         for link in self.links:
             if link.rel == rel:
