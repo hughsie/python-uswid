@@ -281,7 +281,7 @@ class uSwidComponent:
                     since="0.4.7",
                 )
             ]
-        if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
+        if uSwidLinkRel.COMPILER in link_by_rel and not self.edition:
             problems += [
                 uSwidProblem(
                     "component", "Has no edition (source code tree hash)", since="0.4.7"

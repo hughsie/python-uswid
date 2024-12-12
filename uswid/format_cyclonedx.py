@@ -108,13 +108,13 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 )
                 if "hashes" in eref_data:
                     try:
-                        component.colloquial_version = eref_data["hashes"][0]["content"]
+                        component.edition = eref_data["hashes"][0]["content"]
                     except KeyError:
                         pass
 
         for meta in data.get("properties", []):
-            if meta.get("name") == "edition":
-                component.edition = meta.get("value")
+            if meta.get("name") == "colloquialVersion":
+                component.colloquial_version = meta.get("value")
             if meta.get("name") == "revision":
                 component.revision = meta.get("value")
             if meta.get("name") == "product":
@@ -352,7 +352,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         # save the source code VCS and colloquial version
         link_vcs = component.get_link_by_rel(uSwidLinkRel.SEE_ALSO)
-        if link_vcs or component.colloquial_version:
+        if link_vcs or component.edition:
             vcs_data: Dict[str, str] = {"type": "vcs"}
 
             if link_vcs:
@@ -361,8 +361,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 vcs_data["url"] = "https://NOASSERTION/"
 
             # set the correct hash algorithm automatically
-            if component.colloquial_version:
-                hash_tmp = uSwidHash(value=component.colloquial_version)
+            if component.edition:
+                hash_tmp = uSwidHash(value=component.edition)
                 vcs_data["hashes"] = [
                     {
                         "alg": _convert_hash_alg_to_str(hash_tmp.alg_id),
@@ -373,8 +373,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         # additional metadata, not yet standardized in cdx
         metadata: Dict[str, str] = {}
-        if component.edition:
-            metadata["edition"] = component.edition
+        if component.colloquial_version:
+            metadata["colloquialVersion"] = component.colloquial_version
         if component.product:
             metadata["product"] = component.product
         if component.revision:
