@@ -25,13 +25,6 @@ from .errors import NotSupportedError
 from .hash import uSwidHash, uSwidHashAlg
 
 
-def _spdx_url_to_id(url: str) -> Optional[str]:
-
-    if not url.startswith("https://spdx.org/licenses/"):
-        return None
-    return url[26:].replace(".html", "")
-
-
 def _convert_hash_alg_to_str(alg_id: uSwidHashAlg) -> str:
     return {
         uSwidHashAlg.SHA1: "SHA-1",
@@ -156,7 +149,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 component.add_link(
                     uSwidLink(
                         rel=uSwidLinkRel.LICENSE,
-                        href=f"https://spdx.org/licenses/{spdx_id}.html",
+                        spdx_id=spdx_id,
                     )
                 )
             elif name:
@@ -398,9 +391,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 continue
             if link.rel == uSwidLinkRel.LICENSE:
                 license_choice: Dict[str, Any] = {}
-                spdx_id: Optional[str] = _spdx_url_to_id(link.href)
-                if spdx_id:
-                    license_choice["license"] = {"url": link.href, "id": spdx_id}
+                if link.spdx_id:
+                    license_choice["license"] = {"url": link.href, "id": link.spdx_id}
                 else:
                     license_choice["license"] = {"name": link.href}
                 licenses.append(license_choice)
