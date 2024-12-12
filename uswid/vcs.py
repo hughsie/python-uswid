@@ -10,7 +10,7 @@ import sys
 import subprocess
 from typing import Optional, List, Tuple
 
-from uswid import uSwidVersionScheme
+from .enums import uSwidVersionScheme
 
 
 def _is_valid_author(author: str) -> bool:
