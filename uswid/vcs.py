@@ -198,19 +198,18 @@ class uSwidVcs:
             authors.append("NOASSERTION")
         return authors
 
-    def get_authors(self, threshold: int = 5) -> List[str]:
+    def get_authors(
+        self, threshold: int = 5, relpath: Optional[str] = None
+    ) -> List[str]:
 
         """Gets the list of project authors"""
         authors: List[str] = []
         try:
+            argv = ["git", "shortlog", "HEAD", "-n", "-s"]
+            if relpath:
+                argv.append(relpath)
             p = subprocess.run(
-                [
-                    "git",
-                    "shortlog",
-                    "HEAD",
-                    "-n",
-                    "-s",
-                ],
+                argv,
                 capture_output=True,
                 cwd=self.dirpath,
                 check=True,
