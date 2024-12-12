@@ -67,7 +67,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
                 component.add_link(
                     uSwidLink(
                         rel=uSwidLinkRel.LICENSE,
-                        href=f"https://spdx.org/licenses/{spdx_license_id}",
+                        spdx_id=spdx_license_id,
                     )
                 )
         except KeyError:
@@ -228,8 +228,8 @@ class uSwidFormatSpdx(uSwidFormatBase):
         for link in component.links:
             if link.rel != uSwidLinkRel.LICENSE:
                 continue
-            if link.href.startswith("https://spdx.org/licenses/"):
-                license_spdx_ids.append(link.href[26:])
+            if link.spdx_id:
+                license_spdx_ids.append(link.spdx_id)
         if license_spdx_ids:
             root["licenseDeclared"] = " AND ".join(license_spdx_ids)
 

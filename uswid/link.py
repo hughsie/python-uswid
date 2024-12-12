@@ -79,6 +79,7 @@ class uSwidLink:
         href: Optional[str] = None,
         rel: Optional[uSwidLinkRel] = None,
         use: Optional[uSwidLinkUse] = None,
+        spdx_id: Optional[str] = None,
     ):
         """Initializes uSwidLink"""
         self._href: Optional[str] = href
@@ -86,6 +87,17 @@ class uSwidLink:
         self.use: Optional[uSwidLinkUse] = use
         self.component: Optional[uSwidComponent] = None
         """Component, if the SWID reference in internally resolvable"""
+
+        # be helpful
+        if spdx_id:
+            self._href = f"https://spdx.org/licenses/{spdx_id}.html"
+
+    @property
+    def spdx_id(self) -> Optional[str]:
+        """Returns the SPDX ID from the URL, if possible"""
+        if not self.href.startswith("https://spdx.org/licenses/"):
+            return None
+        return self.href[26:].replace(".html", "")
 
     @property
     def rel(self) -> Optional[uSwidLinkRel]:
