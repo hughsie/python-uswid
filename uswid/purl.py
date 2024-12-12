@@ -80,7 +80,8 @@ class uSwidPurl:
             self.namespace = None
             self.name = pnn[0]
 
-    def __repr__(self) -> str:
+    def _export(self) -> str:
+
         tmp: str = ""
         if self.scheme:
             tmp = f"{self.scheme}:"
@@ -99,4 +100,11 @@ class uSwidPurl:
             tmp += f"?{self.qualifiers}"
         if self.subpath:
             tmp += f"#{self.subpath}"
-        return f'uSwidPurl("{tmp}")'
+        return tmp
+
+    def __str__(self) -> str:
+
+        return self._export()
+
+    def __repr__(self) -> str:
+        return f'uSwidPurl("{self._export()}")'
