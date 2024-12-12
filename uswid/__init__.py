@@ -10,8 +10,10 @@ from uswid.link import uSwidLink, uSwidLinkRel, uSwidLinkUse
 from uswid.hash import uSwidHash, uSwidHashAlg
 from uswid.payload import uSwidPayload
 from uswid.evidence import uSwidEvidence
-from uswid.component import uSwidComponent
+from uswid.component import uSwidComponent, uSwidComponentType
 from uswid.problem import uSwidProblem
+from uswid.purl import uSwidPurl
+from uswid.vcs import uSwidVcs
 from uswid.entity import uSwidEntity, uSwidEntityRole
 from uswid.enums import (
     uSwidVersionScheme,
@@ -20,6 +22,7 @@ from uswid.enums import (
     USWID_HEADER_MAGIC,
 )
 from uswid.errors import NotSupportedError
+from uswid.format import uSwidFormatBase
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_goswid import uSwidFormatGoswid
 from uswid.format_ini import uSwidFormatIni
