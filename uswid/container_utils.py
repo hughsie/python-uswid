@@ -55,8 +55,8 @@ def container_generate(container: uSwidContainer) -> None:
         component.software_version = "1." + "".join(
             choices("123456789", k=randrange(1, 6))
         )
-        component.colloquial_version = tree_hashes[randrange(len(tree_hashes))]
-        component.edition = "".join(choices("0123456789abcdef", k=40))
+        component.edition = tree_hashes[randrange(len(tree_hashes))]
+        component.colloquial_version = "".join(choices("0123456789abcdef", k=40))
         component.version_scheme = uSwidVersionScheme.MULTIPARTNUMERIC
         component.add_entity(entities[randrange(len(entities))])
         container.append(component)
@@ -115,6 +115,7 @@ def container_roundtrip(container: uSwidContainer, verbose: bool = False) -> Non
             "summary",
             "product",
             "colloquial_version",
+            "edition",
             "revision",
             "edition",
             "persistent_id",

@@ -143,12 +143,10 @@ def _container_merge_from_filepath(
                 component.version_scheme = uSwidVersionScheme.from_version(
                     component.software_version
                 )
-            if not component.colloquial_version:
-                component.colloquial_version = vcs.get_commit()
+            if not component.edition:
+                component.edition = vcs.get_commit()
                 if base.verbose:
-                    fixup_strs.append(
-                        f"Add VCS commit → {component.colloquial_version}"
-                    )
+                    fixup_strs.append(f"Add VCS commit → {component.edition}")
             if not component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR):
                 entity: uSwidEntity = uSwidEntity(
                     name=", ".join(vcs.get_sbom_authors()),
