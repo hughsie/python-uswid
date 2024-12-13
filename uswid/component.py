@@ -69,7 +69,7 @@ class uSwidComponentType(Enum):
         return self.name.lower()
 
     @staticmethod
-    def from_str(value: str) -> str:
+    def from_str(value: str) -> "uSwidComponentType":
         """converts a lowercase component type to a uSwidComponentType"""
         return uSwidComponentType[value.upper()]
 
@@ -132,7 +132,7 @@ class uSwidComponent:
         """Status, with specific terms and conditions for its use, e.g. 'DO NOT SHIP'"""
         self.activation_status: Optional[str] = None
 
-    def add_source_filename(self, source_file: str):
+    def add_source_filename(self, source_file: str) -> None:
         """Adds a source filename, i.e. what file helped created this component"""
         if source_file not in self.source_filenames:
             self.source_filenames.append(source_file)
@@ -267,7 +267,8 @@ class uSwidComponent:
         # link
         link_by_rel: Dict[uSwidLinkRel, uSwidLink] = {}
         for link in self.links:
-            link_by_rel[link.rel] = link
+            if link.rel:
+                link_by_rel[link.rel] = link
             problems += link.problems()
         if uSwidLinkRel.LICENSE not in link_by_rel:
             problems += [uSwidProblem("link", "Has no LICENSE", since="0.4.7")]

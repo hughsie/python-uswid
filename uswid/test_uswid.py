@@ -21,7 +21,7 @@ sys.path.append(os.path.realpath("."))
 
 from .container import uSwidContainer
 from .errors import NotSupportedError
-from .link import uSwidLink
+from .link import uSwidLink, uSwidLinkRel
 from .entity import uSwidEntity, uSwidEntityRole
 from .enums import uSwidVersionScheme
 from .component import uSwidComponent
@@ -226,7 +226,7 @@ class TestSwidEntity(unittest.TestCase):
     def test_link(self):
         """Unit tests for uSwidLink"""
         # enumerated type
-        link = uSwidLink(href="http://test.com/", rel="see-also")
+        link = uSwidLink(href="http://test.com/", rel=uSwidLinkRel.SEE_ALSO)
         self.assertEqual(str(link), 'uSwidLink(rel="see-also",href="http://test.com/")')
         self.assertEqual(
             str(uSwidFormatCoswid()._save_link(link)),  # type: ignore
@@ -235,7 +235,7 @@ class TestSwidEntity(unittest.TestCase):
         )
 
         # rel from IANA "Software Tag Link Relationship Values" registry
-        link = uSwidLink(href="http://test.com/", rel="license")
+        link = uSwidLink(href="http://test.com/", rel=uSwidLinkRel.LICENSE)
         self.assertEqual(str(link), 'uSwidLink(rel="license",href="http://test.com/")')
         self.assertEqual(
             str(uSwidFormatCoswid()._save_link(link)),  # type: ignore

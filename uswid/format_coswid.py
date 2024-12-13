@@ -147,25 +147,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
         data: Dict[uSwidGlobalMap, Any] = {}
         data[uSwidGlobalMap.HREF] = link.href
-
-        # map back into a uSwidLinkRel if possible
         if link.rel:
-            LINK_MAP: Dict[str, uSwidLinkRel] = {
-                "license": uSwidLinkRel.LICENSE,
-                "compiler": uSwidLinkRel.COMPILER,
-                "ancestor": uSwidLinkRel.ANCESTOR,
-                "component": uSwidLinkRel.COMPONENT,
-                "feature": uSwidLinkRel.FEATURE,
-                "installation-media": uSwidLinkRel.INSTALLATION_MEDIA,
-                "package-installer": uSwidLinkRel.PACKAGE_INSTALLER,
-                "parent": uSwidLinkRel.PARENT,
-                "patches": uSwidLinkRel.PATCHES,
-                "requires": uSwidLinkRel.REQUIRES,
-                "see-also": uSwidLinkRel.SEE_ALSO,
-                "supersedes": uSwidLinkRel.SUPERSEDES,
-                "supplemental": uSwidLinkRel.SUPPLEMENTAL,
-            }
-            data[uSwidGlobalMap.REL] = LINK_MAP.get(link.rel, link.rel)
+            data[uSwidGlobalMap.REL] = link.rel
         return data
 
     def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
@@ -235,7 +218,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
             data[uSwidGlobalMap.VERSION_SCHEME] = component.version_scheme
 
         # metadata section
-        metadata: Dict[uSwidGlobalMap, Any] = {
+        metadata: Dict[Union[uSwidGlobalMap, str], Any] = {
             uSwidGlobalMap.GENERATOR: component.generator
         }
         if component.type and component.type != uSwidComponentType.FIRMWARE:

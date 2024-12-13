@@ -23,6 +23,7 @@ class uSwidLinkRel(IntEnum):
 
     LICENSE = -2
     COMPILER = -1
+    UNKNOWN = 0
     ANCESTOR = 1
     COMPONENT = 2
     FEATURE = 3
@@ -46,6 +47,7 @@ class uSwidLinkRel(IntEnum):
                 "license": uSwidLinkRel.LICENSE,
                 "compiler": uSwidLinkRel.COMPILER,
                 "ancestor": uSwidLinkRel.ANCESTOR,
+                "unknown": uSwidLinkRel.UNKNOWN,
                 "component": uSwidLinkRel.COMPONENT,
                 "feature": uSwidLinkRel.FEATURE,
                 "installation-media": uSwidLinkRel.INSTALLATION_MEDIA,
@@ -95,9 +97,9 @@ class uSwidLink:
     @property
     def spdx_id(self) -> Optional[str]:
         """Returns the SPDX ID from the URL, if possible"""
-        if not self.href.startswith("https://spdx.org/licenses/"):
-            return None
-        return self.href[26:].replace(".html", "")
+        if self.href and self.href.startswith("https://spdx.org/licenses/"):
+            return self.href[26:].replace(".html", "")
+        return None
 
     @property
     def rel(self) -> Optional[uSwidLinkRel]:
