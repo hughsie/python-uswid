@@ -216,8 +216,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 )
 
         for dep in root.get("dependencies", []):
-            component_ref = container._get_by_id(dep["ref"])
-            component_other = container._get_by_id(dep["dependsOn"])
+            component_ref = container.get_by_id(dep["ref"])
+            component_other = container.get_by_id(dep["dependsOn"])
             if not component_ref:
                 continue
             if not component_other:
@@ -234,7 +234,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 )
 
         for ann in root.get("annotations", []):
-            component_ref = container._get_by_id(ann["bom-ref"])
+            component_ref = container.get_by_id(ann["bom-ref"])
             if not component_ref:
                 continue
             try:

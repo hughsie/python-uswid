@@ -110,7 +110,7 @@ class uSwidContainer:
             return component_default
 
         # does this tag ID already exist?
-        component_old = self._get_by_id(component.tag_id)
+        component_old = self.get_by_id(component.tag_id)
         if component_old:
             component_old.merge(component)
             return component_old
@@ -128,7 +128,7 @@ class uSwidContainer:
             self._components.append(uSwidComponent())
         return self._components[0]
 
-    def _get_by_id(self, tag_id: str) -> Optional[uSwidComponent]:
+    def get_by_id(self, tag_id: str) -> Optional[uSwidComponent]:
         """Returns the component that matches the tag ID"""
 
         for component in self._components:
