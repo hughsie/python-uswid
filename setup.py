@@ -54,6 +54,7 @@ setup(
             "format_coswid.pyi",
             "format_cyclonedx.pyi",
             "format_goswid.pyi",
+            "format_inf.pyi",
             "format_ini.pyi",
             "format.pyi",
             "format_spdx.pyi",
