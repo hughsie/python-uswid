@@ -1,0 +1,36 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "type": "firmware",
+      "bom-ref": "pkg:github/tianocore/edk2@202411",
+      "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:*",
+      "name": "EDK II",
+      "version": "edk2-stable202411-105-gd55d4e22f4",
+      "description": "A cross-platform firmware development environment for UEFI and PI specifications",
+      "authors": [
+        {
+          "name": "EDK II authors"
+        }
+      ],
+      "supplier": {
+        "name": "EDK II developers"
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tianocore/edk2"
+        }
+      ]
+    }
+  ]
+}
