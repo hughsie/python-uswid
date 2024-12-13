@@ -9,7 +9,7 @@
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Any
 import argparse
 import socket
 import json
@@ -49,7 +49,7 @@ from uswid.vex_document import uSwidVexDocument
 from uswid.container_utils import container_generate, container_roundtrip
 
 
-def _detect_format(filepath: str) -> Optional[Callable]:
+def _detect_format(filepath: str) -> Optional[Any]:
     if filepath.endswith("bom.json") or filepath.endswith("cdx.json"):
         return uSwidFormatCycloneDX()
     if filepath.endswith("spdx.json"):
@@ -148,21 +148,21 @@ def _container_merge_from_filepath(
                 if base.verbose:
                     fixup_strs.append(f"Add VCS commit → {component.edition}")
             if not component.get_entity_by_role(uSwidEntityRole.TAG_CREATOR):
-                entity: uSwidEntity = uSwidEntity(
+                entity_tag: uSwidEntity = uSwidEntity(
                     name=", ".join(vcs.get_sbom_authors()),
                     roles=[uSwidEntityRole.TAG_CREATOR],
                 )
-                component.add_entity(entity)
+                component.add_entity(entity_tag)
                 if base.verbose:
-                    fixup_strs.append(f"Add VCS SBOM author → {entity.name}")
+                    fixup_strs.append(f"Add VCS SBOM author → {entity_tag.name}")
             if not component.get_entity_by_role(uSwidEntityRole.SOFTWARE_CREATOR):
-                entity: uSwidEntity = uSwidEntity(
+                entity_creator: uSwidEntity = uSwidEntity(
                     name=", ".join(vcs.get_authors()),
                     roles=[uSwidEntityRole.SOFTWARE_CREATOR],
                 )
-                component.add_entity(entity)
+                component.add_entity(entity_creator)
                 if base.verbose:
-                    fixup_strs.append(f"Add VCS author → {entity.name}")
+                    fixup_strs.append(f"Add VCS author → {entity_creator.name}")
             if fixup_strs:
                 print(f"Fixup required in {filepath}:")
                 for fixup_str in fixup_strs:

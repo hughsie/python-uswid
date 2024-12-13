@@ -11,6 +11,7 @@ from enum import IntEnum
 class uSwidVersionScheme(IntEnum):
     """Represents an enumerated version scheme"""
 
+    UNKNOWN = 0
     MULTIPARTNUMERIC = 1
     MULTIPARTNUMERIC_SUFFIX = 2
     ALPHANUMERIC = 3

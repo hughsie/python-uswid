@@ -50,7 +50,7 @@ def _convert_str_to_version_scheme(version_scheme: str) -> uSwidVersionScheme:
         "alphanumeric": uSwidVersionScheme.ALPHANUMERIC,
         "decimal": uSwidVersionScheme.DECIMAL,
         "semver": uSwidVersionScheme.SEMVER,
-    }.get(version_scheme, None)
+    }.get(version_scheme, uSwidVersionScheme.UNKNOWN)
 
 
 def _convert_entity_to_dict(entity: uSwidEntity) -> Dict[str, Any]:
@@ -174,11 +174,11 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component.add_entity(entity)
 
         # we only have authors
-        entity = component.get_entity_by_role(uSwidEntityRole.MAINTAINER)
-        if entity and not component.get_entity_by_role(
+        entity_authors = component.get_entity_by_role(uSwidEntityRole.MAINTAINER)
+        if entity_authors and not component.get_entity_by_role(
             uSwidEntityRole.SOFTWARE_CREATOR
         ):
-            entity.add_role(uSwidEntityRole.SOFTWARE_CREATOR)
+            entity_authors.add_role(uSwidEntityRole.SOFTWARE_CREATOR)
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
         try:
@@ -216,32 +216,32 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 )
 
         for dep in root.get("dependencies", []):
-            component = container._get_by_id(dep["ref"])
+            component_ref = container._get_by_id(dep["ref"])
             component_other = container._get_by_id(dep["dependsOn"])
-            if not component:
+            if not component_ref:
                 continue
             if not component_other:
                 continue
             if component_other.tag_id == "compiler":
-                component.add_link(
+                component_ref.add_link(
                     uSwidLink(
                         rel=uSwidLinkRel.COMPILER, href=component_other.software_name
                     )
                 )
             else:
-                component.add_link(
+                component_ref.add_link(
                     uSwidLink(rel=uSwidLinkRel.COMPONENT, href=component_other.tag_id)
                 )
 
         for ann in root.get("annotations", []):
-            component = container._get_by_id(ann["bom-ref"])
-            if not component:
+            component_ref = container._get_by_id(ann["bom-ref"])
+            if not component_ref:
                 continue
             try:
                 date = datetime.fromisoformat(ann["timestamp"])
             except AttributeError:
                 date = None
-            component.add_evidence(uSwidEvidence(date=date, device_id=ann["text"]))
+            component_ref.add_evidence(uSwidEvidence(date=date, device_id=ann["text"]))
 
         return container
 
@@ -353,9 +353,9 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         # save the source code VCS and colloquial version
         link_vcs = component.get_link_by_rel(uSwidLinkRel.SEE_ALSO)
         if link_vcs or component.edition:
-            vcs_data: Dict[str, str] = {"type": "vcs"}
+            vcs_data: Dict[str, Any] = {"type": "vcs"}
 
-            if link_vcs:
+            if link_vcs and link_vcs.href:
                 vcs_data["url"] = link_vcs.href
             else:
                 vcs_data["url"] = "https://NOASSERTION/"
@@ -363,12 +363,10 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             # set the correct hash algorithm automatically
             if component.edition:
                 hash_tmp = uSwidHash(value=component.edition)
-                vcs_data["hashes"] = [
-                    {
-                        "alg": _convert_hash_alg_to_str(hash_tmp.alg_id),
-                        "content": hash_tmp.value,
-                    }
-                ]
+                vcs_data_hash = {"content": hash_tmp.value}
+                if hash_tmp.alg_id:
+                    vcs_data_hash["alg"] = _convert_hash_alg_to_str(hash_tmp.alg_id)
+                vcs_data["hashes"] = [vcs_data_hash]
             root["externalReferences"] = [vcs_data]
 
         # additional metadata, not yet standardized in cdx

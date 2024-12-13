@@ -195,7 +195,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         """Imports a uSwidLink goSWID section"""
 
         link.href = node.get("href")
-        link.rel = uSwidLinkRel.from_string(node.get("rel"))
+        link.rel = uSwidLinkRel.from_string(node.get("rel", "unknown"))
 
     def _load_evidence(self, evidence: uSwidEvidence, node: Dict[str, str]) -> None:
         """Imports a uSwidEvidence goSWID section"""
