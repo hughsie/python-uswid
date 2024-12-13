@@ -26,6 +26,7 @@ from uswid.format import uSwidFormatBase
 from uswid.format_coswid import uSwidFormatCoswid
 from uswid.format_goswid import uSwidFormatGoswid
 from uswid.format_ini import uSwidFormatIni
+from uswid.format_inf import uSwidFormatInf
 from uswid.format_pkgconfig import uSwidFormatPkgconfig
 from uswid.format_swid import uSwidFormatSwid
 from uswid.format_uswid import uSwidFormatUswid
