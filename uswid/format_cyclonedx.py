@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .container import uSwidContainer
 from .format import uSwidFormatBase
@@ -260,7 +260,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         # metadata
         metadata: Dict[str, Any] = {}
-        metadata["timestamp"] = datetime.now().isoformat()
+        metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
         root["metadata"] = metadata
 
         # find tag creator
