@@ -446,6 +446,24 @@ def main():
     # depsolve any internal SWID links
     container.depsolve()
 
+    # remove any deps that do not exist
+    if args.fixup:
+        fixup_dep_remove_strs: List[str] = []
+        for component in container:
+            for link in component.links:
+                if link.rel == uSwidLinkRel.COMPONENT and not container.get_by_id(
+                    link.href
+                ):
+                    if args.verbose:
+                        fixup_dep_remove_strs.append(
+                            f"Removed missing component listed as dep of {component.tag_id} → {link.href}"
+                        )
+                    component.remove_link(link)
+        if fixup_dep_remove_strs:
+            print(f"Fixup required in {filepath}:")
+            for fixup_str in fixup_dep_remove_strs:
+                print(f" - {fixup_str}")
+
     # validate
     rc: int = 0
     if args.validate:

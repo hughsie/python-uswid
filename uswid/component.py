@@ -361,6 +361,12 @@ class uSwidComponent:
             raise NotSupportedError("the link href MUST be provided")
         self._links[link.href] = link
 
+    def remove_link(self, link: uSwidLink) -> None:
+        """Remove the link"""
+        if not link.href:
+            raise NotSupportedError("the link href MUST be provided")
+        self._links.pop(link.href)
+
     def add_payload(self, payload: uSwidPayload) -> None:
         """Add the payload"""
         if not payload.hashes:
