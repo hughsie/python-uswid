@@ -80,6 +80,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
     def __init__(self) -> None:
         """Initializes uSwidFormatCycloneDX"""
         uSwidFormatBase.__init__(self, "CycloneDX")
+        self.serial_number: Optional[str] = None
+        self.timestamp: Optional[str] = None
 
     def _load_component_internal(
         self, component: uSwidComponent, data: Dict[str, Any]
@@ -250,7 +252,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         root: Dict[str, Any] = {}
         root["bomFormat"] = "CycloneDX"
         root["specVersion"] = "1.6"
-        root["serialNumber"] = f"urn:uuid:{str(uuid.uuid4())}"
+        root["serialNumber"] = self.serial_number or f"urn:uuid:{str(uuid.uuid4())}"
 
         # MAX() of all the component tag versions
         version: int = 1
@@ -260,7 +262,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         # metadata
         metadata: Dict[str, Any] = {}
-        metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
+        metadata["timestamp"] = self.timestamp or datetime.now(timezone.utc).isoformat()
         root["metadata"] = metadata
 
         # find tag creator
