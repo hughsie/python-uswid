@@ -59,6 +59,33 @@ class TestSwidEntity(unittest.TestCase):
             uSwidVersionScheme.ALPHANUMERIC,
         )
 
+    def test_container(self):
+        """Unit tests for uSwidContainer"""
+
+        container = uSwidContainer()
+
+        self.assertIsNone(container.get_by_id("pkg:github/tianocore/edk2@202411"))
+
+        # exact match
+        container.append(uSwidComponent(tag_id="pkg:github/tianocore/edk2@202411"))
+        self.assertIsNotNone(container.get_by_id("pkg:github/tianocore/edk2@202411"))
+        self.assertIsNone(container.get_by_id("pkg:github/tianocore/edk2"))
+
+        # incomplete PURL match
+        self.assertIsNone(
+            container.get_by_id("pkg:github/tianocore/something@202411", fuzzy=True)
+        )
+        self.assertIsNone(
+            container.get_by_id("pkg:github/tianocore/edk2@12345678", fuzzy=True)
+        )
+        self.assertIsNone(
+            container.get_by_id("pkg:github/intel/edk2@202411", fuzzy=True)
+        )
+        self.assertIsNotNone(
+            container.get_by_id("pkg:github/tianocore/edk2", fuzzy=True)
+        )
+        self.assertIsNotNone(container.get_by_id("pkg:edk2", fuzzy=True))
+
     def test_vcs(self):
         """Unit tests for uSwidVcs"""
 
@@ -340,6 +367,21 @@ class TestSwidEntity(unittest.TestCase):
             b'xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512" name="foo" size="123" '
             b'SHA256:hash="8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c"/>'
             b"</SoftwareIdentity>",
+        )
+
+    def test_component_purl(self):
+        """Unit tests for uSwidComponent, PURL specific"""
+
+        component = uSwidComponent(
+            tag_id="pkg:github/tianocore/edk2@202411",
+        )
+        self.assertEqual(
+            component.tag_id,
+            "pkg:github/tianocore/edk2@202411",
+        )
+        self.assertEqual(
+            str(component.purl),
+            "pkg:github/tianocore/edk2@202411",
         )
 
     def test_component(self):

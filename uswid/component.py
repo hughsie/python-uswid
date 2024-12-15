@@ -20,6 +20,7 @@ from .payload import uSwidPayload
 from .evidence import uSwidEvidence
 from .problem import uSwidProblem, _is_redacted
 from .vex_statement import uSwidVexStatement
+from .purl import uSwidPurl
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -87,6 +88,7 @@ class uSwidComponent:
     ):
         """Initializes uSwidComponent"""
         self._auto_increment_tag_version = False
+        self.purl: Optional[uSwidPurl] = None
         self._tag_id: Optional[str] = None
         if tag_id:
             self.tag_id = tag_id
@@ -163,6 +165,8 @@ class uSwidComponent:
     @property
     def tag_id(self) -> Optional[str]:
         """Returns the tag ID"""
+        if self.purl:
+            return str(self.purl)
         return self._tag_id
 
     @tag_id.setter
@@ -173,6 +177,8 @@ class uSwidComponent:
                 self._tag_id = str(uuid.UUID(tag_id[5:]))
             except ValueError:
                 self._tag_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, tag_id[5:]))
+        elif tag_id and tag_id.startswith("pkg:"):
+            self.purl = uSwidPurl(tag_id)
         else:
             self._tag_id = tag_id
 
