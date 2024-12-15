@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .container import uSwidContainer
+    from .component import uSwidComponent
 
 
 class uSwidFormatBase:
@@ -19,8 +20,9 @@ class uSwidFormatBase:
     Available formats are:
 
     * ``uSwidFormatCoswid``
-    * ``uSwidFormatCycloneDX`` (``.save`` only)
+    * ``uSwidFormatCycloneDX``
     * ``uSwidFormatGoswid``
+    * ``uSwidFormatInf`` (``.load`` only)
     * ``uSwidFormatIni``
     * ``uSwidFormatPkgconfig`` (``.load`` only)
     * ``uSwidFormatSwid``
@@ -40,3 +42,8 @@ class uSwidFormatBase:
     def save(self, container: "uSwidContainer") -> bytes:
         """Save into a blob of data"""
         raise NotImplementedError
+
+    def incorporate(
+        self, container: "uSwidContainer", component: "uSwidComponent"
+    ) -> None:
+        """Depsolve a new component into an existing container"""

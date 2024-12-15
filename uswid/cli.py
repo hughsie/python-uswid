@@ -44,6 +44,7 @@ from uswid.format_uswid import uSwidFormatUswid
 from uswid.format_cyclonedx import uSwidFormatCycloneDX
 from uswid.format_spdx import uSwidFormatSpdx
 from uswid.format_pe import uSwidFormatPe
+from uswid.format_inf import uSwidFormatInf
 from uswid.vcs import uSwidVcs
 from uswid.vex_document import uSwidVexDocument
 from uswid.container_utils import container_generate, container_roundtrip
@@ -63,6 +64,8 @@ def _detect_format(filepath: str) -> Optional[Any]:
         return uSwidFormatCoswid()
     if ext == "ini":
         return uSwidFormatIni()
+    if ext == "inf":
+        return uSwidFormatInf()
     if ext == "xml":
         return uSwidFormatSwid()
     if ext == "json":
@@ -170,6 +173,9 @@ def _container_merge_from_filepath(
 
             # get the toplevel so that we can auto-add deps
             component.source_dir = vcs.get_toplevel()
+
+        # add requirements from the loader
+        base.incorporate(container, component)
 
         component_new = container.merge(component)
         if component_new:
@@ -396,6 +402,7 @@ def main():
                     base.objcopy = args.objcopy
                     with open(filepath, "rb") as f:
                         for component in base.load(f.read(), filepath):
+                            base.incorporate(container, component)
                             component_new = container.merge(component)
                             if component_new:
                                 print(

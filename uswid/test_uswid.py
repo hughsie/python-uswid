@@ -33,13 +33,148 @@ from .format_coswid import uSwidFormatCoswid
 from .format_swid import uSwidFormatSwid
 from .format_cyclonedx import uSwidFormatCycloneDX
 from .format_spdx import uSwidFormatSpdx
+from .format_inf import uSwidFormatInf
 from .vcs import uSwidVcs
 
 from .purl import uSwidPurl
 
+unittest.TestCase.maxDiff = None
+
 
 class TestSwidEntity(unittest.TestCase):
     """Tescases for components, entities, links, evidence and payloads"""
+
+    def test_format_inf(self):
+        """Unit tests for uSwidFormatInf"""
+
+        fmt_parent = uSwidFormatCycloneDX()
+        with open("./tests/edk2/sbom.cdx.json", "rb") as f:
+            container_parent = fmt_parent.load(f.read())
+        print(container_parent)
+
+        fmt = uSwidFormatInf()
+        fn = "./tests/edk2/Shell.inf"
+        with open(fn, "rb") as f:
+            container = fmt.load(f.read(), path=fn)
+        for component in container:
+            fmt.incorporate(container_parent, component)
+            container_parent.append(component)
+
+        self.assertIsNotNone(
+            container_parent.get_by_id("pkg:github/tianocore/edk2@202411")
+        )
+        self.assertIsNotNone(
+            container_parent.get_by_id("pkg:github/tianocore/edk2@202411#Shell")
+        )
+
+        fmt_parent.serial_number = "urn:uuid:00000000-0000-0000-0000-000000000000"
+        fmt_parent.timestamp = "2024-01-01T00:00:00.000000+00:00"
+        self.assertEqual(
+            fmt_parent.save(container_parent).decode(),
+            """{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-01-01T00:00:00.000000+00:00",
+    "tools": [
+      {
+        "vendor": "uSWID Authors",
+        "name": "uSWID",
+        "version": "0.4.0"
+      }
+    ],
+    "authors": [
+      {
+        "name": "Richard Hughes"
+      }
+    ],
+    "lifecycles": {
+      "phase": "pre-build"
+    }
+  },
+  "components": [
+    {
+      "type": "firmware",
+      "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:*",
+      "name": "EDK II",
+      "version": "edk2-stable202411-105-gd55d4e22f4",
+      "description": "A cross-platform firmware development environment for UEFI and PI specifications",
+      "bom-ref": "pkg:github/tianocore/edk2@202411",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tianocore/edk2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "url": "https://spdx.org/licenses/BSD-2-Clause.html",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "supplier": {
+        "name": "EDK II developers"
+      },
+      "authors": [
+        {
+          "name": "EDK II authors"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "group": "7c04a583-9e3e-4f1c-ad65-e05268d0b4d1",
+      "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:Shell",
+      "name": "Shell",
+      "version": "1.0",
+      "description": "This is the shell application",
+      "bom-ref": "pkg:github/tianocore/edk2@202411#Shell",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tianocore/edk2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "url": "https://spdx.org/licenses/BSD-2-Clause-Patent.html",
+            "id": "BSD-2-Clause-Patent"
+          }
+        }
+      ],
+      "supplier": {
+        "name": "EDK II developers"
+      },
+      "authors": [
+        {
+          "name": "Richard Hughes"
+        }
+      ],
+      "properties": [
+        {
+          "name": "colloquialVersion",
+          "value": "6e434ee13d3fe6f205f93523c7874a666a75aa6e443f6848a1c11af062861359"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:github/tianocore/edk2@202411",
+      "dependsOn": "pkg:github/tianocore/edk2@202411#Shell"
+    },
+    {
+      "ref": "pkg:github/tianocore/edk2@202411#Shell",
+      "dependsOn": "pkg:github/tianocore/edk2@202411#BaseLib"
+    }
+  ]
+}""",
+        )
 
     def test_vcs_verfmt(self):
         """Unit tests for uSwidVcs, version format conversion"""
@@ -58,6 +193,33 @@ class TestSwidEntity(unittest.TestCase):
             uSwidVersionScheme.from_version("1.2.3-4~5"),
             uSwidVersionScheme.ALPHANUMERIC,
         )
+
+    def test_container(self):
+        """Unit tests for uSwidContainer"""
+
+        container = uSwidContainer()
+
+        self.assertIsNone(container.get_by_id("pkg:github/tianocore/edk2@202411"))
+
+        # exact match
+        container.append(uSwidComponent(tag_id="pkg:github/tianocore/edk2@202411"))
+        self.assertIsNotNone(container.get_by_id("pkg:github/tianocore/edk2@202411"))
+        self.assertIsNone(container.get_by_id("pkg:github/tianocore/edk2"))
+
+        # incomplete PURL match
+        self.assertIsNone(
+            container.get_by_id("pkg:github/tianocore/something@202411", fuzzy=True)
+        )
+        self.assertIsNone(
+            container.get_by_id("pkg:github/tianocore/edk2@12345678", fuzzy=True)
+        )
+        self.assertIsNone(
+            container.get_by_id("pkg:github/intel/edk2@202411", fuzzy=True)
+        )
+        self.assertIsNotNone(
+            container.get_by_id("pkg:github/tianocore/edk2", fuzzy=True)
+        )
+        self.assertIsNotNone(container.get_by_id("pkg:edk2", fuzzy=True))
 
     def test_vcs(self):
         """Unit tests for uSwidVcs"""
@@ -340,6 +502,21 @@ class TestSwidEntity(unittest.TestCase):
             b'xmlns:SHA512="http://www.w3.org/2001/04/xmlenc#sha512" name="foo" size="123" '
             b'SHA256:hash="8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c"/>'
             b"</SoftwareIdentity>",
+        )
+
+    def test_component_purl(self):
+        """Unit tests for uSwidComponent, PURL specific"""
+
+        component = uSwidComponent(
+            tag_id="pkg:github/tianocore/edk2@202411",
+        )
+        self.assertEqual(
+            component.tag_id,
+            "pkg:github/tianocore/edk2@202411",
+        )
+        self.assertEqual(
+            str(component.purl),
+            "pkg:github/tianocore/edk2@202411",
         )
 
     def test_component(self):
