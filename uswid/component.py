@@ -365,7 +365,8 @@ class uSwidComponent:
         """Remove the link"""
         if not link.href:
             raise NotSupportedError("the link href MUST be provided")
-        self._links.pop(link.href)
+        if link.href in self._links:
+            self._links.pop(link.href)
 
     def add_payload(self, payload: uSwidPayload) -> None:
         """Add the payload"""
