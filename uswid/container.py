@@ -14,6 +14,7 @@ from .errors import NotSupportedError
 
 from .vex_document import uSwidVexDocument
 from .vex_statement import uSwidVexStatement
+from .purl import uSwidPurl
 
 
 class uSwidContainer:
@@ -128,12 +129,23 @@ class uSwidContainer:
             self._components.append(uSwidComponent())
         return self._components[0]
 
-    def get_by_id(self, tag_id: str) -> Optional[uSwidComponent]:
+    def get_by_id(self, tag_id: str, fuzzy: bool = False) -> Optional[uSwidComponent]:
         """Returns the component that matches the tag ID"""
 
+        # exact match
         for component in self._components:
             if component.tag_id == tag_id:
                 return component
+
+        # incomplete purl match
+        if fuzzy and tag_id.startswith("pkg:"):
+            purl = uSwidPurl(tag_id)
+            for component in self._components:
+                if not component.purl:
+                    continue
+                if component.purl.matches(purl):
+                    return component
+
         return None
 
     def get_by_link_href(self, url: str) -> Optional[uSwidComponent]:
