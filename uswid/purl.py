@@ -80,6 +80,24 @@ class uSwidPurl:
             self.namespace = None
             self.name = pnn[0]
 
+    def matches(self, other: "uSwidPurl") -> bool:
+        """Returns success if all the populated fields in @other match"""
+        if other.scheme and self.scheme != other.scheme:
+            return False
+        if other.protocol and self.protocol != other.protocol:
+            return False
+        if other.namespace and self.namespace != other.namespace:
+            return False
+        if other.name and self.name != other.name:
+            return False
+        if other.version and self.version != other.version:
+            return False
+        if other.qualifiers and self.qualifiers != other.qualifiers:
+            return False
+        if other.subpath and self.subpath != other.subpath:
+            return False
+        return True
+
     def _export(self) -> str:
 
         tmp: str = ""
