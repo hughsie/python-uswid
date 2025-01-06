@@ -2,13 +2,13 @@
 
 1. Write NEWS entries in the same format as usual.
 
-    git shortlog 0.5.0.. | grep -i -v trivial | grep -v Merge > NEWS.new
+    git shortlog 0.5.1.. | grep -i -v trivial | grep -v Merge > NEWS.new
     # add entries to ./docs/source/versionhistory.rst
 
 Commit changes to git:
 
     # MAKE SURE THAT setup.py IS ALSO CORRECT
-    export release_ver="0.5.1"
+    export release_ver="0.5.2"
     git commit -a -m "Release ${release_ver}"
     git tag -s -f -m "Release ${release_ver}" "${release_ver}"
     make pkg
