@@ -11,10 +11,11 @@ This library adheres to `Semantic Versioning <http://semver.org/>`_.
  - Add ``--fixup`` to repair any loaded SBOM files (Richard Hughes)
  - Add support for component CPE values (Richard Hughes)
  - Add support for component types, e.g. library, application or firmware (Richard Hughes)
- - Add support for loading SPDX files (Richard Hughes)
  - Add support for loading CycloneDX files (Richard Hughes)
  - Add support for loading fallback files (Richard Hughes)
+ - Add support for loading SPDX files (Richard Hughes)
  - Add support for substituted values like ``@VCS_VERSION@`` (Richard Hughes)
+ - Add support for SWID activationStatus (Richard Hughes)
  - Add support for verifying different SBOM different formats (Richard Hughes)
 
 **0.5.0** (2024-05-09)
