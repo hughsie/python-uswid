@@ -209,7 +209,7 @@ class uSwidFormatGoswid(uSwidFormatBase):
         """Imports a uSwidPayload goSWID section"""
 
         # sanity check
-        if not isinstance(data, dict):
+        if not isinstance(node, dict):
             raise NotSupportedError("No component data")
 
         # for compat with Intel FSP template
@@ -239,6 +239,10 @@ class uSwidFormatGoswid(uSwidFormatBase):
     ) -> None:
         """Imports a uSwidEntity goSWID section"""
 
+        # sanity check
+        if not isinstance(node, dict):
+            raise NotSupportedError("No component data")
+
         # for compat with Intel FSP template
         for key in list(node):
             node[key.replace("_", "-")] = node.pop(key)
@@ -259,6 +263,11 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def _load_component_internal(
         self, component: uSwidComponent, data: Dict[str, Any]
     ) -> None:
+
+        # sanity check
+        if not isinstance(data, dict):
+            raise NotSupportedError("No component data")
+
         # for compat with Intel FSP template
         for key in list(data):
             data[key.replace("_", "-")] = data.pop(key)
