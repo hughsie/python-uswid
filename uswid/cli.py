@@ -514,6 +514,8 @@ def main():
         print("Loaded:")
         for component in container:
             print(f"{component}")
+        for vex_document in container.vex_documents:
+            print(f"{vex_document}")
 
     # optional save
     if save_filepaths and args.verbose:
