@@ -208,6 +208,10 @@ class uSwidFormatGoswid(uSwidFormatBase):
     def _load_file(self, payload: uSwidPayload, node: Dict[str, Any]) -> None:
         """Imports a uSwidPayload goSWID section"""
 
+        # sanity check
+        if not isinstance(data, dict):
+            raise NotSupportedError("No component data")
+
         # for compat with Intel FSP template
         for key in list(node):
             node[key.replace("_", "-")] = node.pop(key)
