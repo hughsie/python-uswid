@@ -93,6 +93,12 @@ class uSwidVexDocument:
             )
         except KeyError:
             pass
+
+        # CSAF 2.0 from AMD
+        try:
+            self.id = data["document_details"]["notice_identifier"]
+        except KeyError:
+            pass
         try:
             for statement_data in data["vulnerabilities"]:
                 vex_statement = uSwidVexStatement()
