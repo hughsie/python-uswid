@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2025 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -21,6 +22,7 @@ from .evidence import uSwidEvidence
 from .problem import uSwidProblem, _is_redacted
 from .vex_statement import uSwidVexStatement
 from .purl import uSwidPurl
+from .patch import uSwidPatch
 
 _VERSION_SCHEME_TO_STRING = {
     uSwidVersionScheme.MULTIPARTNUMERIC: "multipartnumeric",
@@ -133,6 +135,10 @@ class uSwidComponent:
         self.source_dir: Optional[str] = None
         """Status, with specific terms and conditions for its use, e.g. 'DO NOT SHIP'"""
         self.activation_status: Optional[str] = None
+        """List of components used to derive this component"""
+        self.ancestors: Optional[List[uSwidComponent]] = None
+        """List of patches"""
+        self.patches: Optional[List[uSwidPatch]] = None
 
     def add_source_filename(self, source_file: str) -> None:
         """Adds a source filename, i.e. what file helped created this component"""
