@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2025 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -23,6 +24,7 @@ from .evidence import uSwidEvidence
 from .entity import uSwidEntity, uSwidEntityRole
 from .errors import NotSupportedError
 from .hash import uSwidHash, uSwidHashAlg
+from .patch import uSwidPatch, uSwidPatchType
 
 
 def _convert_hash_alg_to_str(alg_id: uSwidHashAlg) -> str:
@@ -128,6 +130,44 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         try:
             component.activation_status = data["pedigree"]["notes"]
+        except KeyError:
+            pass
+
+        try:
+            component.ancestors = data["pedigree"]["ancestors"]
+        except KeyError:
+            pass
+
+        try:
+            patches = data["pedigree"]["patches"]
+            if isinstance(patches, list):
+                component.patches = []
+                for patch in patches:
+                    patch_type = uSwidPatchType.from_str(patch.get("type"))
+
+                    try:
+                        patch_url = patch.get("diff")
+                    except KeyError:
+                        patch_url = None
+
+                    try:
+                        description = patch.get("resolves")
+                    except KeyError:
+                        description = None
+
+                    try:
+                        additional_refs = patch.get("additionalRefs")
+                    except KeyError:
+                        additional_refs = None
+
+                    component.patches.append(
+                        uSwidPatch(
+                            patch_type=patch_type,
+                            patch_url=patch_url,
+                            description=description,
+                            additional_refs=additional_refs,
+                        )
+                    )
         except KeyError:
             pass
 
@@ -382,8 +422,26 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         if component.version_scheme:
             metadata["versionScheme"] = str(component.version_scheme)
 
+        # pedigree
+        pedigree: Optional[List[Dict[str, str]]] = {}
         if component.activation_status:
-            root["pedigree"] = {"notes": component.activation_status}
+            pedigree["notes"] = component.activation_status
+        if component.ancestors:
+            pedigree["ancestors"] = component.ancestors
+        if component.patches:
+            pedigree["patches"] = []
+            for patch in component.patches:
+                patch_dict = {}
+                if patch.patch_type:
+                    patch_dict["type"] = patch.patch_type
+                if patch.patch_url:
+                    patch_dict["diff"] = patch.patch_url
+                if patch.description:
+                    patch_dict["resolves"] = patch.description
+                pedigree["patches"].append(patch_dict)
+
+        if pedigree:
+            root["pedigree"] = pedigree
 
         licenses: List[Dict[str, Any]] = []
         for link in component.links:
