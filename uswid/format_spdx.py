@@ -73,16 +73,23 @@ class uSwidFormatSpdx(uSwidFormatBase):
         except KeyError:
             pass
 
-        # entities
+        # entities - try to get licensor info from package first
+        name = None
         try:
-            name = data["name"]
+            name = data["packages"][0]["originator"]
+        except KeyError:
+            try:
+                name = data["name"]
+            except KeyError:
+                pass
+        if name:
             if name.startswith("Organization: "):
                 name = name[14:]
             component.add_entity(
                 uSwidEntity(name=name, roles=[uSwidEntityRole.LICENSOR])
             )
-        except KeyError:
-            pass
+
+
         try:
             name = data["originator"]
             if name.startswith("Organization: "):
