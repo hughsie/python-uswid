@@ -586,6 +586,7 @@ persistent-id = org.hughski.colorhug
 [uSWID-Entity:TagCreator]
 name = Richard Hughes
 regid = hughsie.com
+extra-roles = Licensor
 
 [uSWID-Entity:ANYTHING_CAN_GO_HERE]
 name = Hughski Limited
@@ -603,7 +604,7 @@ rel = see-also
             'uSwidComponent(tag_id="acbd84ff-9898-4922-8ade-dd4bbe2e40ba",tag_version="1",'
             'software_name="HughskiColorHug.efi",software_version="1.0.0"):\n'
             ' - uSwidLink(rel="see-also",href="https://hughski.com/")\n'
-            ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=[TAG_CREATOR])\n'
+            ' - uSwidEntity(regid="hughsie.com",name="Richard Hughes",roles=[TAG_CREATOR,LICENSOR])\n'
             ' - uSwidEntity(regid="hughski.com",name="Hughski Limited",roles=[AGGREGATOR])',
         )
 
@@ -625,7 +626,7 @@ rel = see-also
             b'xmlns:n8060="http://csrc.nist.gov/ns/swid/2015-extensions/1.0" '
             b'xml:lang="en-US" name="HughskiColorHug.efi" tagId="acbd84ff-9898-4922-8ade-dd4bbe2e40ba" '
             b'tagVersion="1" version="1.0.0">\n'
-            b'  <Entity name="Richard Hughes" regid="hughsie.com" role="tagCreator"/>\n'
+            b'  <Entity name="Richard Hughes" regid="hughsie.com" role="tagCreator licensor"/>\n'
             b'  <Entity name="Hughski Limited" regid="hughski.com" role="aggregator"/>\n'
             b'  <Link href="https://hughski.com/" rel="see-also"/>\n'
             b'  <Meta colloquialVersion="22905301d08e69473393d94c3e787e4bf0453268" '
@@ -640,11 +641,13 @@ rel = see-also
         assert "uSWID" in tmp
         assert "org.hughski.colorhug" in tmp
         assert "22905301d08e69473393d94c3e787e4bf0453268" in tmp
+        assert "manufacturer" in tmp
 
         # SPDX export
         tmp = uSwidFormatSpdx().save(uSwidContainer([component])).decode()
         assert "SPDX" in tmp
         assert "uSWID" in tmp
+        assert "supplier" in tmp
 
     def test_parse(self):
         """Unit tests for parsing PURL text"""
