@@ -44,8 +44,104 @@ unittest.TestCase.maxDiff = None
 class TestSwidEntity(unittest.TestCase):
     """Tescases for components, entities, links, evidence and payloads"""
 
+    def setUp(self):
+        self.git_path = "/tmp/uswid-test-git-tree"
+        try:
+            shutil.rmtree(self.git_path)
+        except FileNotFoundError:
+            pass
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(self.git_path)
+        except FileNotFoundError:
+            pass
+
+    def _build_fake_git_path(self):
+        subprocess.run(
+            ["git", "init", self.git_path, "--initial-branch", "main"],
+            cwd=".",
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "admin@example.com"],
+            cwd=self.git_path,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "RH"],
+            cwd=self.git_path,
+            check=True,
+        )
+        subprocess.run(
+            ["mkdir", "contrib"],
+            cwd=self.git_path,
+            check=True,
+        )
+        with open(os.path.join(self.git_path, "contrib", "bom.cdx.json"), "wb") as f:
+            f.write(b"hello")
+        subprocess.run(
+            ["git", "add", "contrib/bom.cdx.json"],
+            cwd=self.git_path,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-a", "-m", "Add SBOM"],
+            cwd=self.git_path,
+            check=True,
+            env={},
+        )
+        subprocess.run(
+            ["mkdir", "edk2"],
+            cwd=self.git_path,
+            check=True,
+        )
+        for basename in ["Shell.inf", "Shell.c", "Shell.h"]:
+            shutil.copy(
+                os.path.join(".", "tests", "edk2", basename),
+                os.path.join(self.git_path, "edk2", basename),
+            )
+        subprocess.run(
+            ["git", "add", "edk2/Shell.inf"],
+            cwd=self.git_path,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-a", "-m", "Add EDK Inf"],
+            cwd=self.git_path,
+            check=True,
+            env={},
+        )
+        subprocess.run(
+            ["git", "tag", "v1.2.3"],
+            cwd=self.git_path,
+            check=True,
+        )
+        with open(os.path.join(self.git_path, "contrib", "bom.cdx.json"), "wb") as f:
+            f.write(b"hello world")
+        subprocess.run(
+            ["git", "commit", "-a", "-m", "A SBOM fixup"],
+            cwd=self.git_path,
+            check=True,
+            env={},
+        )
+        subprocess.run(
+            [
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "git@github.com:hughsie/python-uswid.git",
+            ],
+            cwd=self.git_path,
+            check=True,
+        )
+
     def test_format_inf(self):
         """Unit tests for uSwidFormatInf"""
+
+        # generate something plausible
+        self._build_fake_git_path()
 
         fmt_parent = uSwidFormatCycloneDX()
         with open("./tests/edk2/sbom.cdx.json", "rb") as f:
@@ -53,7 +149,7 @@ class TestSwidEntity(unittest.TestCase):
         print(container_parent)
 
         fmt = uSwidFormatInf()
-        fn = "./tests/edk2/Shell.inf"
+        fn = os.path.join(self.git_path, "edk2", "Shell.inf")
         with open(fn, "rb") as f:
             container = fmt.load(f.read(), path=fn)
         for component in container:
@@ -87,7 +183,7 @@ class TestSwidEntity(unittest.TestCase):
     ],
     "authors": [
       {
-        "name": "Richard Hughes"
+        "name": "RH"
       }
     ],
     "lifecycles": {
@@ -152,7 +248,7 @@ class TestSwidEntity(unittest.TestCase):
       },
       "authors": [
         {
-          "name": "Richard Hughes"
+          "name": "RH"
         }
       ],
       "properties": [
@@ -224,70 +320,10 @@ class TestSwidEntity(unittest.TestCase):
     def test_vcs(self):
         """Unit tests for uSwidVcs"""
 
-        tmp_remote = "/tmp/remote"
-        try:
-            shutil.rmtree(tmp_remote)
-        except FileNotFoundError:
-            pass
-        subprocess.run(
-            ["git", "init", tmp_remote, "--initial-branch", "main"],
-            cwd=".",
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.email", "admin@example.com"],
-            cwd=tmp_remote,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "config", "user.name", "RH"],
-            cwd=tmp_remote,
-            check=True,
-        )
-        subprocess.run(
-            ["mkdir", "contrib"],
-            cwd=tmp_remote,
-            check=True,
-        )
-        with open("/tmp/remote/contrib/bom.cdx.json", "wb") as f:
-            f.write(b"hello")
-        subprocess.run(
-            ["git", "add", "contrib/bom.cdx.json"],
-            cwd=tmp_remote,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-a", "-m", "Add SBOM"],
-            cwd=tmp_remote,
-            check=True,
-            env={},
-        )
-        subprocess.run(
-            ["git", "tag", "v1.2.3"],
-            cwd=tmp_remote,
-            check=True,
-        )
-        with open("/tmp/remote/contrib/bom.cdx.json", "wb") as f:
-            f.write(b"hello world")
-        subprocess.run(
-            ["git", "commit", "-a", "-m", "A SBOM fixup"],
-            cwd=tmp_remote,
-            check=True,
-            env={},
-        )
-        subprocess.run(
-            [
-                "git",
-                "remote",
-                "add",
-                "origin",
-                "git@github.com:hughsie/python-uswid.git",
-            ],
-            cwd=tmp_remote,
-            check=True,
-        )
+        # generate something plausible
+        self._build_fake_git_path()
 
-        vcs = uSwidVcs(filepath=os.path.join(tmp_remote, "contrib", "bom.cdx.json"))
+        vcs = uSwidVcs(filepath=os.path.join(self.git_path, "contrib", "bom.cdx.json"))
 
         # 0.5.0
         self.assertEqual(vcs.get_tag(), "1.2.3")
@@ -303,7 +339,7 @@ class TestSwidEntity(unittest.TestCase):
 
         # /home/hughsie/Code/uswid
         value: Optional[str] = vcs.get_toplevel()
-        self.assertEqual(value, "/tmp/remote")
+        self.assertEqual(value, self.git_path)
 
         # https://github.com/hughsie/python-uswid
         value = vcs.get_remote_url()
