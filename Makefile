@@ -23,6 +23,8 @@ clean:
 	rm -rf ./build
 	rm -rf ./htmlcov
 	rm -rf ./docs/build
+	rm -rf ./dist
+	rm -f ./uswid/*.pyi
 
 $(PYTEST):
 	$(PIP) install pytest-cov pylint
