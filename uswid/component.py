@@ -284,7 +284,7 @@ class uSwidComponent:
             problems += link.problems()
         if uSwidLinkRel.LICENSE not in link_by_rel:
             problems += [uSwidProblem("link", "Has no LICENSE", since="0.4.7")]
-        if self.colloquial_version and str(uSwidLinkRel.COMPILER) not in link_by_rel:
+        if self.colloquial_version and uSwidLinkRel.COMPILER not in link_by_rel:
             problems += [uSwidProblem("link", "Has no COMPILER", since="0.4.7")]
         if uSwidLinkRel.COMPILER in link_by_rel and not self.colloquial_version:
             problems += [
