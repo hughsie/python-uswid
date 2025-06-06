@@ -62,7 +62,7 @@ class uSwidFormatIni(uSwidFormatBase):
     def save(self, container: uSwidContainer) -> bytes:
         component = container.get_default()
         if not component:
-            raise NotSupportedError("cannot save when no default component")
+            raise NotSupportedError("cannot save INI when no default component")
         return self._save_component(component)
 
     def _save_link(self, link: uSwidLink) -> Dict[str, Any]:
