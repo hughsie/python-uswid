@@ -131,16 +131,18 @@ class uSwidFormatCoswid(uSwidFormatBase):
         uSwidFormatBase.__init__(self, "CoSWID")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
-        component = uSwidComponent()
-        container = uSwidContainer([component])
-        self._load_component(component, blob)
+        container = uSwidContainer()
+        idx: int = 0
+        while idx < len(blob):
+            component = uSwidComponent()
+            idx += self._load_component(component, blob[idx:])
+            container.append(component)
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
-        component = container.get_default()
-        if not component:
-            raise NotSupportedError("cannot save when no default component")
-        return self._save_component(component)
+
+        # just append
+        return b"".join([self._save_component(component) for component in container])
 
     def _save_link(self, link: uSwidLink) -> Dict[uSwidGlobalMap, Any]:
         """Exports a uSwidLink CoSWID section"""
