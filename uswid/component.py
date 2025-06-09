@@ -136,7 +136,7 @@ class uSwidComponent:
         """Status, with specific terms and conditions for its use, e.g. 'DO NOT SHIP'"""
         self.activation_status: Optional[str] = None
         """List of components used to derive this component"""
-        self.ancestors: Optional[List[uSwidComponent]] = None
+        self.ancestors: List[uSwidComponent] = []
         """List of patches"""
         self.patches: List[uSwidPatch] = []
 

@@ -6,7 +6,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-locals
 
 from typing import Dict, Any, Optional, List
 
@@ -156,7 +156,10 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             pass
 
         try:
-            component.ancestors = data["pedigree"]["ancestors"]
+            for component_child in data["pedigree"]["ancestors"]:
+                ancestor = uSwidComponent()
+                self._load_component_internal(ancestor, component_child)
+                component.ancestors.append(ancestor)
         except KeyError:
             pass
 
@@ -439,12 +442,15 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         if component.activation_status:
             pedigree["notes"] = component.activation_status
         if component.ancestors:
-            pedigree["ancestors"] = component.ancestors
+            ancestors_data = []
+            for ancestor in component.ancestors:
+                ancestors_data.append(self._save_component(ancestor))
+            pedigree["ancestors"] = ancestors_data
         if component.patches:
-            patches = []
+            patches_data = []
             for patch in component.patches:
-                patches.append(self._save_patch(patch))
-            pedigree["patches"] = patches
+                patches_data.append(self._save_patch(patch))
+            pedigree["patches"] = patches_data
         if pedigree:
             root["pedigree"] = pedigree
 
