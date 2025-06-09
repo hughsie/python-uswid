@@ -138,7 +138,7 @@ class uSwidComponent:
         """List of components used to derive this component"""
         self.ancestors: Optional[List[uSwidComponent]] = None
         """List of patches"""
-        self.patches: Optional[List[uSwidPatch]] = None
+        self.patches: List[uSwidPatch] = []
 
     def add_source_filename(self, source_file: str) -> None:
         """Adds a source filename, i.e. what file helped created this component"""

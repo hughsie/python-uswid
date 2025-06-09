@@ -13,6 +13,7 @@ import unittest
 from typing import Optional
 import shutil
 import subprocess
+import json
 
 from lxml import etree as ET
 
@@ -27,6 +28,7 @@ from .enums import uSwidVersionScheme
 from .component import uSwidComponent
 from .hash import uSwidHash, uSwidHashAlg
 from .payload import uSwidPayload
+from .patch import uSwidPatch, uSwidPatchType
 
 from .format_ini import uSwidFormatIni
 from .format_coswid import uSwidFormatCoswid
@@ -539,6 +541,38 @@ class TestSwidEntity(unittest.TestCase):
             b'SHA256:hash="8cab6b2125c2b561351b4e02ee531f26dde05c3c6a2be8ff942975fbdef6823c"/>'
             b"</SoftwareIdentity>",
         )
+
+    def test_patch(self):
+        """Unit tests for uSwidPatch"""
+        self.maxDiff = None
+
+        # enumerated type
+        patch = uSwidPatch(
+            type=uSwidPatchType.BACKPORT,
+            url="http://foo",
+            description="foo",
+            references=["foo", "bar", "baz"],
+        )
+        self.assertEqual(
+            str(patch),
+            'uSwidPatch(type="backport", description="foo")',
+        )
+
+        # CycloneDX export
+        jsonstr: str = json.dumps(uSwidFormatCycloneDX()._save_patch(patch))  # type: ignore
+        self.assertEqual(
+            jsonstr,
+            '{"type": "backport", '
+            '"diff": {"url": "http://foo"}, '
+            '"resolves": {"description": "foo", "references": ["foo", "bar", "baz"]}}',
+        )
+
+        # CycloneDX import
+        patch2 = uSwidFormatCycloneDX()._load_patch(json.loads(jsonstr))
+        self.assertEqual(patch.type, patch2.type)
+        self.assertEqual(patch.url, patch2.url)
+        self.assertEqual(patch.description, patch2.description)
+        self.assertEqual(patch.references, patch2.references)
 
     def test_component_purl(self):
         """Unit tests for uSwidComponent, PURL specific"""

@@ -85,6 +85,28 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         self.serial_number: Optional[str] = None
         self.timestamp: Optional[str] = None
 
+    def _load_patch(self, data: Dict[str, Any]) -> uSwidPatch:
+
+        patch = uSwidPatch()
+        try:
+            patch.type = uSwidPatchType.from_str(data["type"])
+        except KeyError:
+            pass
+        try:
+            patch.url = str(data["diff"]["url"])
+        except KeyError:
+            pass
+        try:
+            patch.description = str(data["resolves"]["description"])
+        except KeyError:
+            pass
+        try:
+            for ref in data["resolves"]["references"]:
+                patch.references.append(str(ref))
+        except KeyError:
+            pass
+        return patch
+
     def _load_component_internal(
         self, component: uSwidComponent, data: Dict[str, Any]
     ) -> None:
@@ -140,34 +162,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         try:
             patches = data["pedigree"]["patches"]
-            if isinstance(patches, list):
-                component.patches = []
-                for patch in patches:
-                    patch_type = uSwidPatchType.from_str(patch.get("type"))
-
-                    try:
-                        patch_url = patch.get("diff")
-                    except KeyError:
-                        patch_url = None
-
-                    try:
-                        description = patch.get("resolves")
-                    except KeyError:
-                        description = None
-
-                    try:
-                        additional_refs = patch.get("additionalRefs")
-                    except KeyError:
-                        additional_refs = None
-
-                    component.patches.append(
-                        uSwidPatch(
-                            patch_type=patch_type,
-                            patch_url=patch_url,
-                            description=description,
-                            additional_refs=additional_refs,
-                        )
-                    )
+            for patch in patches:
+                component.patches.append(self._load_patch(patch))
         except KeyError:
             pass
 
@@ -363,6 +359,22 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
 
         return json.dumps(root, indent=2, ensure_ascii=False).encode()
 
+    def _save_patch(self, patch: uSwidPatch) -> Dict[str, Any]:
+
+        data: Dict[str, Any] = {}
+        if patch.type:
+            data["type"] = str(patch.type)
+        if patch.url:
+            data["diff"] = {"url": patch.url}
+        if patch.description or patch.references:
+            resolves: Dict[str, Any] = {}
+            if patch.description:
+                resolves["description"] = patch.description
+            if patch.references:
+                resolves["references"] = patch.references
+            data["resolves"] = resolves
+        return data
+
     def _save_component(self, component: uSwidComponent) -> Dict[str, Any]:
         root: Dict[str, Any] = {}
         if component.type:
@@ -423,23 +435,16 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             metadata["versionScheme"] = str(component.version_scheme)
 
         # pedigree
-        pedigree: Optional[List[Dict[str, str]]] = {}
+        pedigree: Dict[str, Any] = {}
         if component.activation_status:
             pedigree["notes"] = component.activation_status
         if component.ancestors:
             pedigree["ancestors"] = component.ancestors
         if component.patches:
-            pedigree["patches"] = []
+            patches = []
             for patch in component.patches:
-                patch_dict = {}
-                if patch.patch_type:
-                    patch_dict["type"] = patch.patch_type
-                if patch.patch_url:
-                    patch_dict["diff"] = patch.patch_url
-                if patch.description:
-                    patch_dict["resolves"] = patch.description
-                pedigree["patches"].append(patch_dict)
-
+                patches.append(self._save_patch(patch))
+            pedigree["patches"] = patches
         if pedigree:
             root["pedigree"] = pedigree
 
