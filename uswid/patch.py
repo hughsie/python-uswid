@@ -22,12 +22,12 @@ class uSwidPatchType(str, Enum):
     # Add more types as needed
 
     def __str__(self):
-        return self.name.lower()
+        return self.name.lower().replace("_", "-")
 
     @staticmethod
     def from_str(value: str) -> "uSwidPatchType":
         """Creates a uSwidPatchType from a string identifier"""
-        return uSwidPatchType[value.upper()]
+        return uSwidPatchType[value.upper().replace("-", "_")]
 
 
 class uSwidPatch:
