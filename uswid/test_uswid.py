@@ -589,6 +589,26 @@ class TestSwidEntity(unittest.TestCase):
             "pkg:github/tianocore/edk2@202411",
         )
 
+    def test_ancestor(self):
+
+        """Unit tests for uSwidComponent ancestors"""
+        self.maxDiff = None
+        component = uSwidComponent(tag_id="parent")
+        component.ancestors.append(uSwidComponent(tag_id="child1"))
+        component.ancestors.append(uSwidComponent(tag_id="child2"))
+
+        # CycloneDX export
+        jsonstr = uSwidFormatCycloneDX().save(uSwidContainer([component])).decode()
+        assert "parent" in jsonstr
+        assert "child1" in jsonstr
+        assert "child2" in jsonstr
+
+        # CycloneDX import
+        component1 = uSwidFormatCycloneDX().load(jsonstr.encode())[0]
+        self.assertEqual(component1.tag_id, "parent")
+        self.assertEqual(component1.ancestors[0].tag_id, "child1")
+        self.assertEqual(component1.ancestors[1].tag_id, "child2")
+
     def test_component(self):
         """Unit tests for uSwidComponent"""
         self.maxDiff = None
