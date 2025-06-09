@@ -383,6 +383,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
             data = cbor2.loads(data.value[2])
 
         # component can be specified as a string or in binary
+        if not isinstance(data, dict):
+            raise NotSupportedError("not coSWID dict")
         tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
         if isinstance(tag_id_bytes, str):
             component.tag_id = tag_id_bytes
