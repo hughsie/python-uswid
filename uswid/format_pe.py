@@ -61,9 +61,10 @@ def _load_efi_objcopy(filepath: str, objcopy: str) -> uSwidContainer:
         except subprocess.CalledProcessError as e:
             print(e)
             sys.exit(1)
-        component = uSwidFormatCoswid().load(dst.read())
-        component.add_source_filename(filepath)
-        return component
+        container = uSwidFormatCoswid().load(dst.read())
+        for component in container:
+            component.add_source_filename(filepath)
+        return container
 
 
 def _save_efi_objcopy(
