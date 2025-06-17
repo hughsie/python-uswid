@@ -5,7 +5,17 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
-**0.5.1** (2024-11-xx)
+**0.5.2** (2025-06-17)
+
+ - Add support for ancestors and patches in pedigree (Baraneedharan Anbazhagan)
+ - Add support for loading EDK 2 inf files (Richard Hughes)
+ - Add the CBOR defines from swid-tools (Richard Hughes)
+ - Allow getting components from the container with a fuzzy match (Richard Hughes)
+ - Allow saving concat'd raw coswid SBOMs (Richard Hughes)
+ - Build the fake git tree to make tests reproducable (Richard Hughes)
+ - Get licensor field correctly (Baraneedharan Anbazhagan)
+
+**0.5.1** (2025-01-06)
 
  - Add ``--find`` to recursively find SBOM files (Richard Hughes)
  - Add ``--fixup`` to repair any loaded SBOM files (Richard Hughes)

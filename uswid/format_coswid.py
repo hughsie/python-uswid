@@ -430,13 +430,14 @@ class uSwidFormatCoswid(uSwidFormatBase):
         if not isinstance(data, dict):
             raise NotSupportedError("not coSWID dict")
         tag_id_bytes = data.get(uSwidGlobalMap.TAG_ID, None)
-        if isinstance(tag_id_bytes, str):
-            component.tag_id = tag_id_bytes
-        else:
-            try:
-                component.tag_id = str(uuid.UUID(bytes=tag_id_bytes))
-            except ValueError:
-                component.tag_id = tag_id_bytes.hex()
+        if tag_id_bytes:
+            if isinstance(tag_id_bytes, str):
+                component.tag_id = tag_id_bytes
+            else:
+                try:
+                    component.tag_id = str(uuid.UUID(bytes=tag_id_bytes))
+                except ValueError:
+                    component.tag_id = tag_id_bytes.hex()
 
         component.tag_version = data.get(uSwidGlobalMap.TAG_VERSION, 0)
         component.software_name = data.get(uSwidGlobalMap.SOFTWARE_NAME, None)

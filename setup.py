@@ -69,6 +69,7 @@ setup(
             "container.pyi",
             "container_utils.pyi",
             "link.pyi",
+            "patch.pyi",
             "problem.pyi",
             "vcs.pyi",
             "vex_document.pyi",
