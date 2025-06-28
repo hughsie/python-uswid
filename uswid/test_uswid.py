@@ -574,6 +574,21 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(patch.description, patch2.description)
         self.assertEqual(patch.references, patch2.references)
 
+        # INI export
+        ini_save_patch = uSwidFormatIni()._save_patch(patch)
+        self.assertEqual(
+            ini_save_patch,
+            {'type': 'backport', 'url': 'http://foo', 'description': 'foo', 'references': 'foo,bar,baz'},
+        )
+
+        # INI import
+        ini_load_patch = uSwidPatch()
+        uSwidFormatIni()._load_patch(ini_load_patch, ini_save_patch)
+        self.assertEqual(ini_load_patch.type, patch.type)
+        self.assertEqual(ini_load_patch.url, patch.url)
+        self.assertEqual(ini_load_patch.description, patch.description)
+        self.assertEqual(ini_load_patch.references, patch.references)
+
     def test_component_purl(self):
         """Unit tests for uSwidComponent, PURL specific"""
 
