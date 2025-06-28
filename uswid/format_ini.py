@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2025 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -28,6 +29,7 @@ from .link import uSwidLink, uSwidLinkRel
 from .hash import uSwidHash
 from .payload import uSwidPayload
 from .evidence import uSwidEvidence
+from .patch import uSwidPatch, uSwidPatchType
 
 _ENTITY_MAP_FROM_INI = {
     "TagCreator": uSwidEntityRole.TAG_CREATOR,
@@ -95,6 +97,20 @@ class uSwidFormatIni(uSwidFormatBase):
             data["date"] = evidence.date.isoformat()
         if evidence.device_id:
             data["device-id"] = evidence.device_id
+        return data
+
+    def _save_patch(self, patch: uSwidPatch) -> Dict[str, Any]:
+        """Exports a uSwidPatch INI section"""
+
+        data: Dict[str, Any] = {}
+        if patch.type:
+            data["type"] = str(patch.type)
+        if patch.url:
+            data["url"] = patch.url
+        if patch.description:
+            data["description"] = patch.description
+        if patch.references:
+            data["references"] = ",".join(patch.references)
         return data
 
     def _save_entity(self, entity: uSwidEntity) -> Dict[str, Any]:
@@ -173,6 +189,13 @@ class uSwidFormatIni(uSwidFormatBase):
             if i > 0:
                 key += f":{i}"
             config[key] = self._save_evidence(evidence)
+
+        # patch
+        for i, patch in enumerate(component.patches):
+            key = "uSWID-Patch"
+            if i > 0:
+                key += f":{i}"
+            config[key] = self._save_patch(patch)
 
         # as string
         with io.StringIO() as f:
@@ -275,6 +298,25 @@ class uSwidFormatIni(uSwidFormatBase):
         if not entity.roles:
             raise NotSupportedError(f"entity {entity.name} MUST have at least one role")
 
+    def _load_patch(
+        self,
+        patch: uSwidPatch,
+        data: Union[configparser.SectionProxy, Dict[str, str]],
+    ) -> None:
+        """Imports a uSwidPatch INI section"""
+
+        for key, value in data.items():
+            if key == "type":
+                patch.type = uSwidPatchType.from_str(value)
+            elif key == "url":
+                patch.url = value
+            elif key == "description":
+                patch.description = value
+            elif key == "references":
+                patch.references = [ref.strip() for ref in value.split(",")]
+            else:
+                print(f"unknown key {key} found in ini file!")
+
     def _load_component(
         self, component: uSwidComponent, blob: bytes, path: Optional[str]
     ) -> None:
@@ -321,7 +363,14 @@ class uSwidFormatIni(uSwidFormatBase):
             if group.startswith("uSWID-Link"):
                 link = uSwidLink()
                 self._load_link(link, config[group])
-                component.add_link(link)
+                # Convert ancestor links to ancestor components
+                if link.rel == uSwidLinkRel.ANCESTOR:
+                    # Create an ancestor component from the link
+                    ancestor = uSwidComponent()
+                    ancestor.software_name = link.href
+                    component.ancestors.append(ancestor)
+                else:
+                    component.add_link(link)
             if group.startswith("uSWID-Payload"):
                 payload = uSwidPayload()
                 self._load_payload(payload, config[group], path=path)
@@ -330,3 +379,7 @@ class uSwidFormatIni(uSwidFormatBase):
                 evidence = uSwidEvidence()
                 self._load_evidence(evidence, config[group])
                 component.add_evidence(evidence)
+            if group.startswith("uSWID-Patch"):
+                patch = uSwidPatch()
+                self._load_patch(patch, config[group])
+                component.add_patch(patch)

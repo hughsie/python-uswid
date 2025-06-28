@@ -166,7 +166,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
         try:
             patches = data["pedigree"]["patches"]
             for patch in patches:
-                component.patches.append(self._load_patch(patch))
+                component.add_patch(self._load_patch(patch))
         except KeyError:
             pass
 
