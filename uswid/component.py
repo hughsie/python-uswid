@@ -416,6 +416,11 @@ class uSwidComponent:
                 return link
         return None
 
+    def add_patch(self, patch: uSwidPatch) -> None:
+        """Add the patch"""
+        if patch not in self.patches:
+            self.patches.append(patch)
+
     def add_evidence(self, evidence: uSwidEvidence) -> None:
         """Add the evidence"""
         self.evidences.append(evidence)
