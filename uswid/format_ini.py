@@ -367,7 +367,7 @@ class uSwidFormatIni(uSwidFormatBase):
                 if link.rel == uSwidLinkRel.ANCESTOR:
                     # Create an ancestor component from the link
                     ancestor = uSwidComponent()
-                    ancestor.software_name = link.href
+                    ancestor.tag_id = link.href
                     component.ancestors.append(ancestor)
                 else:
                     component.add_link(link)
