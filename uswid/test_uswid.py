@@ -189,9 +189,11 @@ class TestSwidEntity(unittest.TestCase):
         "name": "RH"
       }
     ],
-    "lifecycles": {
-      "phase": "pre-build"
-    }
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ]
   },
   "components": [
     {
