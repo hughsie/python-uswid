@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2025 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -31,38 +32,22 @@ def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
 class uSwidFormatSpdx(uSwidFormatBase):
     """SPDX file"""
 
-    def _load_component(
-        self, component: uSwidComponent, blob: bytes, offset: Optional[int] = 0
-    ) -> None:
-        """Imports a uSwidComponent SPXD blob"""
+    def _load_single_package(self, pkg: Dict[str, Any], data_root: Dict[str, Any]) -> uSwidComponent:
+        """Load a single package from SPDX JSON data"""
+        component = uSwidComponent()
+        # tag_id
+        tag_id = pkg.get("SPDXID")
+        if tag_id and tag_id.startswith("SPDXRef-"):
+            tag_id = tag_id[8:]
+        component.tag_id = tag_id
+        # basic fields
+        component.software_name = pkg.get("name")
+        component.summary = pkg.get("summary")
+        component.software_version = pkg.get("versionInfo")
 
-        try:
-            data = json.loads(blob[offset:])
-        except json.JSONDecodeError as e:
-            raise NotSupportedError(f"invalid JSON file: {e}") from e
-
-        # package (should always exist)
-        try:
-            tag_id = data["packages"][0]["SPDXID"]
-            if tag_id.startswith("SPDXRef-"):
-                tag_id = tag_id[8:]
-            component.tag_id = tag_id
-        except KeyError:
-            pass
-        try:
-            component.software_name = data["packages"][0]["name"]
-        except KeyError:
-            pass
-        try:
-            component.summary = data["packages"][0]["summary"]
-        except KeyError:
-            pass
-        try:
-            component.software_version = data["packages"][0]["versionInfo"]
-        except KeyError:
-            pass
-        try:
-            spdx_license_ids = data["packages"][0]["licenseDeclared"]
+        # licenseDeclared (best-effort extraction of SPDX IDs)
+        spdx_license_ids = pkg.get("licenseDeclared")
+        if spdx_license_ids:
             for spdx_license_id in spdx_license_ids.split(" AND "):
                 component.add_link(
                     uSwidLink(
@@ -70,63 +55,78 @@ class uSwidFormatSpdx(uSwidFormatBase):
                         spdx_id=spdx_license_id,
                     )
                 )
-        except KeyError:
-            pass
 
-        # entities - try to get licensor info from package first
-        name = None
-        try:
-            name = data["packages"][0]["originator"]
-        except KeyError:
-            try:
-                name = data["name"]
-            except KeyError:
-                pass
-        if name:
-            if name.startswith("Organization: "):
-                name = name[14:]
-            component.add_entity(
-                uSwidEntity(name=name, roles=[uSwidEntityRole.LICENSOR])
-            )
+        # originator / supplier
+        originator = pkg.get("originator")
+        supplier = pkg.get("supplier")
+        if supplier:
+            if supplier.startswith("Organization: "):
+                supplier = supplier[14:]
+            component.add_entity(uSwidEntity(name=supplier, roles=[uSwidEntityRole.LICENSOR]))
+        if originator:
+            if originator.startswith("Organization: "):
+                originator = originator[14:]
+            component.add_entity(uSwidEntity(name=originator, roles=[uSwidEntityRole.SOFTWARE_CREATOR]))
 
-
+        # creationInfo creators (tag creators)
         try:
-            name = data["originator"]
-            if name.startswith("Organization: "):
-                name = name[14:]
-            component.add_entity(
-                uSwidEntity(name=name, roles=[uSwidEntityRole.SOFTWARE_CREATOR])
-            )
-        except KeyError:
-            pass
-        try:
-            for creator in data["creationInfo"]["creators"]:
+            creators = data_root["creationInfo"]["creators"]
+            for creator in creators:
                 if creator.startswith("Organization: "):
                     component.add_entity(
-                        uSwidEntity(
-                            name=creator[14:], roles=[uSwidEntityRole.TAG_CREATOR]
-                        )
+                        uSwidEntity(name=creator[14:], roles=[uSwidEntityRole.TAG_CREATOR])
                     )
                     break
                 if creator.startswith("Person: "):
                     component.add_entity(
-                        uSwidEntity(
-                            name=creator[8:], roles=[uSwidEntityRole.TAG_CREATOR]
-                        )
+                        uSwidEntity(name=creator[8:], roles=[uSwidEntityRole.TAG_CREATOR])
                     )
                     break
         except KeyError:
             pass
+
+        return component
 
     def __init__(self) -> None:
         """Initializes uSwidFormatSpdx"""
         uSwidFormatBase.__init__(self, "SPDX")
 
     def load(self, blob: bytes, path: Optional[str] = None) -> uSwidContainer:
+        try:
+            data = json.loads(blob)
+        except json.JSONDecodeError as e:
+            raise NotSupportedError(f"invalid JSON file: {e}") from e
 
-        component = uSwidComponent()
-        container = uSwidContainer([component])
-        self._load_component(component, blob)
+        packages = data.get("packages")
+        if not packages:
+            # return empty container vs raising, depending on policy
+            return uSwidContainer()
+
+        # build components
+        components_by_spdxid = {}
+        container = uSwidContainer()
+        for pkg in packages:
+            comp = self._load_single_package(pkg, data)
+            if comp.tag_id:
+                components_by_spdxid[f"SPDXRef-{comp.tag_id}"] = comp
+            container.append(comp)
+
+        # relationships (dependencies)
+        for rel in data.get("relationships", []):
+            try:
+                if rel.get("relationshipType") != "DEPENDS_ON":
+                    continue
+                src = rel["spdxElementId"]
+                tgt = rel["relatedSpdxElement"]
+                if src in components_by_spdxid and tgt in components_by_spdxid:
+                    # add link from src -> tgt
+                    csrc = components_by_spdxid[src]
+                    ctgt = components_by_spdxid[tgt]
+                    rel_enum = getattr(uSwidLinkRel, "DEPENDENCY", uSwidLinkRel.COMPONENT)
+                    csrc.add_link(uSwidLink(rel=uSwidLinkRel.COMPONENT, href=ctgt.tag_id))
+            except KeyError:
+                continue  # skip malformed relationship objects
+
         return container
 
     def save(self, container: uSwidContainer) -> bytes:
