@@ -788,6 +788,81 @@ rel = see-also
         self.assertEqual(purl.qualifiers, None)
         self.assertEqual(purl.subpath, None)
 
+    def test_spdx_single_package(self):
+        """Unit tests for SPDX single package import"""
+        jsonstr = {
+            "spdxVersion": "SPDX-2.3",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-pkgA",
+                    "name": "pkgA",
+                    "versionInfo": "1.2.3",
+                    "summary": "Test package A",
+                    "licenseDeclared": "BSD-2-Clause",
+                    "originator": "Organization: OriginCorp",
+                    "supplier": "Organization: SupplyCorp"
+                }
+            ]
+        }
+        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
+        self.assertEqual(len(container), 1)
+        comp = container[0]
+        self.assertEqual(comp.tag_id, "pkgA")
+        self.assertEqual(comp.software_name, "pkgA")
+        self.assertEqual(comp.software_version, "1.2.3")
+        # licenses extracted
+        lic_ids = sorted({l.spdx_id for l in comp.links if l.rel == uSwidLinkRel.LICENSE})
+        self.assertEqual(lic_ids, ["BSD-2-Clause"])
+        # entity roles
+        licensor_names = [e.name for e in comp.entities if uSwidEntityRole.LICENSOR in e.roles]
+        creator_names = [e.name for e in comp.entities if uSwidEntityRole.SOFTWARE_CREATOR in e.roles]
+        tag_creator_names = [e.name for e in comp.entities if uSwidEntityRole.TAG_CREATOR in e.roles]
+        self.assertEqual(licensor_names, ["SupplyCorp"])
+        self.assertEqual(creator_names, ["OriginCorp"])
+        self.assertEqual(tag_creator_names, ["TagCo"])
+
+    def test_spdx_multiple_packages_with_dep(self):
+        """Unit tests for SPDX multiple packages with dependencies"""
+        jsonstr: str = {
+            "spdxVersion": "SPDX-2.3",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-libX",
+                    "name": "libX",
+                    "versionInfo": "2.0.0",
+                    "licenseDeclared": "BSD-2-Clause"
+                },
+                {
+                    "SPDXID": "SPDXRef-appY",
+                    "name": "appY",
+                    "versionInfo": "5.1",
+                    "licenseDeclared": "GPL-3.0-only"
+                }
+            ],
+            "relationships": [
+                {
+                    "spdxElementId": "SPDXRef-appY",
+                    "relationshipType": "DEPENDS_ON",
+                    "relatedSpdxElement": "SPDXRef-libX"
+                }
+            ]
+        }
+        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
+        self.assertEqual(len(container), 2)
+        lib = next(c for c in container if c.tag_id == "libX")
+        app = next(c for c in container if c.tag_id == "appY")
+        # dependency represented as COMPONENT link to libX (per current implementation fallback)
+        self.assertTrue(any(l.rel == uSwidLinkRel.COMPONENT and l.href == "libX" for l in app.links))
+        # license links exist
+        app_lic = [l.spdx_id for l in app.links if l.rel == uSwidLinkRel.LICENSE]
+        lib_lic = [l.spdx_id for l in lib.links if l.rel == uSwidLinkRel.LICENSE]
+        self.assertEqual(app_lic, ["GPL-3.0-only"])
+        self.assertEqual(lib_lic, ["BSD-2-Clause"])
+        # TAG_CREATOR added from creationInfo
+        self.assertTrue(any(e.name == "TagCo" and uSwidEntityRole.TAG_CREATOR in e.roles for e in app.entities))
+
 
 if __name__ == "__main__":
     unittest.main()
