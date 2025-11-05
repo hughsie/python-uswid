@@ -21,6 +21,7 @@ Additionally, uSWID supports importing SBOM metadata from a few additional file 
 - `.ini` files -- designed to be easier for humans to write
 - `pkgconfig` -- `.pc` files that are shipped with most open source libraries
 - [PE binaries](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) -- coSWID metadata can be inserted in a `.sbom` section at link time
+- [FIT images](https://fitspec.osfw.foundation/) -- using the `SBOM` section that contains a uSWID blob.
 - unspecified firmware files -- using a 24 byte header to locate the coSWID CBOR SBOM entry
 
 There are three elements of an SBOM that uswid supports. These are:
