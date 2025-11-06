@@ -286,7 +286,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
         if component.persistent_id:
             metadata[uSwidGlobalMap.PERSISTENT_ID] = component.persistent_id
         if component.cpe:
-            metadata["cpe"] = component.cpe
+            metadata[uSwidGlobalMap.PRODUCT_FAMILY] = component.cpe
         data[uSwidGlobalMap.SOFTWARE_META] = metadata
 
         # payloads
@@ -464,7 +464,7 @@ class uSwidFormatCoswid(uSwidFormatBase):
                     component.persistent_id = value
                 elif key == uSwidGlobalMap.MEDIA:
                     component.type = uSwidComponentType.from_str(value)
-                elif key == "cpe":
+                elif key == uSwidGlobalMap.PRODUCT_FAMILY:
                     component.cpe = value
 
         # payload
