@@ -240,6 +240,26 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                 tag_creators.append(data_author["name"])
 
         container = uSwidContainer()
+
+        # primary component may live in metadata
+        if metadata and metadata.get("component"):
+            component = uSwidComponent()
+            self._load_component_internal(component, metadata["component"])
+            if not component.tag_version:
+                try:
+                    component.tag_version = int(root["version"])
+                except AttributeError:
+                    pass
+            if component.tag_id and not container.get_by_id(component.tag_id):
+                container.append(component)
+                # the person that created the source file
+                for tag_creator in tag_creators:
+                    component.add_entity(
+                        uSwidEntity(
+                            name=tag_creator, roles=[uSwidEntityRole.TAG_CREATOR]
+                        )
+                    )
+
         for data in root.get("components", []):
             component = uSwidComponent()
             self._load_component_internal(component, data)
@@ -248,6 +268,8 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                     component.tag_version = int(root["version"])
                 except AttributeError:
                     pass
+            if component.tag_id and container.get_by_id(component.tag_id):
+                continue
             container.append(component)
 
             # the person that created the source file

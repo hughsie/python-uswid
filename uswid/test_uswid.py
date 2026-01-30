@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2026 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -753,6 +754,104 @@ rel = see-also
         assert "SPDX" in tmp
         assert "uSWID" in tmp
         assert "supplier" in tmp
+
+    def test_cyclonedx_metadata_component_no_duplicate(self):
+        """CycloneDX metadata.component should not duplicate components list"""
+
+        jsonstr = {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "version": 1,
+            "metadata": {
+                "component": {
+                    "type": "application",
+                    "name": "MyApp",
+                    "version": "1.0",
+                    "bom-ref": "myapp",
+                },
+                "authors": [{"name": "TagCreator"}],
+            },
+            "components": [
+                {
+                    "type": "application",
+                    "name": "MyApp",
+                    "version": "1.0",
+                    "bom-ref": "myapp",
+                }
+            ],
+        }
+        container = uSwidFormatCycloneDX().load(json.dumps(jsonstr).encode())
+        self.assertEqual(len(container), 1)
+        component = container[0]
+        self.assertEqual(component.tag_id, "myapp")
+        self.assertEqual(component.software_name, "MyApp")
+        self.assertTrue(
+            any(
+                e.name == "TagCreator"
+                and uSwidEntityRole.TAG_CREATOR in e.roles
+                for e in component.entities
+            )
+        )
+
+    def test_cyclonedx_metadata_component_only(self):
+        """CycloneDX metadata.component should load when components absent"""
+
+        jsonstr = {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "version": 1,
+            "metadata": {
+                "component": {
+                    "type": "application",
+                    "name": "MyApp",
+                    "version": "1.0",
+                    "bom-ref": "myapp",
+                },
+                "authors": [{"name": "TagCreator"}],
+            },
+        }
+        container = uSwidFormatCycloneDX().load(json.dumps(jsonstr).encode())
+        self.assertEqual(len(container), 1)
+        component = container[0]
+        self.assertEqual(component.tag_id, "myapp")
+        self.assertEqual(component.software_name, "MyApp")
+        self.assertTrue(
+            any(
+                e.name == "TagCreator"
+                and uSwidEntityRole.TAG_CREATOR in e.roles
+                for e in component.entities
+            )
+        )
+
+    def test_cyclonedx_metadata_component_with_components(self):
+        """CycloneDX metadata.component with extra components yields two entries"""
+
+        jsonstr = {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.6",
+            "version": 1,
+            "metadata": {
+                "component": {
+                    "type": "application",
+                    "name": "MyApp",
+                    "version": "1.0",
+                    "bom-ref": "myapp",
+                },
+                "authors": [{"name": "TagCreator"}],
+            },
+            "components": [
+                {
+                    "type": "library",
+                    "name": "MyLib",
+                    "version": "2.0",
+                    "bom-ref": "mylib",
+                }
+            ],
+        }
+        container = uSwidFormatCycloneDX().load(json.dumps(jsonstr).encode())
+        self.assertEqual(len(container), 2)
+        self.assertIsNotNone(container.get_by_id("myapp"))
+        self.assertIsNotNone(container.get_by_id("mylib"))
 
     def test_parse(self):
         """Unit tests for parsing PURL text"""
