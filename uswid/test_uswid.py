@@ -1001,10 +1001,10 @@ rel = see-also
 
         self.assertEqual(len(merged), 2)
         self.assertIsNotNone(
-            merged.get_by_id("urn:uuid:11111111-1111-1111-1111-111111111111#dupPkg")
+            merged.get_by_id("11111111-1111-1111-1111-111111111111:dupPkg")
         )
         self.assertIsNotNone(
-            merged.get_by_id("urn:uuid:22222222-2222-2222-2222-222222222222#dupPkg")
+            merged.get_by_id("22222222-2222-2222-2222-222222222222:dupPkg")
         )
 
 

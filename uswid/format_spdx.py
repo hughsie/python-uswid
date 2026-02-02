@@ -32,7 +32,10 @@ def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
 def _normalize_spdx_namespace(namespace: Optional[str]) -> Optional[str]:
     if not namespace:
         return None
-    return namespace.rstrip("#/")
+    namespace = namespace.rstrip("#/")
+    if namespace.startswith("urn:uuid:"):
+        namespace = namespace[len("urn:uuid:") :]
+    return namespace
 
 
 def _namespaced_tag_id(spdx_id: Optional[str], namespace: Optional[str]) -> Optional[str]:
@@ -41,7 +44,7 @@ def _namespaced_tag_id(spdx_id: Optional[str], namespace: Optional[str]) -> Opti
     if spdx_id.startswith("SPDXRef-"):
         spdx_id = spdx_id[8:]
     if namespace:
-        return f"{namespace}#{spdx_id}"
+        return f"{namespace}:{spdx_id}"
     return spdx_id
 
 
