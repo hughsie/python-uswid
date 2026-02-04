@@ -890,8 +890,8 @@ rel = see-also
         purl = uSwidPurl("pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3")
         self.assertEqual(purl.scheme, "pkg")
         self.assertEqual(purl.protocol, "swid")
-        self.assertEqual(purl.namespace, "Acme%20Inc")
-        self.assertEqual(purl.name, "example.com/sample_firmware")
+        self.assertEqual(purl.namespace, "Acme%20Inc/example.com")
+        self.assertEqual(purl.name, "sample_firmware")
         self.assertEqual(purl.version, "1.2.3")
 
     def test_spdx_single_package(self):

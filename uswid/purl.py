@@ -60,18 +60,17 @@ class uSwidPurl:
             self.version = tmp_split[1]
             value = tmp_split[0]
 
-        # [scheme:]protocol/namespace/name[/name...]
+        # [scheme:]protocol/namespace/name
         tmp_split = value.rsplit(":", maxsplit=1)
-        pnn = tmp_split[0].split("/", maxsplit=3)
         if len(tmp_split) > 1:
-            pnn = tmp_split[1].split("/", maxsplit=3)
+            pnn = tmp_split[1].split("/")
             self.scheme = tmp_split[0]
         else:
-            pnn = tmp_split[0].split("/", maxsplit=3)
+            pnn = tmp_split[0].split("/")
         if len(pnn) > 2:
             self.protocol = pnn[0]
-            self.namespace = pnn[1]
-            self.name = "/".join(pnn[2:])
+            self.namespace = "/".join(pnn[1:-1])
+            self.name = pnn[-1]
         elif len(pnn) > 1:
             self.protocol = pnn[0]
             self.namespace = None
