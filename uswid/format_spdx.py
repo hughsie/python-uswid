@@ -19,6 +19,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .errors import NotSupportedError
 from .hash import uSwidHashAlg
 from .link import uSwidLink, uSwidLinkRel
+from .purl import uSwidPurl
 
 
 def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
@@ -61,6 +62,18 @@ class uSwidFormatSpdx(uSwidFormatBase):
         component = uSwidComponent()
         # tag_id
         component.tag_id = _namespaced_tag_id(pkg.get("SPDXID"), namespace)
+        # externalRefs (purl)
+        external_refs = pkg.get("externalRefs") or pkg.get("externalReferences") or []
+        if isinstance(external_refs, list):
+            for ref in external_refs:
+                if not isinstance(ref, dict):
+                    continue
+                if ref.get("referenceType") != "purl":
+                    continue
+                locator = ref.get("referenceLocator")
+                if locator:
+                    component.purl = uSwidPurl(locator)
+                    break
         # basic fields
         component.software_name = pkg.get("name")
         component.summary = pkg.get("summary")

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+# (c) Copyright 2026 HP Development Company, L.P.
 #
 # SPDX-License-Identifier: LGPL-2.1+
 #
@@ -59,7 +60,7 @@ class uSwidPurl:
             self.version = tmp_split[1]
             value = tmp_split[0]
 
-        # [scheme:]protocol/namespace/name
+        # [scheme:]protocol/namespace/name[/name...]
         tmp_split = value.rsplit(":", maxsplit=1)
         pnn = tmp_split[0].split("/", maxsplit=3)
         if len(tmp_split) > 1:
@@ -70,7 +71,7 @@ class uSwidPurl:
         if len(pnn) > 2:
             self.protocol = pnn[0]
             self.namespace = pnn[1]
-            self.name = pnn[2]
+            self.name = "/".join(pnn[2:])
         elif len(pnn) > 1:
             self.protocol = pnn[0]
             self.namespace = None
