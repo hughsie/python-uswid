@@ -11,7 +11,7 @@
 import os
 import sys
 import unittest
-from typing import Optional
+from typing import Optional, Any
 import shutil
 import subprocess
 import json
@@ -906,7 +906,7 @@ rel = see-also
                 }
             ]
         }
-        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
+        container = uSwidFormatSpdx().load(json.dumps(jsonstr).encode())
         self.assertEqual(len(container), 1)
         comp = container[0]
         self.assertEqual(comp.tag_id, "pkgA")
@@ -925,7 +925,7 @@ rel = see-also
 
     def test_spdx_multiple_packages_with_dep(self):
         """Unit tests for SPDX multiple packages with dependencies"""
-        jsonstr: str = {
+        jsonstr: dict[str, Any] = {
             "spdxVersion": "SPDX-2.3",
             "creationInfo": {"creators": ["Organization: TagCo"]},
             "packages": [
@@ -950,7 +950,7 @@ rel = see-also
                 }
             ]
         }
-        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
+        container = uSwidFormatSpdx().load(json.dumps(jsonstr).encode())
         self.assertEqual(len(container), 2)
         lib = next(c for c in container if c.tag_id == "libX")
         app = next(c for c in container if c.tag_id == "appY")
