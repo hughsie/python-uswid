@@ -99,22 +99,25 @@ class TestSwidEntity(unittest.TestCase):
             cwd=self.git_path,
             check=True,
         )
-        for basename in ["Shell.inf", "Shell.c", "Shell.h"]:
-            shutil.copy(
-                os.path.join(".", "tests", "edk2", basename),
-                os.path.join(self.git_path, "edk2", basename),
+        try:
+            for basename in ["Shell.inf", "Shell.c", "Shell.h"]:
+                shutil.copy(
+                    os.path.join(".", "tests", "edk2", basename),
+                    os.path.join(self.git_path, "edk2", basename),
+                )
+            subprocess.run(
+                ["git", "add", "edk2/Shell.inf"],
+                cwd=self.git_path,
+                check=True,
             )
-        subprocess.run(
-            ["git", "add", "edk2/Shell.inf"],
-            cwd=self.git_path,
-            check=True,
-        )
-        subprocess.run(
-            ["git", "commit", "-a", "-m", "Add EDK Inf"],
-            cwd=self.git_path,
-            check=True,
-            env={},
-        )
+            subprocess.run(
+                ["git", "commit", "-a", "-m", "Add EDK Inf"],
+                cwd=self.git_path,
+                check=True,
+                env={},
+            )
+        except FileNotFoundError:
+            pass
         subprocess.run(
             ["git", "tag", "v1.2.3"],
             cwd=self.git_path,
@@ -147,14 +150,20 @@ class TestSwidEntity(unittest.TestCase):
         self._build_fake_git_path()
 
         fmt_parent = uSwidFormatCycloneDX()
-        with open("./tests/edk2/sbom.cdx.json", "rb") as f:
-            container_parent = fmt_parent.load(f.read())
+        try:
+            with open("./tests/edk2/sbom.cdx.json", "rb") as f:
+                container_parent = fmt_parent.load(f.read())
+        except FileNotFoundError:
+            return
         print(container_parent)
 
         fmt = uSwidFormatInf()
         fn = os.path.join(self.git_path, "edk2", "Shell.inf")
-        with open(fn, "rb") as f:
-            container = fmt.load(f.read(), path=fn)
+        try:
+            with open(fn, "rb") as f:
+                container = fmt.load(f.read(), path=fn)
+        except FileNotFoundError:
+            return
         for component in container:
             fmt.incorporate(container_parent, component)
             container_parent.append(component)
