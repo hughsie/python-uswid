@@ -71,3 +71,25 @@ class uSwidPayloadCompression(IntEnum):
             return uSwidPayloadCompression[s.upper()]
         except KeyError:
             return s
+
+
+class uSwidPayloadFormat(IntEnum):
+    """The payload format"""
+
+    COSWID = 0
+    CYCLONEDX = 1
+    SPDX = 2
+
+    def __str__(self):
+        return self.name.lower()
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """Used only for argparse"""
+        try:
+            return uSwidPayloadFormat[s.upper()]
+        except KeyError:
+            return s
