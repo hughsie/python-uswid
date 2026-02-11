@@ -30,6 +30,7 @@ from uswid import (
     uSwidProblem,
     uSwidVersionScheme,
     uSwidPayloadCompression,
+    uSwidPayloadFormat,
     uSwidLink,
     uSwidLinkRel,
     uSwidLinkUse,
@@ -247,6 +248,14 @@ def main():
         dest="compression",
         default=uSwidPayloadCompression.NONE,
         help="Compress uSWID containers",
+    )
+    parser.add_argument(
+        "--format",
+        type=uSwidPayloadFormat.argparse,
+        choices=list(uSwidPayloadFormat),
+        dest="format",
+        default=uSwidPayloadFormat.COSWID,
+        help="Format for uSWID container",
     )
     parser.add_argument(
         "--generate",
@@ -531,6 +540,7 @@ def main():
             base.verbose = args.verbose
             if isinstance(base, uSwidFormatUswid):
                 base.compression = args.compression
+                base.format = args.format
             if isinstance(base, uSwidFormatPe):
                 base.filepath = filepath
                 base.objcopy = args.objcopy
