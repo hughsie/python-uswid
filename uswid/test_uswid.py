@@ -889,6 +889,13 @@ rel = see-also
         self.assertEqual(purl.qualifiers, None)
         self.assertEqual(purl.subpath, None)
 
+        purl = uSwidPurl("pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3")
+        self.assertEqual(purl.scheme, "pkg")
+        self.assertEqual(purl.protocol, "swid")
+        self.assertEqual(purl.namespace, "Acme%20Inc/example.com")
+        self.assertEqual(purl.name, "sample_firmware")
+        self.assertEqual(purl.version, "1.2.3")
+
     def test_spdx_single_package(self):
         """Unit tests for SPDX single package import"""
         jsonstr = {
@@ -963,6 +970,84 @@ rel = see-also
         self.assertEqual(lib_lic, ["BSD-2-Clause"])
         # TAG_CREATOR added from creationInfo
         self.assertTrue(any(e.name == "TagCo" and uSwidEntityRole.TAG_CREATOR in e.roles for e in app.entities))
+
+    def test_spdx_external_refs_purl(self):
+        """Unit tests for SPDX externalRefs purl import"""
+        jsonstr = {
+            "spdxVersion": "SPDX-2.3",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-pkgA",
+                    "name": "pkgA",
+                    "versionInfo": "1.2.3",
+                    "externalRefs": [
+                        {
+                            "referenceCategory": "PACKAGE-MANAGER",
+                            "referenceType": "purl",
+                            "referenceLocator": "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
+                        }
+                    ],
+                }
+            ],
+        }
+        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
+        self.assertEqual(len(container), 1)
+        comp = container[0]
+        self.assertIsNotNone(comp.purl)
+        self.assertEqual(
+            str(comp.purl),
+            "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
+        )
+        self.assertEqual(
+            comp.tag_id,
+            "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
+        )
+
+    def test_spdx_duplicate_spdxid_unique_namespace(self):
+        """Duplicate SPDXIDs should be unique when documentNamespace differs"""
+        json_a = {
+            "spdxVersion": "SPDX-2.3",
+            "documentNamespace": "urn:uuid:11111111-1111-1111-1111-111111111111",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-dupPkg",
+                    "name": "dupPkg",
+                    "versionInfo": "1.0",
+                }
+            ],
+        }
+        json_b = {
+            "spdxVersion": "SPDX-2.3",
+            "documentNamespace": "urn:uuid:22222222-2222-2222-2222-222222222222",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-dupPkg",
+                    "name": "dupPkg",
+                    "versionInfo": "2.0",
+                }
+            ],
+        }
+
+        fmt = uSwidFormatSpdx()
+        container_a = fmt.load(json.dumps(json_a))
+        container_b = fmt.load(json.dumps(json_b))
+
+        # consolidate into one container to simulate merged SBOMs
+        merged = uSwidContainer()
+        for comp in list(container_a) + list(container_b):
+            if comp.tag_id and not merged.get_by_id(comp.tag_id):
+                merged.append(comp)
+
+        self.assertEqual(len(merged), 2)
+        self.assertIsNotNone(
+            merged.get_by_id("11111111-1111-1111-1111-111111111111:dupPkg")
+        )
+        self.assertIsNotNone(
+            merged.get_by_id("22222222-2222-2222-2222-222222222222:dupPkg")
+        )
 
 
 if __name__ == "__main__":
