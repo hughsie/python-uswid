@@ -122,7 +122,6 @@ class uSwidFormatSpdx(uSwidFormatBase):
                     # add link from src -> tgt
                     csrc = components_by_spdxid[src]
                     ctgt = components_by_spdxid[tgt]
-                    rel_enum = getattr(uSwidLinkRel, "DEPENDENCY", uSwidLinkRel.COMPONENT)
                     csrc.add_link(uSwidLink(rel=uSwidLinkRel.COMPONENT, href=ctgt.tag_id))
             except KeyError:
                 continue  # skip malformed relationship objects
