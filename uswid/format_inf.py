@@ -28,7 +28,7 @@ class uSwidFormatInf(uSwidFormatBase):
 
     def __init__(self) -> None:
         """Initializes uSwidFormatInf"""
-        uSwidFormatBase.__init__(self, "inf")  # type:ignore[call-arg]
+        uSwidFormatBase.__init__(self, "inf")  # type: ignore[call-arg]
         self._inf_data: dict[str, list[str]] = defaultdict(list)
         self._inf_defines: dict[str, str] = {}
         self._spdx_ids: list[str] = []

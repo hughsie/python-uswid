@@ -66,7 +66,7 @@ def container_roundtrip(container: uSwidContainer, verbose: bool = False) -> Non
     """rountrip the container into a few different SBOM formats"""
 
     try:
-        component: uSwidComponent = container[0]  # type:ignore[index]
+        component: uSwidComponent = container[0]  # type: ignore[index]
     except IndexError:
         print("no default component")
         return
@@ -98,7 +98,7 @@ def container_roundtrip(container: uSwidContainer, verbose: bool = False) -> Non
         except NotImplementedError:
             continue
         try:
-            component_new = container_new[0]  # type:ignore[index]
+            component_new = container_new[0]  # type: ignore[index]
         except IndexError:
             print(f"no default component for {base.name}")
             continue

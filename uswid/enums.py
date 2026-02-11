@@ -35,7 +35,7 @@ class uSwidVersionScheme(IntEnum):
         return cls(uSwidVersionScheme.ALPHANUMERIC)
 
 
-USWID_HEADER_MAGIC = b"\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
+USWID_HEADER_MAGIC = b"\x53\x42\x4f\x4d\xd6\xba\x2e\xac\xa3\xe6\x7a\x52\xaa\xee\x3b\xaf"
 
 # deprecated
 USWID_HEADER_FLAG_COMPRESSED = 0x01

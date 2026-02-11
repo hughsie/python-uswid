@@ -111,7 +111,7 @@ class uSwidFormatUswid(uSwidFormatBase):
         _USWID_HEADER_FMT = "<BHI"
 
         # this is the most basic of headers
-        (hdrver, hdrsz, payloadsz) = struct.unpack_from(
+        hdrver, hdrsz, payloadsz = struct.unpack_from(
             _USWID_HEADER_FMT, blob, offset + len(USWID_HEADER_MAGIC)
         )
         if hdrver == 0:
