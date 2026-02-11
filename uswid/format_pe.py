@@ -122,7 +122,7 @@ class uSwidFormatPe(uSwidFormatBase):
 
     def __init__(self, filepath: Optional[str] = None) -> None:
         """Initializes uSwidFormatPe"""
-        uSwidFormatBase.__init__(self, "PE")  # type:ignore[call-arg]
+        uSwidFormatBase.__init__(self, "PE")  # type: ignore[call-arg]
         self.objcopy: Optional[str] = None
         self.cc: Optional[str] = None
         self.cflags: Optional[str] = None

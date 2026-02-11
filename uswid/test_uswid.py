@@ -581,7 +581,12 @@ class TestSwidEntity(unittest.TestCase):
         ini_save_patch = uSwidFormatIni()._save_patch(patch)
         self.assertEqual(
             ini_save_patch,
-            {'type': 'backport', 'url': 'http://foo', 'description': 'foo', 'references': 'foo,bar,baz'},
+            {
+                "type": "backport",
+                "url": "http://foo",
+                "description": "foo",
+                "references": "foo,bar,baz",
+            },
         )
 
         # INI import
@@ -608,7 +613,6 @@ class TestSwidEntity(unittest.TestCase):
         )
 
     def test_ancestor(self):
-
         """Unit tests for uSwidComponent ancestors"""
         self.maxDiff = None
         component = uSwidComponent(tag_id="parent")
@@ -789,8 +793,7 @@ rel = see-also
         self.assertEqual(component.software_name, "MyApp")
         self.assertTrue(
             any(
-                e.name == "TagCreator"
-                and uSwidEntityRole.TAG_CREATOR in e.roles
+                e.name == "TagCreator" and uSwidEntityRole.TAG_CREATOR in e.roles
                 for e in component.entities
             )
         )
@@ -819,8 +822,7 @@ rel = see-also
         self.assertEqual(component.software_name, "MyApp")
         self.assertTrue(
             any(
-                e.name == "TagCreator"
-                and uSwidEntityRole.TAG_CREATOR in e.roles
+                e.name == "TagCreator" and uSwidEntityRole.TAG_CREATOR in e.roles
                 for e in component.entities
             )
         )
@@ -902,9 +904,9 @@ rel = see-also
                     "summary": "Test package A",
                     "licenseDeclared": "BSD-2-Clause",
                     "originator": "Organization: OriginCorp",
-                    "supplier": "Organization: SupplyCorp"
+                    "supplier": "Organization: SupplyCorp",
                 }
-            ]
+            ],
         }
         container = uSwidFormatSpdx().load(json.dumps(jsonstr).encode())
         self.assertEqual(len(container), 1)
@@ -913,12 +915,20 @@ rel = see-also
         self.assertEqual(comp.software_name, "pkgA")
         self.assertEqual(comp.software_version, "1.2.3")
         # licenses extracted
-        lic_ids = sorted({l.spdx_id for l in comp.links if l.rel == uSwidLinkRel.LICENSE})
+        lic_ids = sorted(
+            {l.spdx_id for l in comp.links if l.rel == uSwidLinkRel.LICENSE}
+        )
         self.assertEqual(lic_ids, ["BSD-2-Clause"])
         # entity roles
-        licensor_names = [e.name for e in comp.entities if uSwidEntityRole.LICENSOR in e.roles]
-        creator_names = [e.name for e in comp.entities if uSwidEntityRole.SOFTWARE_CREATOR in e.roles]
-        tag_creator_names = [e.name for e in comp.entities if uSwidEntityRole.TAG_CREATOR in e.roles]
+        licensor_names = [
+            e.name for e in comp.entities if uSwidEntityRole.LICENSOR in e.roles
+        ]
+        creator_names = [
+            e.name for e in comp.entities if uSwidEntityRole.SOFTWARE_CREATOR in e.roles
+        ]
+        tag_creator_names = [
+            e.name for e in comp.entities if uSwidEntityRole.TAG_CREATOR in e.roles
+        ]
         self.assertEqual(licensor_names, ["SupplyCorp"])
         self.assertEqual(creator_names, ["OriginCorp"])
         self.assertEqual(tag_creator_names, ["TagCo"])
@@ -933,36 +943,43 @@ rel = see-also
                     "SPDXID": "SPDXRef-libX",
                     "name": "libX",
                     "versionInfo": "2.0.0",
-                    "licenseDeclared": "BSD-2-Clause"
+                    "licenseDeclared": "BSD-2-Clause",
                 },
                 {
                     "SPDXID": "SPDXRef-appY",
                     "name": "appY",
                     "versionInfo": "5.1",
-                    "licenseDeclared": "GPL-3.0-only"
-                }
+                    "licenseDeclared": "GPL-3.0-only",
+                },
             ],
             "relationships": [
                 {
                     "spdxElementId": "SPDXRef-appY",
                     "relationshipType": "DEPENDS_ON",
-                    "relatedSpdxElement": "SPDXRef-libX"
+                    "relatedSpdxElement": "SPDXRef-libX",
                 }
-            ]
+            ],
         }
         container = uSwidFormatSpdx().load(json.dumps(jsonstr).encode())
         self.assertEqual(len(container), 2)
         lib = next(c for c in container if c.tag_id == "libX")
         app = next(c for c in container if c.tag_id == "appY")
         # dependency represented as COMPONENT link to libX (per current implementation fallback)
-        self.assertTrue(any(l.rel == uSwidLinkRel.COMPONENT and l.href == "libX" for l in app.links))
+        self.assertTrue(
+            any(l.rel == uSwidLinkRel.COMPONENT and l.href == "libX" for l in app.links)
+        )
         # license links exist
         app_lic = [l.spdx_id for l in app.links if l.rel == uSwidLinkRel.LICENSE]
         lib_lic = [l.spdx_id for l in lib.links if l.rel == uSwidLinkRel.LICENSE]
         self.assertEqual(app_lic, ["GPL-3.0-only"])
         self.assertEqual(lib_lic, ["BSD-2-Clause"])
         # TAG_CREATOR added from creationInfo
-        self.assertTrue(any(e.name == "TagCo" and uSwidEntityRole.TAG_CREATOR in e.roles for e in app.entities))
+        self.assertTrue(
+            any(
+                e.name == "TagCo" and uSwidEntityRole.TAG_CREATOR in e.roles
+                for e in app.entities
+            )
+        )
 
 
 if __name__ == "__main__":
