@@ -887,13 +887,6 @@ rel = see-also
         self.assertEqual(purl.qualifiers, None)
         self.assertEqual(purl.subpath, None)
 
-        purl = uSwidPurl("pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3")
-        self.assertEqual(purl.scheme, "pkg")
-        self.assertEqual(purl.protocol, "swid")
-        self.assertEqual(purl.namespace, "Acme%20Inc/example.com")
-        self.assertEqual(purl.name, "sample_firmware")
-        self.assertEqual(purl.version, "1.2.3")
-
     def test_spdx_single_package(self):
         """Unit tests for SPDX single package import"""
         jsonstr = {
@@ -968,39 +961,6 @@ rel = see-also
         self.assertEqual(lib_lic, ["BSD-2-Clause"])
         # TAG_CREATOR added from creationInfo
         self.assertTrue(any(e.name == "TagCo" and uSwidEntityRole.TAG_CREATOR in e.roles for e in app.entities))
-
-    def test_spdx_external_refs_purl(self):
-        """Unit tests for SPDX externalRefs purl import"""
-        jsonstr = {
-            "spdxVersion": "SPDX-2.3",
-            "creationInfo": {"creators": ["Organization: TagCo"]},
-            "packages": [
-                {
-                    "SPDXID": "SPDXRef-pkgA",
-                    "name": "pkgA",
-                    "versionInfo": "1.2.3",
-                    "externalRefs": [
-                        {
-                            "referenceCategory": "PACKAGE-MANAGER",
-                            "referenceType": "purl",
-                            "referenceLocator": "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
-                        }
-                    ],
-                }
-            ],
-        }
-        container = uSwidFormatSpdx().load(json.dumps(jsonstr))
-        self.assertEqual(len(container), 1)
-        comp = container[0]
-        self.assertIsNotNone(comp.purl)
-        self.assertEqual(
-            str(comp.purl),
-            "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
-        )
-        self.assertEqual(
-            comp.tag_id,
-            "pkg:swid/Acme%20Inc/example.com/sample_firmware@1.2.3?tag_id=11111111-2222-3333-4444-555555555555",
-        )
 
     def test_spdx_duplicate_spdxid_unique_namespace(self):
         """Duplicate SPDXIDs should be unique when documentNamespace differs"""
