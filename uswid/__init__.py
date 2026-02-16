@@ -19,6 +19,7 @@ from uswid.enums import (
     uSwidVersionScheme,
     uSwidHeaderFlags,
     uSwidPayloadCompression,
+    uSwidPayloadFormat,
     USWID_HEADER_MAGIC,
 )
 from uswid.errors import NotSupportedError

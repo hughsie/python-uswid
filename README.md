@@ -14,13 +14,14 @@ When building or creating a SBOM there are lots of formats to choose from:
 - [SPDX](https://spdx.dev/)
 - [goSWID](https://github.com/veraison/swid)
 
-Using the uSWID tool allows you to **create**, **convert** and **merge** SBOM metadata to and from most of those formats, with the initial focus being functionality useful for firmware files.
+Using the uSWID tool allows you to **create**, **fix-up**, **convert** and **merge** SBOM metadata to and from most of those formats, with the initial focus being functionality useful for firmware files.
 
-Additionally, uSWID supports importing SBOM metadata from a few additional file formats:
+uSWID supports importing SBOM metadata from a few additional file formats:
 
 - `.ini` files -- designed to be easier for humans to write
 - `pkgconfig` -- `.pc` files that are shipped with most open source libraries
 - [PE binaries](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) -- coSWID metadata can be inserted in a `.sbom` section at link time
+- [FIT images](https://fitspec.osfw.foundation/) -- using the `SBOM` section that contains a uSWID blob.
 - unspecified firmware files -- using a 24 byte header to locate the coSWID CBOR SBOM entry
 
 There are three elements of an SBOM that uswid supports. These are:
@@ -38,35 +39,21 @@ There is also a [web-generator on the LVFS](https://fwupd.org/lvfs/uswid) that u
 
 ![LVFS Web Generator](docs/lvfs-uswid.png)
 
-Some of the formats in further detail:
+# uSWID Header
 
-## SWID
+There are many places a firmware could embed an SBOM, and we do not always know how to parse the secret vendor-specific header, e.g.
 
-Software Identification (SWID) tags provide an extensible XML-based structure to identify and describe individual software components, patches, and installation bundles.
-SWID tag representations are too large for firmware with storage constraints, but is useful when importing the data into other programs and frameworks.
+| VENDOR_HDR | ARC_IMAGE | FREE_SPACE | PAYLOAD | FREE_SPACE |
+|------------|-----------|------------|---------|------------|
 
-## coSWID
-
-CoSWID supports a similar set of semantics and features as SWID tags, all in a more space efficient format known as [CBOR](https://cbor.io/).
-This format is suitable for embedding into binary files, although the client then needs to be aware of the offset and length of the CBOR binary block of metadata.
-
-If we know how to parse the firmware and can lookup the offset the coSWID blob starts and ends (e.g. the PE COFF header says *data is stored at 0x123, length is 0x234*) then embedding coSWID as CBOR data is appropriate.
-
-## coSWID with uSWID header
-
-If we are asked to process lots of different kinds of firmware, we do not always know how to parse the secret vendor-specific header, e.g.
-
-| VENDOR_HDR | ARC_IMAGE | FREE_SPACE | coSWID | FREE_SPACE |
-|------------|-----------|------------|--------|------------|
-
-With this the SBOM builder tool does not know *where* the coSWID data starts in the blob, or *how many* coSWID sections there might be.
-If we include a small header with a 16 byte *magic* identifier then we can search the image to discover the offsets to read the coSWID blobs.
+With this vendor proprietary image the SBOM tool does not know *where* the SBOM payload data starts in the blob, the SBOM format, or *how many* SBOM components there might be.
+If we include a small header with a 16 byte *magic* identifier then we can search the image to discover the offsets to read the correct SBOM payload.
 
 The 25 byte uSWID header in full:
 
     uint8_t[16]   magic, "\x53\x42\x4F\x4D\xD6\xBA\x2E\xAC\xA3\xE6\x7A\x52\xAA\xEE\x3B\xAF"
-    uint8_t       header version, typically 0x03
-    uint16_t      little-endian header length, typically 0x19
+    uint8_t       header version, typically 0x04
+    uint16_t      little-endian header length, typically 0x1A
     uint32_t      little-endian payload length
     uint8_t       flags
                     0x00: no flags set
@@ -75,10 +62,39 @@ The 25 byte uSWID header in full:
                     0x00: none
                     0x01: zlib
                     0x02: lzma
+    uint8_t       payload format
+                    0x00: coSWID
+                    0x01: CycloneDX
+                    0x02: SPDX
 
 The uSWID header is automatically added when the file extension is `.uswid`, e.g.
 
-    uswid --load payload.efi --load oem.ini --save ./blob.uswid
+    uswid --load payload.efi --load oem.ini --save ./blob.uswid --format coswid
+
+## uSWID Header Versions:
+
+| Version | Changes                                             |
+|---------|-----------------------------------------------------|
+| 4       | Added payload format and CycloneDX and SPDX support |
+| 3       | Added payload compression and LZMA support          |
+| 2       | Added flags to header, which included Zlib support  |
+| 1       | Initial version                                     |
+
+Some of the formats in further detail:
+
+## SWID
+
+Software Identification (SWID) tags provide an extensible XML-based structure to identify and describe individual software components, patches, and installation bundles.
+SWID tag representations are too large for firmware with storage constraints, but is useful when importing the data into other programs and frameworks.
+
+The main drawback of SWID is that it hasn't been updated since 2022 and so isn't usually requested as a export format.
+
+## coSWID
+
+CoSWID supports a similar set of semantics and features as SWID tags, all in a more space efficient format known as [CBOR](https://cbor.io/).
+This format is suitable for embedding into binary files, although the client then needs to be aware of the offset and length of the CBOR binary block of metadata.
+
+If we know how to parse the firmware and can lookup the offset the coSWID blob starts and ends (e.g. the PE COFF header says *data is stored at 0x123, length is 0x234*) then embedding coSWID as CBOR data is appropriate.
 
 ## INI File
 

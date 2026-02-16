@@ -354,7 +354,7 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             if component.get_link_by_rel(uSwidLinkRel.COMPILER):
                 has_compiler = True
                 break
-        metadata["lifecycles"] = {"phase": "build" if has_compiler else "pre-build"}
+        metadata["lifecycles"] = [{"phase": "build" if has_compiler else "pre-build"}]
 
         # find components
         components: List[Dict[str, Any]] = []

@@ -63,9 +63,9 @@ class uSwidContainer:
                             continue
                         vex_by_hash[vex_hash.value] = vex_statement
                     for vex_purl in vex_product.tag_ids:
-                        vex_by_tag_version[
-                            f"{vex_purl.name}:{vex_purl.version}"
-                        ] = vex_statement
+                        vex_by_tag_version[f"{vex_purl.name}:{vex_purl.version}"] = (
+                            vex_statement
+                        )
         for component in self._components:
             try:
                 component.add_vex_statement(

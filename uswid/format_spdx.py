@@ -96,11 +96,15 @@ class uSwidFormatSpdx(uSwidFormatBase):
         if supplier:
             if supplier.startswith("Organization: "):
                 supplier = supplier[14:]
-            component.add_entity(uSwidEntity(name=supplier, roles=[uSwidEntityRole.LICENSOR]))
+            component.add_entity(
+                uSwidEntity(name=supplier, roles=[uSwidEntityRole.LICENSOR])
+            )
         if originator:
             if originator.startswith("Organization: "):
                 originator = originator[14:]
-            component.add_entity(uSwidEntity(name=originator, roles=[uSwidEntityRole.SOFTWARE_CREATOR]))
+            component.add_entity(
+                uSwidEntity(name=originator, roles=[uSwidEntityRole.SOFTWARE_CREATOR])
+            )
 
         # creationInfo creators (tag creators)
         try:
@@ -108,12 +112,16 @@ class uSwidFormatSpdx(uSwidFormatBase):
             for creator in creators:
                 if creator.startswith("Organization: "):
                     component.add_entity(
-                        uSwidEntity(name=creator[14:], roles=[uSwidEntityRole.TAG_CREATOR])
+                        uSwidEntity(
+                            name=creator[14:], roles=[uSwidEntityRole.TAG_CREATOR]
+                        )
                     )
                     break
                 if creator.startswith("Person: "):
                     component.add_entity(
-                        uSwidEntity(name=creator[8:], roles=[uSwidEntityRole.TAG_CREATOR])
+                        uSwidEntity(
+                            name=creator[8:], roles=[uSwidEntityRole.TAG_CREATOR]
+                        )
                     )
                     break
         except KeyError:
@@ -158,8 +166,9 @@ class uSwidFormatSpdx(uSwidFormatBase):
                     # add link from src -> tgt
                     csrc = components_by_spdxid[src]
                     ctgt = components_by_spdxid[tgt]
-                    rel_enum = getattr(uSwidLinkRel, "DEPENDENCY", uSwidLinkRel.COMPONENT)
-                    csrc.add_link(uSwidLink(rel=uSwidLinkRel.COMPONENT, href=ctgt.tag_id))
+                    csrc.add_link(
+                        uSwidLink(rel=uSwidLinkRel.COMPONENT, href=ctgt.tag_id)
+                    )
             except KeyError:
                 continue  # skip malformed relationship objects
 
