@@ -199,7 +199,13 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
     def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
         """Exports a uSwidHash CoSWID section"""
-        return (ihash.alg_id or 0, bytes.fromhex(ihash.value or ""))
+        try:
+            blob = bytes.fromhex(ihash.value)
+        except ValueError as exc:
+            raise NotSupportedError(
+                f"hashes must be in hex format: {ihash.value}"
+            ) from exc
+        return (ihash.alg_id or 0, blob)
 
     def _save_payload(self, payload: uSwidPayload) -> Dict[uSwidGlobalMap, Any]:
         """Exports a uSwidPayload CoSWID section"""
