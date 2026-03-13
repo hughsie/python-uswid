@@ -7,7 +7,7 @@
 #
 # pylint: disable=too-few-public-methods,protected-access
 
-from typing import Optional
+from typing import Optional, Callable
 
 import struct
 import zlib
@@ -68,7 +68,7 @@ class uSwidFormatUswid(uSwidFormatBase):
         return container
 
     @property
-    def _fmt(self) -> uSwidFormatBase:
+    def _fmt(self) -> Callable[[], uSwidFormatBase]:
 
         if self.format == uSwidPayloadFormat.COSWID:
             return uSwidFormatCoswid
