@@ -199,6 +199,8 @@ class uSwidFormatCoswid(uSwidFormatBase):
 
     def _save_hash(self, ihash: uSwidHash) -> Tuple[int, bytes]:
         """Exports a uSwidHash CoSWID section"""
+        if not ihash.value:
+            raise NotSupportedError("hash value unset")
         try:
             blob = bytes.fromhex(ihash.value)
         except ValueError as exc:
