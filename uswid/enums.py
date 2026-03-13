@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 
 
 class uSwidVersionScheme(IntEnum):
@@ -41,13 +41,15 @@ USWID_HEADER_MAGIC = b"\x53\x42\x4f\x4d\xd6\xba\x2e\xac\xa3\xe6\x7a\x52\xaa\xee\
 USWID_HEADER_FLAG_COMPRESSED = 0x01
 
 
-class uSwidHeaderFlags(IntEnum):
+class uSwidHeaderFlags(IntFlag):
     """The header flags type"""
 
     NONE = 0x00
     COMPRESSED = 0x01
 
     def __str__(self):
+        if not self.name:
+            return None
         return self.name.lower()
 
 
