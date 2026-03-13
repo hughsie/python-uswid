@@ -181,9 +181,15 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             component.add_payload(payload)
 
         for lic in data.get("licenses", []):
-            url: Optional[str] = lic["license"].get("url")
-            spdx_id: Optional[str] = lic["license"].get("id")
-            name: Optional[str] = lic["license"].get("name")
+            url: Optional[str] = None
+            spdx_id: Optional[str] = None
+            name: Optional[str] = None
+            if isinstance(lic, str):
+                spdx_id = lic
+            else:
+                url = lic["license"].get("url")
+                spdx_id = lic["license"].get("id")
+                name = lic["license"].get("name")
             if url:
                 component.add_link(uSwidLink(rel=uSwidLinkRel.LICENSE, href=url))
             elif spdx_id:
