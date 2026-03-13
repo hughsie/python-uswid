@@ -421,7 +421,10 @@ class uSwidFormatCoswid(uSwidFormatBase):
         consumed: int = 0
         try:
             f = io.BytesIO(blob[offset:])
-            data = cbor2.load(f)
+            try:
+                data = cbor2.load(f, read_size=1)  # type: ignore
+            except TypeError:
+                data = cbor2.load(f)
             consumed = f.tell()
         except EOFError as e:
             raise NotSupportedError("invalid header") from e
