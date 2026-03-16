@@ -5,6 +5,18 @@ Version history
 
 This library adheres to `Semantic Versioning <http://semver.org/>`_.
 
+**0.6.0** (2025-03-16)
+
+ - Add a workaround for a regression in cbor2 5.8.0 (Richard Hughes)
+ - Add capability for patch and ancestor in INI (Baraneedharan Anbazhagan)
+ - Add SPDX multi-package parsing + DEPENDS_ON mapping (Baraneedharan Anbazhagan)
+ - Add support for metadata.component in CycloneDX (Baraneedharan Anbazhagan)
+ - Allow embedding a CycloneDX or SPDX file in a uSWID container (Richard Hughes)
+ - Fix lifecycles to be an array in CycloneDX (Richard Hughes)
+ - Support reading in a string as a CycloneDX license (Richard Hughes)
+ - Use an entry from the global map to encode the CPE (Richard Hughes)
+ - Use link href as component tag_id for ancestors (Baraneedharan Anbazhagan)
+
 **0.5.1** (2024-11-xx)
 
  - Add ``--find`` to recursively find SBOM files (Richard Hughes)

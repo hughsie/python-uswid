@@ -9,7 +9,7 @@ Contributors welcome, either adding new functionality or fixing bugs.
 
 setup(
     name="uswid",
-    version="0.5.2",
+    version="0.6.0",
     license="BSD-2-Clause-Patent",
     license_files=[
         "LICENSE",
