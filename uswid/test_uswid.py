@@ -990,6 +990,51 @@ rel = see-also
             )
         )
 
+    def test_spdx_duplicate_spdxid_unique_namespace(self):
+        """Duplicate SPDXIDs should be unique when documentNamespace differs"""
+        json_a = {
+            "spdxVersion": "SPDX-2.3",
+            "documentNamespace": "urn:uuid:11111111-1111-1111-1111-111111111111",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-dupPkg",
+                    "name": "dupPkg",
+                    "versionInfo": "1.0",
+                }
+            ],
+        }
+        json_b = {
+            "spdxVersion": "SPDX-2.3",
+            "documentNamespace": "urn:uuid:22222222-2222-2222-2222-222222222222",
+            "creationInfo": {"creators": ["Organization: TagCo"]},
+            "packages": [
+                {
+                    "SPDXID": "SPDXRef-dupPkg",
+                    "name": "dupPkg",
+                    "versionInfo": "2.0",
+                }
+            ],
+        }
+
+        fmt = uSwidFormatSpdx()
+        container_a = fmt.load(json.dumps(json_a))
+        container_b = fmt.load(json.dumps(json_b))
+
+        # consolidate into one container to simulate merged SBOMs
+        merged = uSwidContainer()
+        for comp in list(container_a) + list(container_b):
+            if comp.tag_id and not merged.get_by_id(comp.tag_id):
+                merged.append(comp)
+
+        self.assertEqual(len(merged), 2)
+        self.assertIsNotNone(
+            merged.get_by_id("11111111-1111-1111-1111-111111111111:dupPkg")
+        )
+        self.assertIsNotNone(
+            merged.get_by_id("22222222-2222-2222-2222-222222222222:dupPkg")
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

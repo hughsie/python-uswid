@@ -19,6 +19,7 @@ from .entity import uSwidEntity, uSwidEntityRole
 from .errors import NotSupportedError
 from .hash import uSwidHashAlg
 from .link import uSwidLink, uSwidLinkRel
+from .purl import uSwidPurl
 
 
 def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
@@ -29,19 +30,50 @@ def _convert_hash_alg_id(alg_id: uSwidHashAlg) -> str:
     }.get(alg_id, "UNKNOWN")
 
 
+def _normalize_spdx_namespace(namespace: Optional[str]) -> Optional[str]:
+    if not namespace:
+        return None
+    namespace = namespace.rstrip("#/")
+    if namespace.startswith("urn:uuid:"):
+        namespace = namespace[len("urn:uuid:") :]
+    return namespace
+
+
+def _namespaced_tag_id(spdx_id: Optional[str], namespace: Optional[str]) -> Optional[str]:
+    if not spdx_id:
+        return None
+    if spdx_id.startswith("SPDXRef-"):
+        spdx_id = spdx_id[8:]
+    if namespace:
+        return f"{namespace}:{spdx_id}"
+    return spdx_id
+
+
 class uSwidFormatSpdx(uSwidFormatBase):
     """SPDX file"""
 
     def _load_single_package(
-        self, pkg: Dict[str, Any], data_root: Dict[str, Any]
+        self,
+        pkg: Dict[str, Any],
+        data_root: Dict[str, Any],
+        namespace: Optional[str],
     ) -> uSwidComponent:
         """Load a single package from SPDX JSON data"""
         component = uSwidComponent()
         # tag_id
-        tag_id = pkg.get("SPDXID")
-        if tag_id and tag_id.startswith("SPDXRef-"):
-            tag_id = tag_id[8:]
-        component.tag_id = tag_id
+        component.tag_id = _namespaced_tag_id(pkg.get("SPDXID"), namespace)
+        # externalRefs (purl)
+        external_refs = pkg.get("externalRefs") or pkg.get("externalReferences") or []
+        if isinstance(external_refs, list):
+            for ref in external_refs:
+                if not isinstance(ref, dict):
+                    continue
+                if ref.get("referenceType") != "purl":
+                    continue
+                locator = ref.get("referenceLocator")
+                if locator:
+                    component.purl = uSwidPurl(locator)
+                    break
         # basic fields
         component.software_name = pkg.get("name")
         component.summary = pkg.get("summary")
@@ -113,12 +145,14 @@ class uSwidFormatSpdx(uSwidFormatBase):
             return uSwidContainer()
 
         # build components
+        namespace = _normalize_spdx_namespace(data.get("documentNamespace"))
         components_by_spdxid = {}
         container = uSwidContainer()
         for pkg in packages:
-            comp = self._load_single_package(pkg, data)
-            if comp.tag_id:
-                components_by_spdxid[f"SPDXRef-{comp.tag_id}"] = comp
+            comp = self._load_single_package(pkg, data, namespace)
+            pkg_spdxid = pkg.get("SPDXID")
+            if pkg_spdxid:
+                components_by_spdxid[pkg_spdxid] = comp
             container.append(comp)
 
         # relationships (dependencies)
