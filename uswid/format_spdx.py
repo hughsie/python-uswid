@@ -93,6 +93,10 @@ def _detect_spdx_json_version(data: Dict[str, Any]) -> str:
     raise NotSupportedError("unrecognized SPDX JSON format")
 
 
+def _spdx30_node_id(node: Dict[str, Any]) -> Optional[str]:
+    return node.get("spdxId") or node.get("@id")
+
+
 class uSwidFormatSpdx(uSwidFormatBase):
     """SPDX file"""
 
@@ -102,7 +106,7 @@ class uSwidFormatSpdx(uSwidFormatBase):
         data_root: Dict[str, Any],
         namespace: Optional[str],
     ) -> uSwidComponent:
-        """Load a single package from SPDX JSON data"""
+        """Load a single package from SPDX 2.3 JSON data"""
         component = uSwidComponent()
         # tag_id
         component.tag_id = _namespaced_tag_id(pkg.get("SPDXID"), namespace)
@@ -172,6 +176,88 @@ class uSwidFormatSpdx(uSwidFormatBase):
             pass
 
         return component
+
+    def _load_single_node(
+        self,
+        node: Dict[str, Any],
+        nodes_by_id: Dict[str, Dict[str, Any]],
+    ) -> uSwidComponent:
+        """Load a single SPDX 3.0 node from JSON data."""
+        component = uSwidComponent()
+        # tag_id
+        component.tag_id = _namespaced_tag_id(node.get("spdxId"), None)
+
+        # externalRefs (purl) - not implemented yet
+
+        # basic fields
+        component.software_name = node.get("name")
+
+        # component.summary = pkg.get("summary")
+        component.software_version = node.get("software_packageVersion")
+
+        # licenseDeclared (best-effort extraction of SPDX IDs) - not implemented yet
+
+        # originator / supplier
+        self._add_spdx30_agent_entities(
+            component,
+            node.get("suppliedBy"),
+            nodes_by_id,
+            uSwidEntityRole.LICENSOR,
+        )
+        self._add_spdx30_agent_entities(
+            component,
+            node.get("originatedBy"),
+            nodes_by_id,
+            uSwidEntityRole.SOFTWARE_CREATOR,
+        )
+        # creationInfo creators (tag creators)
+        self._load_spdx30_creation_info(component, node, nodes_by_id)
+        return component
+
+    def _add_spdx30_agent_entities(
+        self,
+        component: uSwidComponent,
+        entities: Any,
+        nodes_by_id: Dict[str, Dict[str, Any]],
+        role: uSwidEntityRole,
+    ) -> None:
+        if isinstance(entities, str):
+            entity_refs = [entities]
+        elif isinstance(entities, list):
+            entity_refs = entities
+        else:
+            return
+        for entity in entity_refs:
+            if not isinstance(entity, str):
+                continue
+            node = nodes_by_id.get(entity)
+            if node:
+                name = node.get("name")
+            else:
+                # Keep unresolved references as-is for visibility rather than
+                # silently dropping creators.
+                name = entity
+            if name and isinstance(name, str):
+                component.add_entity(uSwidEntity(name=name, roles=[role]))
+
+    def _load_spdx30_creation_info(
+        self,
+        component: uSwidComponent,
+        node: Dict[str, Any],
+        nodes_by_id: Dict[str, Dict[str, Any]],
+    ) -> None:
+        creation_info_ref = node.get("creationInfo")
+        if not isinstance(creation_info_ref, str):
+            return
+        creation_info = nodes_by_id.get(creation_info_ref)
+        if not creation_info:
+            return
+        self._add_spdx30_agent_entities(
+            component,
+            creation_info.get("createdBy"),
+            nodes_by_id,
+            uSwidEntityRole.TAG_CREATOR,
+        )
 
     def __init__(self) -> None:
         """Initializes uSwidFormatSpdx"""
