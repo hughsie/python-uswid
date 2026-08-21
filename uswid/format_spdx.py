@@ -334,8 +334,8 @@ class uSwidFormatSpdx(uSwidFormatBase):
         for node in graph:
             if not isinstance(node, dict):
                 continue
-            node_types = node.get("type")
-            if any("software_Package" in t for t in node_types):
+            node_type = node.get("type")
+            if node_type == "software_Package":
                 component = self._load_single_node(node, nodes_by_id)
                 container.append(component)
                 if component.tag_id:
