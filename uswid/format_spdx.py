@@ -185,9 +185,12 @@ class uSwidFormatSpdx(uSwidFormatBase):
         """Load a single SPDX 3.0 node from JSON data."""
         component = uSwidComponent()
         # tag_id
-        component.tag_id = _namespaced_tag_id(node.get("spdxId"), None)
+        component.tag_id = _namespaced_tag_id(_spdx30_node_id(node), None)
 
-        # externalRefs (purl) - not implemented yet
+        # externalRefs (purl)
+        package_url = node.get("packageURL")
+        if isinstance(package_url, str):
+            component.purl = uSwidPurl(package_url)
 
         # basic fields
         component.software_name = node.get("name")
