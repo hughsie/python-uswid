@@ -189,6 +189,8 @@ class uSwidFormatSpdx(uSwidFormatBase):
 
         # externalRefs (purl)
         package_url = node.get("packageURL")
+        if package_url is None:
+            package_url = node.get("software_packageURL")
         if isinstance(package_url, str):
             component.purl = uSwidPurl(package_url)
 
