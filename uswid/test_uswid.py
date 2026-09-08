@@ -1195,6 +1195,141 @@ rel = see-also
         self.assertEqual(fmt_30._called, "3.0")  # type: ignore[attr-defined]
         self.assertEqual(container_30[0].tag_id, "from30")
 
+    def test_spdx30_load_single_node(self):
+        """SPDX 3.0 single node loader should map fields and entity refs"""
+        fmt = uSwidFormatSpdx()
+
+        data = {
+            "@graph": [
+                {
+                    "type": "CreationInfo",
+                    "@id": "_:creationinfo",
+                    "createdBy": "http://spdx.example.com/agents/person",
+                    "specVersion": "3.0.1",
+                },
+                {
+                    "type": "Person",
+                    "spdxId": "http://spdx.example.com/agents/person",
+                    "name": "FirstName LastName",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/A",
+                    "name": "pkgA",
+                    "software_packageVersion": "1.0.0",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "suppliedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/B",
+                    "name": "pkgB",
+                    "software_packageVersion": "2.0.0",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_File",
+                    "spdxId": "http://spdx.example.com/file/C",
+                    "name": "fileC",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+            ]
+        }
+        nodes_by_id: dict[str, dict[str, Any]] = {}
+        for node in data["@graph"]:
+            node_id = node.get("spdxId") or node.get("@id")
+            if node_id:
+                nodes_by_id[node_id] = node
+
+        # select arbitrary package node to test _load_single_node
+        package_node = data["@graph"][2]
+
+        comp = fmt._load_single_node(package_node, nodes_by_id)
+
+        # assert that the component fields are mapped correctly from the SPDX node
+        self.assertEqual(comp.tag_id, package_node["spdxId"])
+        self.assertEqual(comp.software_name, package_node["name"])
+        self.assertEqual(comp.software_version, package_node["software_packageVersion"])
+
+        # suppliedBy
+        licensor_names = [
+            e.name for e in comp.entities if uSwidEntityRole.LICENSOR in e.roles
+        ]
+        # originatedBy
+        creator_names = [
+            e.name for e in comp.entities if uSwidEntityRole.SOFTWARE_CREATOR in e.roles
+        ]
+        # createdBy
+        tag_creator_names = [
+            e.name for e in comp.entities if uSwidEntityRole.TAG_CREATOR in e.roles
+        ]
+        self.assertEqual(licensor_names, ["FirstName LastName"])
+        self.assertEqual(creator_names, ["FirstName LastName"])
+        self.assertEqual(tag_creator_names, ["FirstName LastName"])
+
+    def test_spdx30_load_requires_graph_list(self):
+        """SPDX 3.0 loader should reject documents without a graph list"""
+        fmt = uSwidFormatSpdx()
+        data = {
+            "@graph": {"type": "software_Package"}
+        }
+        with self.assertRaises(NotSupportedError):
+            fmt._load_spdx30(data)
+
+    def test_spdx30_load_graph_packages(self):
+        """SPDX 3.0 loader should import software_Package nodes only"""
+        fmt = uSwidFormatSpdx()
+        data = {
+            "@graph": [
+                {
+                    "type": "CreationInfo",
+                    "@id": "_:creationinfo",
+                    "createdBy": "http://spdx.example.com/agents/person",
+                    "specVersion": "3.0.1",
+                },
+                {
+                    "type": "Person",
+                    "spdxId": "http://spdx.example.com/agents/person",
+                    "name": "FirstName LastName",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/A",
+                    "name": "pkgA",
+                    "software_packageVersion": "1.0.0",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "suppliedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/B",
+                    "name": "pkgB",
+                    "software_packageVersion": "2.0.0",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "software_File",
+                    "spdxId": "http://spdx.example.com/file/C",
+                    "name": "fileC",
+                    "originatedBy": "http://spdx.example.com/agents/person",
+                    "creationInfo": "_:creationinfo",
+                },
+                {
+                    "type": "Element", "spdxId": "http://spdx.example.com/notpkg"
+                },
+                "not-a-dict",
+            ]
+        }
+        container = fmt._load_spdx30(data)
+        self.assertEqual(len(container), 2)
+
     def test_spdx_multiple_packages_with_dep(self):
         """Unit tests for SPDX multiple packages with dependencies"""
         jsonstr: dict[str, Any] = {
