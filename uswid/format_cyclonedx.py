@@ -108,6 +108,17 @@ def _convert_entity_from_dict(data: Dict[str, Any]) -> uSwidEntity:
     return uSwidEntity(name=data.get("name"), regid=regid)
 
 
+# CycloneDX property names this class models as first-class attributes. They are
+# owned by those attributes, never by the generic property dict, so that a
+# round trip cannot move a value from one to the other.
+_RESERVED_PROPERTY_NAMES = (
+    "colloquialVersion",
+    "revision",
+    "product",
+    "versionScheme",
+)
+
+
 class uSwidFormatCycloneDX(uSwidFormatBase):
     """CycloneDX file"""
 
@@ -171,16 +182,18 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
                         pass
 
         for meta in data.get("properties", []):
-            if meta.get("name") == "colloquialVersion":
-                component.colloquial_version = meta.get("value")
-            if meta.get("name") == "revision":
-                component.revision = meta.get("value")
-            if meta.get("name") == "product":
-                component.product = meta.get("value")
-            if meta.get("name") == "versionScheme":
-                component.version_scheme = _convert_str_to_version_scheme(
-                    meta.get("value")
-                )
+            prop_name = meta.get("name")
+            prop_value = meta.get("value")
+            if prop_name == "colloquialVersion":
+                component.colloquial_version = prop_value
+            elif prop_name == "revision":
+                component.revision = prop_value
+            elif prop_name == "product":
+                component.product = prop_value
+            elif prop_name == "versionScheme":
+                component.version_scheme = _convert_str_to_version_scheme(prop_value)
+            elif prop_name and isinstance(prop_value, str):
+                component.add_property(prop_name, prop_value)
 
         try:
             component.activation_status = data["pedigree"]["notes"]
@@ -496,6 +509,10 @@ class uSwidFormatCycloneDX(uSwidFormatBase):
             metadata["revision"] = component.revision
         if component.version_scheme:
             metadata["versionScheme"] = str(component.version_scheme)
+        # generic properties, i.e. anything this class does not model itself
+        for name, value in component.properties.items():
+            if name not in _RESERVED_PROPERTY_NAMES:
+                metadata[name] = value
 
         # pedigree
         pedigree: Dict[str, Any] = {}

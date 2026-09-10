@@ -139,11 +139,21 @@ class uSwidComponent:
         self.ancestors: List[uSwidComponent] = []
         """List of patches"""
         self.patches: List[uSwidPatch] = []
+        """Generic name-value properties, preserved by formats that have somewhere to put them"""
+        self.properties: Dict[str, str] = {}
 
     def add_source_filename(self, source_file: str) -> None:
         """Adds a source filename, i.e. what file helped created this component"""
         if source_file not in self.source_filenames:
             self.source_filenames.append(source_file)
+
+    def add_property(self, name: str, value: str) -> None:
+        """Adds a generic name-value property to the component"""
+        self.properties[name] = value
+
+    def get_property(self, name: str, default: Optional[str] = None) -> Optional[str]:
+        """Returns a generic property value, or the default if it is not set"""
+        return self.properties.get(name, default)
 
     @property
     def software_name(self) -> Optional[str]:
@@ -352,6 +362,8 @@ class uSwidComponent:
             self.add_evidence(evidence)
         for filepath in component_new.source_filenames:
             self.add_source_filename(filepath)
+        for name, value in component_new.properties.items():
+            self.add_property(name, value)
 
     def add_entity(self, entity: uSwidEntity) -> None:
         """Add the latest entity"""

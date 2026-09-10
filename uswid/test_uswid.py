@@ -762,6 +762,85 @@ class TestSwidEntity(unittest.TestCase):
         self.assertEqual(component1.ancestors[0].tag_id, "child1")
         self.assertEqual(component1.ancestors[1].tag_id, "child2")
 
+    def test_properties(self):
+        """Unit tests for generic component properties"""
+        self.maxDiff = None
+        component = uSwidComponent(tag_id="parent")
+        component.add_property(
+            "osf:normalizedHash", "uefi-pe-rebase0.v1:sha256:1348ff9c"
+        )
+        component.colloquial_version = "29"
+
+        # CycloneDX export
+        jsonstr = uSwidFormatCycloneDX().save(uSwidContainer([component])).decode()
+        assert "osf:normalizedHash" in jsonstr
+        assert "uefi-pe-rebase0.v1:sha256:1348ff9c" in jsonstr
+
+        # CycloneDX import
+        component1 = uSwidFormatCycloneDX().load(jsonstr.encode())[0]
+        self.assertEqual(
+            component1.get_property("osf:normalizedHash"),
+            "uefi-pe-rebase0.v1:sha256:1348ff9c",
+        )
+        self.assertEqual(component1.get_property("notThere"), None)
+
+        # the modelled fields are still parsed into their own attributes, and are
+        # not *also* duplicated into the generic property dict
+        self.assertEqual(component1.colloquial_version, "29")
+        self.assertEqual(component1.properties, component.properties)
+
+        # CycloneDX defines a property value as a string; anything else is ignored
+        # rather than stored and re-emitted as an invalid document
+        inbound = json.dumps(
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1.6",
+                "version": 1,
+                "components": [
+                    {
+                        "type": "firmware",
+                        "name": "Test",
+                        "bom-ref": "test",
+                        "properties": [
+                            {"name": "osf:number", "value": 42},
+                            {"name": "osf:text", "value": "ok"},
+                        ],
+                    }
+                ],
+            }
+        )
+        component2 = uSwidFormatCycloneDX().load(inbound.encode())[0]
+        self.assertEqual(component2.properties, {"osf:text": "ok"})
+
+        # a property using a modelled name is never emitted from the generic dict,
+        # or a round trip would move the value into the attribute that owns it
+        reserved = uSwidComponent(tag_id="parent")
+        reserved.add_property("colloquialVersion", "29")
+        self.assertNotIn(
+            "properties",
+            json.loads(
+                uSwidFormatCycloneDX().save(uSwidContainer([reserved])).decode()
+            )["components"][0],
+        )
+
+        # a component with no generic properties emits exactly the modelled ones,
+        # and a round trip does not duplicate them
+        plain = uSwidComponent(tag_id="parent")
+        plain.colloquial_version = "29"
+        blob = uSwidFormatCycloneDX().save(uSwidContainer([plain])).decode()
+        self.assertEqual(
+            json.loads(blob)["components"][0]["properties"],
+            [{"name": "colloquialVersion", "value": "29"}],
+        )
+        plain2 = uSwidFormatCycloneDX().load(blob.encode())[0]
+        self.assertEqual(plain2.properties, {})
+        self.assertEqual(
+            json.loads(uSwidFormatCycloneDX().save(uSwidContainer([plain2])).decode())[
+                "components"
+            ][0]["properties"],
+            [{"name": "colloquialVersion", "value": "29"}],
+        )
+
     def test_component(self):
         """Unit tests for uSwidComponent"""
         self.maxDiff = None
