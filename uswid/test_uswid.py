@@ -8,6 +8,7 @@
 #
 # pylint: disable=wrong-import-position,protected-access
 
+import contextlib
 import os
 import sys
 import unittest
@@ -51,6 +52,36 @@ from .purl import uSwidPurl
 unittest.TestCase.maxDiff = None
 
 
+# git reads the developer's global and system configuration, and honours
+# variables such as GIT_DIR, unless told not to. Settings that are perfectly
+# reasonable to have -- tag.gpgSign and commit.gpgSign in particular -- make
+# these fixtures fail in ways that have nothing to do with the code under test,
+# so every git invocation runs against empty configuration.
+_GIT_ENV = {
+    "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_CONFIG_SYSTEM": "/dev/null",
+}
+
+
+@contextlib.contextmanager
+def _isolated_git_env():
+    """Runs a block with only _GIT_ENV in the environment.
+
+    uSwidVcs shells out to git without passing env, so it inherits whatever the
+    developer has exported. Setting env= on the fixture's own calls is not
+    enough for a test that then exercises that code.
+    """
+    saved = dict(os.environ)
+    os.environ.clear()
+    os.environ.update(_GIT_ENV)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(saved)
+
+
 class TestSwidEntity(unittest.TestCase):
     """Tescases for components, entities, links, evidence and payloads"""
 
@@ -72,16 +103,19 @@ class TestSwidEntity(unittest.TestCase):
             ["git", "init", self.git_path, "--initial-branch", "main"],
             cwd=".",
             check=True,
+            env=_GIT_ENV,
         )
         subprocess.run(
             ["git", "config", "user.email", "admin@example.com"],
             cwd=self.git_path,
             check=True,
+            env=_GIT_ENV,
         )
         subprocess.run(
             ["git", "config", "user.name", "RH"],
             cwd=self.git_path,
             check=True,
+            env=_GIT_ENV,
         )
         subprocess.run(
             ["mkdir", "contrib"],
@@ -94,12 +128,13 @@ class TestSwidEntity(unittest.TestCase):
             ["git", "add", "contrib/bom.cdx.json"],
             cwd=self.git_path,
             check=True,
+            env=_GIT_ENV,
         )
         subprocess.run(
             ["git", "commit", "-a", "-m", "Add SBOM"],
             cwd=self.git_path,
             check=True,
-            env={},
+            env=_GIT_ENV,
         )
         subprocess.run(
             ["mkdir", "edk2"],
@@ -116,12 +151,13 @@ class TestSwidEntity(unittest.TestCase):
                 ["git", "add", "edk2/Shell.inf"],
                 cwd=self.git_path,
                 check=True,
+                env=_GIT_ENV,
             )
             subprocess.run(
                 ["git", "commit", "-a", "-m", "Add EDK Inf"],
                 cwd=self.git_path,
                 check=True,
-                env={},
+                env=_GIT_ENV,
             )
         except FileNotFoundError:
             pass
@@ -129,6 +165,7 @@ class TestSwidEntity(unittest.TestCase):
             ["git", "tag", "v1.2.3"],
             cwd=self.git_path,
             check=True,
+            env=_GIT_ENV,
         )
         with open(os.path.join(self.git_path, "contrib", "bom.cdx.json"), "wb") as f:
             f.write(b"hello world")
@@ -136,7 +173,7 @@ class TestSwidEntity(unittest.TestCase):
             ["git", "commit", "-a", "-m", "A SBOM fixup"],
             cwd=self.git_path,
             check=True,
-            env={},
+            env=_GIT_ENV,
         )
         subprocess.run(
             [
@@ -148,6 +185,7 @@ class TestSwidEntity(unittest.TestCase):
             ],
             cwd=self.git_path,
             check=True,
+            env=_GIT_ENV,
         )
 
     def test_format_inf(self):
@@ -391,31 +429,36 @@ class TestSwidEntity(unittest.TestCase):
         # generate something plausible
         self._build_fake_git_path()
 
-        vcs = uSwidVcs(filepath=os.path.join(self.git_path, "contrib", "bom.cdx.json"))
+        # uSwidVcs shells out to git without passing env, so the calls below
+        # inherit whatever the developer has exported
+        with _isolated_git_env():
+            vcs = uSwidVcs(
+                filepath=os.path.join(self.git_path, "contrib", "bom.cdx.json")
+            )
 
-        # 0.5.0
-        self.assertEqual(vcs.get_tag(), "1.2.3")
+            # 0.5.0
+            self.assertEqual(vcs.get_tag(), "1.2.3")
 
-        # 0.5.0-25-g26af980
-        self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
+            # 0.5.0-25-g26af980
+            self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
 
-        # main
-        self.assertEqual(vcs.get_branch(), "main")
+            # main
+            self.assertEqual(vcs.get_branch(), "main")
 
-        # 26af9806ef407b171481ff234d2fe16386dc75eb
-        self.assertEqual(len(vcs.get_commit()), 40)
+            # 26af9806ef407b171481ff234d2fe16386dc75eb
+            self.assertEqual(len(vcs.get_commit()), 40)
 
-        # /home/hughsie/Code/uswid
-        value: Optional[str] = vcs.get_toplevel()
-        self.assertEqual(value, self.git_path)
+            # /home/hughsie/Code/uswid
+            value: Optional[str] = vcs.get_toplevel()
+            self.assertEqual(value, self.git_path)
 
-        # https://github.com/hughsie/python-uswid
-        value = vcs.get_remote_url()
-        self.assertEqual(value, "https://github.com/hughsie/python-uswid")
+            # https://github.com/hughsie/python-uswid
+            value = vcs.get_remote_url()
+            self.assertEqual(value, "https://github.com/hughsie/python-uswid")
 
-        # me!
-        self.assertEqual(vcs.get_sbom_authors(), ["RH"])
-        self.assertEqual(vcs.get_authors(), ["RH"])
+            # me!
+            self.assertEqual(vcs.get_sbom_authors(), ["RH"])
+            self.assertEqual(vcs.get_authors(), ["RH"])
 
     def test_entity(self):
         """Unit tests for uSwidEntity"""
