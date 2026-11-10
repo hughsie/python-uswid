@@ -1330,6 +1330,134 @@ rel = see-also
         container = fmt._load_spdx30(data)
         self.assertEqual(len(container), 2)
 
+    def test_spdx30_relationship_depends_on_adds_link(self):
+        """depends_on helper should add COMPONENT link from source to target"""
+        fmt = uSwidFormatSpdx()
+        src = uSwidComponent(tag_id="http://spdx.example.com/pkg/A")
+        tgt = uSwidComponent(tag_id="http://spdx.example.com/pkg/B")
+        components_by_spdxid = {
+            "http://spdx.example.com/pkg/A": src,
+            "http://spdx.example.com/pkg/B": tgt,
+        }
+
+        fmt._load_spdx30_relationship_depends_on(
+            "http://spdx.example.com/pkg/A",
+            ["http://spdx.example.com/pkg/B"],
+            components_by_spdxid,
+        )
+
+        self.assertTrue(
+            any(
+                link.rel == uSwidLinkRel.COMPONENT
+                and link.href == "http://spdx.example.com/pkg/B"
+                for link in src.links
+            )
+        )
+
+    def test_spdx30_relationship_depends_on_ignores_missing_nodes(self):
+        """depends_on helper should ignore unknown source/targets"""
+        fmt = uSwidFormatSpdx()
+        src = uSwidComponent(tag_id="http://spdx.example.com/pkg/A")
+        tgt = uSwidComponent(tag_id="http://spdx.example.com/pkg/B")
+        components_by_spdxid = {
+            "http://spdx.example.com/pkg/A": src,
+            "http://spdx.example.com/pkg/B": tgt,
+        }
+
+        # attempt to link unknown source
+        fmt._load_spdx30_relationship_depends_on(
+            "http://spdx.example.com/pkg/C",
+            ["http://spdx.example.com/pkg/B"],
+            components_by_spdxid,
+        )
+        self.assertEqual(len(src.links), 0)
+
+    def test_spdx30_relationships_parsing_and_filtering(self):
+        """relationship parser should accept DEPENDS_ON and skip invalid nodes"""
+        fmt = uSwidFormatSpdx()
+        src = uSwidComponent(tag_id="http://spdx.example.com/pkg/A")
+        tgt_b = uSwidComponent(tag_id="http://spdx.example.com/pkg/B")
+        tgt_c = uSwidComponent(tag_id="http://spdx.example.com/pkg/C")
+        components_by_spdxid = {
+            "http://spdx.example.com/pkg/A": src,
+            "http://spdx.example.com/pkg/B": tgt_b,
+            "http://spdx.example.com/pkg/C": tgt_c,
+        }
+
+        graph: list[dict[str, Any]] = [
+            {
+                "type": "Relationship",
+                "relationshipType": "depends_on",
+                "from": "http://spdx.example.com/pkg/A",
+                "to": "http://spdx.example.com/pkg/B",
+            },
+            {
+                "type": "Relationship",
+                "relationshipType": "Depends_On",
+                "from": "http://spdx.example.com/pkg/A",
+                "to": ["http://spdx.example.com/pkg/C", 123, None],
+            },
+            {
+                "type": "Relationship",
+                "relationshipType": "DESCRIBES",
+                "from": "http://spdx.example.com/pkg/A",
+                "to": "http://spdx.example.com/pkg/B",
+            },
+            {"type": "Relationship", "relationshipType": 123, "from": "x", "to": "y"},
+            {"type": "Relationship", "relationshipType": "DEPENDS_ON", "from": ["x"], "to": "y"},
+            {"type": "Relationship", "relationshipType": "DEPENDS_ON", "from": "x", "to": 999},
+            {"type": "NotRelationship", "relationshipType": "DEPENDS_ON", "from": "x", "to": "y"},
+        ]
+
+        fmt._load_spdx30_relationships(graph, components_by_spdxid)
+        actual = [
+            link.href for link in src.links if link.rel == uSwidLinkRel.COMPONENT
+        ]
+        expected = [
+            "http://spdx.example.com/pkg/B",
+            "http://spdx.example.com/pkg/C",
+        ]
+        self.assertEqual(sorted(actual), sorted(expected))
+
+    def test_spdx30_load_packages_with_relationships(self):
+        """_load_spdx30 should wire load dependency relationships for each component"""
+        fmt = uSwidFormatSpdx()
+        data = {
+            "@graph": [
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/A",
+                    "name": "pkgA",
+                    "software_packageVersion": "1.0.0",
+                },
+                {
+                    "type": "software_Package",
+                    "spdxId": "http://spdx.example.com/pkg/B",
+                    "name": "pkgB",
+                    "software_packageVersion": "2.0.0",
+                },
+                {
+                    "type": "Relationship",
+                    "relationshipType": "DEPENDS_ON",
+                    "from": "http://spdx.example.com/pkg/A",
+                    "to": "http://spdx.example.com/pkg/B",
+                },
+            ]
+        }
+
+        container = fmt._load_spdx30(data)
+
+        # expect 2 packages
+        self.assertEqual(len(container), 2)
+        pkg_a = next(c for c in container if c.tag_id == "http://spdx.example.com/pkg/A")
+        self.assertTrue(
+            any(
+                link.rel == uSwidLinkRel.COMPONENT
+                and link.href == "http://spdx.example.com/pkg/B"
+                for link in pkg_a.links
+            )
+        )
+
     def test_spdx_multiple_packages_with_dep(self):
         """Unit tests for SPDX multiple packages with dependencies"""
         jsonstr: dict[str, Any] = {
