@@ -345,8 +345,67 @@ class uSwidFormatSpdx(uSwidFormatBase):
                 container.append(component)
                 if component.tag_id:
                     components_by_spdxid[component.tag_id] = component
+
+        # relationships (dependencies)
+        self._load_spdx30_relationships(graph, components_by_spdxid)
+
         return container
-    
+
+    def _load_spdx30_relationship_depends_on(
+        self,
+        src: str,
+        targets: List[str],
+        components_by_spdxid: Dict[str, uSwidComponent],
+    ) -> None:
+        if src not in components_by_spdxid:
+            return
+
+        csrc = components_by_spdxid[src]
+        for tgt in targets:
+            if tgt not in components_by_spdxid:
+                continue
+            ctgt = components_by_spdxid[tgt]
+            if not ctgt.tag_id:
+                continue
+            csrc.add_link(uSwidLink(rel=uSwidLinkRel.COMPONENT, href=ctgt.tag_id))
+
+    def _load_spdx30_relationships(
+        self,
+        graph: List[Dict[str, Any]],
+        components_by_spdxid: Dict[str, uSwidComponent],
+    ) -> None:
+        # Search for "Relationship" nodes
+        for node in graph:
+            if not isinstance(node, dict):
+                continue
+            if node.get("type") != "Relationship":
+                continue
+
+            relationship_type = node.get("relationshipType")
+            if not isinstance(relationship_type, str):
+                continue
+            relationship_type = relationship_type.upper()
+
+            # "from" field must have one element
+            src = node.get("from")
+            if not isinstance(src, str):
+                continue
+
+            # "to" field has one or more elements
+            to_values = node.get("to")
+            if isinstance(to_values, str):
+                targets: List[str] = [to_values]
+            elif isinstance(to_values, list):
+                targets = [value for value in to_values if isinstance(value, str)]
+            else:
+                continue
+
+            # Parse "dependsOn" relationship type
+            if relationship_type == "DEPENDS_ON":
+                self._load_spdx30_relationship_depends_on(
+                    src, targets, components_by_spdxid
+                )
+
     def save(self, container: uSwidContainer) -> bytes:
         # header
         root: Dict[str, Any] = {}
