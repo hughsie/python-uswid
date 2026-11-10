@@ -150,148 +150,148 @@ class TestSwidEntity(unittest.TestCase):
             check=True,
         )
 
-#     def test_format_inf(self):
-#         """Unit tests for uSwidFormatInf"""
+    def test_format_inf(self):
+        """Unit tests for uSwidFormatInf"""
 
-#         # generate something plausible
-#         self._build_fake_git_path()
+        # generate something plausible
+        self._build_fake_git_path()
 
-#         fmt_parent = uSwidFormatCycloneDX()
-#         try:
-#             with open("./tests/edk2/sbom.cdx.json", "rb") as f:
-#                 container_parent = fmt_parent.load(f.read())
-#         except FileNotFoundError:
-#             return
-#         print(container_parent)
+        fmt_parent = uSwidFormatCycloneDX()
+        try:
+            with open("./tests/edk2/sbom.cdx.json", "rb") as f:
+                container_parent = fmt_parent.load(f.read())
+        except FileNotFoundError:
+            return
+        print(container_parent)
 
-#         fmt = uSwidFormatInf()
-#         fn = os.path.join(self.git_path, "edk2", "Shell.inf")
-#         try:
-#             with open(fn, "rb") as f:
-#                 container = fmt.load(f.read(), path=fn)
-#         except FileNotFoundError:
-#             return
-#         for component in container:
-#             fmt.incorporate(container_parent, component)
-#             container_parent.append(component)
+        fmt = uSwidFormatInf()
+        fn = os.path.join(self.git_path, "edk2", "Shell.inf")
+        try:
+            with open(fn, "rb") as f:
+                container = fmt.load(f.read(), path=fn)
+        except FileNotFoundError:
+            return
+        for component in container:
+            fmt.incorporate(container_parent, component)
+            container_parent.append(component)
 
-#         self.assertIsNotNone(
-#             container_parent.get_by_id("pkg:github/tianocore/edk2@202411")
-#         )
-#         self.assertIsNotNone(
-#             container_parent.get_by_id("pkg:github/tianocore/edk2@202411#Shell")
-#         )
+        self.assertIsNotNone(
+            container_parent.get_by_id("pkg:github/tianocore/edk2@202411")
+        )
+        self.assertIsNotNone(
+            container_parent.get_by_id("pkg:github/tianocore/edk2@202411#Shell")
+        )
 
-#         fmt_parent.serial_number = "urn:uuid:00000000-0000-0000-0000-000000000000"
-#         fmt_parent.timestamp = "2024-01-01T00:00:00.000000+00:00"
-#         self.assertEqual(
-#             fmt_parent.save(container_parent).decode(),
-#             """{
-#   "bomFormat": "CycloneDX",
-#   "specVersion": "1.6",
-#   "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
-#   "version": 1,
-#   "metadata": {
-#     "timestamp": "2024-01-01T00:00:00.000000+00:00",
-#     "tools": [
-#       {
-#         "vendor": "uSWID Authors",
-#         "name": "uSWID",
-#         "version": "@USWID_VERSION@"
-#       }
-#     ],
-#     "authors": [
-#       {
-#         "name": "RH"
-#       }
-#     ],
-#     "lifecycles": [
-#       {
-#         "phase": "pre-build"
-#       }
-#     ]
-#   },
-#   "components": [
-#     {
-#       "type": "firmware",
-#       "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:*",
-#       "name": "EDK II",
-#       "version": "edk2-stable202411-105-gd55d4e22f4",
-#       "description": "A cross-platform firmware development environment for UEFI and PI specifications",
-#       "bom-ref": "pkg:github/tianocore/edk2@202411",
-#       "externalReferences": [
-#         {
-#           "type": "vcs",
-#           "url": "https://github.com/tianocore/edk2"
-#         }
-#       ],
-#       "licenses": [
-#         {
-#           "license": {
-#             "url": "https://spdx.org/licenses/BSD-2-Clause.html",
-#             "id": "BSD-2-Clause"
-#           }
-#         }
-#       ],
-#       "supplier": {
-#         "name": "EDK II developers"
-#       },
-#       "authors": [
-#         {
-#           "name": "EDK II authors"
-#         }
-#       ]
-#     },
-#     {
-#       "type": "application",
-#       "group": "7c04a583-9e3e-4f1c-ad65-e05268d0b4d1",
-#       "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:Shell",
-#       "name": "Shell",
-#       "version": "1.0",
-#       "description": "This is the shell application",
-#       "bom-ref": "pkg:github/tianocore/edk2@202411#Shell",
-#       "externalReferences": [
-#         {
-#           "type": "vcs",
-#           "url": "https://github.com/tianocore/edk2"
-#         }
-#       ],
-#       "licenses": [
-#         {
-#           "license": {
-#             "url": "https://spdx.org/licenses/BSD-2-Clause-Patent.html",
-#             "id": "BSD-2-Clause-Patent"
-#           }
-#         }
-#       ],
-#       "supplier": {
-#         "name": "EDK II developers"
-#       },
-#       "authors": [
-#         {
-#           "name": "RH"
-#         }
-#       ],
-#       "properties": [
-#         {
-#           "name": "colloquialVersion",
-#           "value": "6e434ee13d3fe6f205f93523c7874a666a75aa6e443f6848a1c11af062861359"
-#         }
-#       ]
-#     }
-#   ],
-#   "dependencies": [
-#     {
-#       "ref": "pkg:github/tianocore/edk2@202411",
-#       "dependsOn": "pkg:github/tianocore/edk2@202411#Shell"
-#     },
-#     {
-#       "ref": "pkg:github/tianocore/edk2@202411#Shell",
-#       "dependsOn": "pkg:github/tianocore/edk2@202411#BaseLib"
-#     }
-#   ]
-# }""".replace("@USWID_VERSION@", tool_version),
-#         )
+        fmt_parent.serial_number = "urn:uuid:00000000-0000-0000-0000-000000000000"
+        fmt_parent.timestamp = "2024-01-01T00:00:00.000000+00:00"
+        self.assertEqual(
+            fmt_parent.save(container_parent).decode(),
+            """{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-01-01T00:00:00.000000+00:00",
+    "tools": [
+      {
+        "vendor": "uSWID Authors",
+        "name": "uSWID",
+        "version": "@USWID_VERSION@"
+      }
+    ],
+    "authors": [
+      {
+        "name": "RH"
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "firmware",
+      "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:*",
+      "name": "EDK II",
+      "version": "edk2-stable202411-105-gd55d4e22f4",
+      "description": "A cross-platform firmware development environment for UEFI and PI specifications",
+      "bom-ref": "pkg:github/tianocore/edk2@202411",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tianocore/edk2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "url": "https://spdx.org/licenses/BSD-2-Clause.html",
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "supplier": {
+        "name": "EDK II developers"
+      },
+      "authors": [
+        {
+          "name": "EDK II authors"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "group": "7c04a583-9e3e-4f1c-ad65-e05268d0b4d1",
+      "cpe": "cpe:2.3:a:tianocore:edk2:202411:*:*:*:*:*:*:Shell",
+      "name": "Shell",
+      "version": "1.0",
+      "description": "This is the shell application",
+      "bom-ref": "pkg:github/tianocore/edk2@202411#Shell",
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tianocore/edk2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "url": "https://spdx.org/licenses/BSD-2-Clause-Patent.html",
+            "id": "BSD-2-Clause-Patent"
+          }
+        }
+      ],
+      "supplier": {
+        "name": "EDK II developers"
+      },
+      "authors": [
+        {
+          "name": "RH"
+        }
+      ],
+      "properties": [
+        {
+          "name": "colloquialVersion",
+          "value": "6e434ee13d3fe6f205f93523c7874a666a75aa6e443f6848a1c11af062861359"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:github/tianocore/edk2@202411",
+      "dependsOn": "pkg:github/tianocore/edk2@202411#Shell"
+    },
+    {
+      "ref": "pkg:github/tianocore/edk2@202411#Shell",
+      "dependsOn": "pkg:github/tianocore/edk2@202411#BaseLib"
+    }
+  ]
+}""".replace("@USWID_VERSION@", tool_version),
+        )
 
     def test_vcs_verfmt(self):
         """Unit tests for uSwidVcs, version format conversion"""
@@ -385,37 +385,37 @@ class TestSwidEntity(unittest.TestCase):
         )
         self.assertIsNotNone(container.get_by_id("pkg:edk2", fuzzy=True))
 
-    # def test_vcs(self):
-    #     """Unit tests for uSwidVcs"""
+    def test_vcs(self):
+        """Unit tests for uSwidVcs"""
 
-    #     # generate something plausible
-    #     self._build_fake_git_path()
+        # generate something plausible
+        self._build_fake_git_path()
 
-    #     vcs = uSwidVcs(filepath=os.path.join(self.git_path, "contrib", "bom.cdx.json"))
+        vcs = uSwidVcs(filepath=os.path.join(self.git_path, "contrib", "bom.cdx.json"))
 
-    #     # 0.5.0
-    #     self.assertEqual(vcs.get_tag(), "1.2.3")
+        # 0.5.0
+        self.assertEqual(vcs.get_tag(), "1.2.3")
 
-    #     # 0.5.0-25-g26af980
-    #     self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
+        # 0.5.0-25-g26af980
+        self.assertEqual(vcs.get_version().rsplit("-", maxsplit=1)[0], "v1.2.3-1")
 
-    #     # main
-    #     self.assertEqual(vcs.get_branch(), "main")
+        # main
+        self.assertEqual(vcs.get_branch(), "main")
 
-    #     # 26af9806ef407b171481ff234d2fe16386dc75eb
-    #     self.assertEqual(len(vcs.get_commit()), 40)
+        # 26af9806ef407b171481ff234d2fe16386dc75eb
+        self.assertEqual(len(vcs.get_commit()), 40)
 
-    #     # /home/hughsie/Code/uswid
-    #     value: Optional[str] = vcs.get_toplevel()
-    #     self.assertEqual(value, self.git_path)
+        # /home/hughsie/Code/uswid
+        value: Optional[str] = vcs.get_toplevel()
+        self.assertEqual(value, self.git_path)
 
-    #     # https://github.com/hughsie/python-uswid
-    #     value = vcs.get_remote_url()
-    #     self.assertEqual(value, "https://github.com/hughsie/python-uswid")
+        # https://github.com/hughsie/python-uswid
+        value = vcs.get_remote_url()
+        self.assertEqual(value, "https://github.com/hughsie/python-uswid")
 
-    #     # me!
-    #     self.assertEqual(vcs.get_sbom_authors(), ["RH"])
-    #     self.assertEqual(vcs.get_authors(), ["RH"])
+        # me!
+        self.assertEqual(vcs.get_sbom_authors(), ["RH"])
+        self.assertEqual(vcs.get_authors(), ["RH"])
 
     def test_entity(self):
         """Unit tests for uSwidEntity"""
